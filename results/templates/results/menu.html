@@ -1,0 +1,79 @@
+{% load results_extras %}{% spaceless %}
+<nav class="navbar navbar-default" style="background-color: #faebcc;">
+	<div class="container-fluid">
+		<div class="navbar-header">
+			<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar_menu" aria-expanded="false">
+				<span class="sr-only">Toggle navigation</span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</button>
+			<a class="navbar-brand" href="/">World Results</a>
+		</div>
+		<div id="navbar_menu" class="collapse navbar-collapse">
+			<ul class="nav navbar-nav">
+{% for item in menus.main %}
+	{% if item.children %}
+				<li class="dropdown">
+					<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ item.title }}<span class="caret"></span></a>
+					<ul class="dropdown-menu">
+		{% for subitem in item.children %}
+			{% if subitem.separator %}
+						<li role="separator" class="divider"></li>
+			{% endif %}
+						<li><a href="{{ subitem.url }}"{% if subitem.attr %}
+								{% for key, val in subitem.attr.items %}
+									{{ key }}="{{ val }}"
+								{% endfor %}
+							{% endif %}>{{ subitem.title }}</a></li>
+		{% endfor %}
+					</ul>
+				</li>
+	{% else %}
+				<li><a href="{{ item.url }}">{{ item.title }}</a></li>
+	{% endif %}
+{% endfor %}
+			</ul>
+			<ul class="nav navbar-nav navbar-right">
+{% for item in menus.user %}
+	{% if item.children %}
+				<li class="dropdown">
+					<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ item.title }}<span class="caret"></span></a>
+					<ul class="dropdown-menu">
+		{% for subitem in item.children %}
+			{% if subitem.separator %}
+						<li role="separator" class="divider"></li>
+			{% endif %}
+						<li><a href="{{ subitem.url }}"{% if subitem.attr %}
+								{% for key, val in subitem.attr.items %}
+									{{ key }}="{{ val }}"
+								{% endfor %}
+							{% endif %}>{{ subitem.title }}</a></li>
+		{% endfor %}
+					</ul>
+				</li>
+	{% else %}
+				<li><a href="{{ item.url }}">{{ item.title }}</a></li>
+	{% endif %}
+{% endfor %}
+			</ul>
+{% if request.user|has_group:"admins" %}
+			<form class="navbar-form navbar-right" role="search" method="GET" action="{% url 'editor:search_by_id' %}">
+				<div class="form-group">
+					<input type="text" class="form-control" placeholder="id или слово" name="id_for_search">
+				</div>
+				<button type="submit" class="btn btn-default">Искать</button>
+			</form>
+{% else %}
+			<form class="navbar-form navbar-right" role="search" method="GET" action="{% url 'results:search_by_text' %}">
+				<div class="form-group">
+					<input type="text" class="form-control" placeholder="Runner or race name" name="query" size="30">
+				</div>
+				&nbsp;
+				<button type="submit" class="btn btn-default">Search</button>
+			</form>
+{% endif %}
+		</div><!--/.nav-collapse -->
+	</div><!--/.container-fluid -->
+</nav>
+{% endspaceless %}

@@ -1,0 +1,38 @@
+{% extends 'results/base.html' %}
+{% block main %}
+<span class="pull-right">
+	<a href="{% url 'editor:distance_create' %}"><button type="button" class="btn btn-primary">Создать новую дистанцию</button></a>
+</span>
+<h3>Все возможные дистанции</h3>
+
+<table id="table_for_sort" class="table table-condensed table-hover">
+	<thead><tr class="info">
+		<th>№</th><th>id</th><th>Популярность</th><th>Тип</th><th>Длина</th>
+		<th>Название</th><th>Старая длина</th><th>Старый тип</th>
+		{% if is_admin %}<th class="no-sort"></th>{% endif %}
+	</tr></thead>
+	<tbody>
+	{% for distance in mylist %}
+		<tr>
+			<td>{{ forloop.counter }}</td>
+			<td>{{ distance.id }}</td>
+			<td><a href="{% url 'results:races' distance_id=distance.id %}">{{ distance.num_races }}</a></td>
+			<td>{{ distance.get_distance_type_display }}</td>
+			<td>{{ distance.length }}</td>
+			<td>{{ distance.name }}</td>
+			<td>{{ distance.distance_raw }}</td>
+			<td>{{ distance.race_type_raw }}</td>
+			{% if is_admin %}
+				<td>
+					<a href="{{ distance.get_editor_url }}">
+						<button type="button" class="btn btn-sm btn-primary">Редактировать</button></a>
+					&nbsp;&nbsp;
+					<a href="{{ distance.get_history_url }}">
+						<button type="button" class="btn btn-sm btn-primary">История изменений</button></a>
+				</td>
+			{% endif %}
+		</tr>
+	{% endfor %}
+	</tbody>
+</table>
+{% endblock %}

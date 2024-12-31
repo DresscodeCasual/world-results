@@ -1,0 +1,109 @@
+{% extends 'results/base.html' %}
+{% load static %}
+{% block main %}
+
+<div class="row">
+	<div class="col-md-12">
+		{% include 'results/panel_header_before_title.html' %}
+			{% if create_new %}
+				Создание новой дистанции
+			{% else %}
+				Дистанция <a class="underlined" href="{{ distance.get_editor_url }}">{{ distance }}</a>
+				{% if is_admin %}
+				&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="{{ distance.get_history_url }}">
+					<button type="button" class="btn btn-sm btn-primary">История изменений</button></a>
+				{% endif %}
+			{% endif %}
+		{% include 'results/panel_header_after_title.html' %}
+
+			{% for error in frmDistance.non_field_errors %}
+				<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+			{% endfor %}
+
+		<form id="frmDistance" action="
+			{% if create_new %}
+				{% url 'editor:distance_create' %}
+			{% else %}
+				{{ distance.get_update_url }}
+			{% endif %}
+			" method="POST"
+		>
+			{% csrf_token %}
+			<table class="table table-condensed">
+				{% for field in frmDistance %}
+					{% include 'results/form_field_tr.html' with field=field %}
+				{% endfor %}
+			</table>
+			{% if create_new %}
+				<input type="submit" name="frmDistance_submit" value="Создать" class="btn btn-success"/>
+				<br/><br/>
+			{% elif is_admin %}
+				<input type="submit" name="frmDistance_submit" value="Сохранить" class="btn btn-success"/>
+				<br/><br/>
+			{% endif %}
+		</form>
+		{% include 'results/panel_footer.html' %}
+	</div>
+		{% if distance.id %}
+			{% if is_admin %}
+				<div class="col-md-9">
+					{% if distance.has_dependent_objects %}
+						{% include 'results/panel_header.html' with title='Заменить текущую дистанцию во всех таблицах на другую и удалить текущую' %}
+						После запуска дистанция {{ distance }} (id {{ distance.id }}) будет заменена на выбранную ниже дистанцию
+						в таблице ProbegDist, после чего удалена.
+						<br/>
+						Будьте очень осторожны!
+						<p/>
+						<form id="frmForDistance" method="POST" action="{{ distance.get_delete_url }}"
+							class="form-inline"
+						>
+							{% csrf_token %}
+							{% for error in frmForDistance.errors %}
+								<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+							{% endfor %}
+							{% for field in frmForDistance %}
+								{% include 'results/form_field.html' with field=field %}
+							{% endfor %}
+							<br/>
+							<input type="submit" name="frmForDistance_submit" value="Удалить дистанцию «{{ distance }}»" class="btn btn-danger"/>
+						</form>
+						{% include 'results/panel_footer.html' %}
+					{% else %}
+						<form id="frmForDistance" method="POST" action="{{ distance.get_delete_url }}" class="form-inline">
+							{% csrf_token %}
+							{% for error in frmForDistance.errors %}
+								<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+							{% endfor %}
+							<input type="submit" name="frmForDistance_submit" value="Удалить дистанцию «{{ distance }}»" class="btn btn-danger"/>
+						</form>
+						<br/>
+					{% endif %}
+				</div>
+				<div class="col-md-3 text-right">
+					<a href="{% url 'editor:distance_create' %}"><button type="button" class="btn btn-primary">Создать ещё дистанцию</button></a>
+				</div>
+			{% endif %}
+			<div class="col-md-12">
+				{% include 'results/panel_header.html' with title='Упоминания дистанции в таблицах' %}
+					<table class="table table-condensed">
+						<tr><th>Таблица</th><th>Число упоминаний</th></tr>
+						{% for key, val in counts.items %}
+							<tr>
+								<td>{{ key }}</td>
+								<td><strong>
+									{% if key == 'ProbegDist' %}
+										<a href="{% url 'results:races' distance_id=distance.id %}">{{ val }}</a>
+									{% else %}
+										{{ val }}
+									{% endif %}
+								</strong></td>
+							</tr>
+						{% endfor %}
+					</table>
+				{% include 'results/panel_footer.html' %}
+			</div>
+		{% endif %}
+	</div>
+</div>
+{% endblock %}

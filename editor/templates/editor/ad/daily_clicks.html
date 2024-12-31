@@ -1,0 +1,62 @@
+{% extends 'results/base.html' %}
+{% block main %}
+<h3>{{ page_title }}</h3>
+
+<p><a href="/admin/results/ad/add/" target="_blank">Добавить ещё объявление</a></p>
+
+<table class="table table-condensed table-bordered">
+	<tr class="info">
+		<th class="text-center">ID объявления</th>
+		<th>Рекламодатель</th>
+		<th>Место размещения</th>
+		<th class="text-center">Кликов за всегда<br/>(клики админов не считаем)</th>
+		{% for date in dates %}
+			<th class="text-center">{{ date }}</th>
+		{% endfor %}
+	</tr>
+	{% for ad, data in ad_data.items %}
+		<tr>
+			<td>{{ ad.id }}</td>
+			<td>{{ ad.company }}</td>
+			<td><a href="{{ ad.place }}" target="_blank">{{ ad.place }}</a></td>
+			<td class="text-center">{{ data.total }}</td>
+			{% for value in data.days %}
+				<td class="text-center">{{ value }}</td>
+			{% endfor %}
+		</tr>
+	{% endfor %}
+</table>
+
+<h4>Последние клики</h4>
+<table class="table table-condensed table-bordered">
+	<tr class="info">
+		<th class="text-center">ID объявления</th>
+		<th>Рекламодатель</th>
+		<th>Место размещения</th>
+		<th>Время</th>
+		<th>Referer</th>
+		<th>IP</th>
+		<th>Кликнул админ?</th>
+	</tr>
+	{% for click in last_clicks %}
+		<tr>
+			<td>{{ click.ad.id }}</td>
+			<td>{{ click.ad.company }}</td>
+			<td>{{ click.ad.place }}</td>
+			<td>{{ click.click_time|date:'Y-m-d H:i:s.u' }}</td>
+			<td>{{ click.referer }}</td>
+			<td>{{ click.ip }}</td>
+			<td>{% if click.is_admin %}<strong>да</strong>{% endif %}</td>
+		</tr>
+	{% endfor %}
+</table>
+
+<h4>Как отслеживать новое объявление</h4>
+<ol>
+	<li>Добавляете ещё одно объявление по ссылке выше.</li>
+	<li>Обновляете эту страницу и смотрите, какой ID у нового объявления. Пусть он равен N.</li>
+	<li>В коде страницы, где будет размещено это объявление, у тега <code>&lt;a&gt;</code> добавляете атрибут <code>onclick="reg_click(N); return true;"</code>.
+	Таким образом, получится код вроде <code>&lt;a href="ссылка_на_рекламодателя" onclick="reg_click(N); return true;"&gt;&lt;img src="адрес_картинки"/&gt;&lt;/a&gt;</code>.</li>
+	<li>Кликаете по картинке и проверяете, что запись о клике появилась на этой странице в списке последних кликов.</li>
+</ol>
+{% endblock %}

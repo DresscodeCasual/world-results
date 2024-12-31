@@ -1,0 +1,120 @@
+{% extends 'results/base.html' %}
+{% load results_extras %}
+{% load starrating %}
+{% block main %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+<div class="row"><div class="col-md-12"> <!-- Header -->
+	<h3><span class="pull-right">
+			{% if is_admin or is_editor %}
+				<a href="{{ series.get_editor_url }}"><button type="button" class="btn btn-xs btn-primary">Редактировать серию</button></a>
+				&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="{{ series.get_create_event_url }}"><button type="button" class="btn btn-xs btn-primary">Создать новый забег в серии</button></a>
+			{% endif %}
+			{% if is_admin %}
+				&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="{{ series.get_clone_url }}"><button type="button" class="btn btn-xs btn-primary">Клонировать серию</button></a>
+			{% endif %}
+			{% if is_admin or is_editor %}
+				&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="{{ series.get_history_url }}"><button type="button" class="btn btn-xs btn-primary">История изменений</button></a>
+			{% endif %}
+		</span>
+		{{ series.name|safe }}
+		{% if series.name_orig %}
+			<br/><small>{{ series.name_orig }}</small>
+		{% endif %}
+	</h3>
+</div></div>
+
+<div class="row"> <!-- First row -->
+	<div class="col-md-4"> <!-- Left column -->
+		{% if series.city %}
+			<h4>{% include 'tools/cities_with_links.html' with city=series.city cityFinish=series.city_finish %}</h4>
+		{% endif %}
+		{% if series.director %}
+			<p>Organizer: {{ series.director|safe }}</p>
+		{% endif %}
+		{% if series.contacts %}
+			<p>Contacts: {{ series.contacts|safe }}</p>
+		{% endif %}
+		{% if series.surface_type %}
+			<p>Surface: {{ series.get_surface_type_display }}</p>
+		{% elif is_admin %}
+			<p class="for-admin">Surface: {{ series.get_surface_type_display }}</p>
+		{% endif %}
+		{% if series.start_place %}
+			<p>Start location: {{ series.start_place|safe|urlize }}</p>
+		{% endif %}
+		{% if series.comment %}
+			<p>Comments: {{ series.comment|safe|urlize }}</p>
+		{% endif %}
+		{% for series_platform in platforms %}
+			<p>ID at {{ series_platform.platform.name }}: <a href="{{ series_platform.get_absolute_url }}">{{ series_platform.value }}</a></p>
+		{% endfor %}
+	</div>
+	<div class="col-md-{% if series.get_url_logo %}3{% else %}6{% endif %}"> <!-- Middle column -->
+		{% overall_rating sr_series True %}
+		{% if user.is_authenticated and user.user_profile and not is_editor %}
+			<p><button type="button" class="btn btn-sm btn-warning btnAddEvent" data-series="{{ series.id }}">
+				Tell us about one more event in this series
+			</button></p>
+		{% endif %}
+		{% include 'tools/series_editors_list.html' %}
+		{% if is_admin or is_editor %}
+			{% if series.comment_private %}
+				<p class="for-admin">Comments for admins: {{ series.comment_private|safe }}</p>
+			{% endif %}
+		{% endif %}
+	</div>
+	{% if series.get_url_logo %}
+		<div class="col-md-3">
+			<a href="#" class="showLogo" data-series="{{ series.id }}">
+				<img src="{{ series.get_url_logo|add_prefix }}" align="right" style="max-height: 200px; max-width: 100%;"/>
+			</a>
+		</div>
+	{% endif %}
+	<div class="col-md-2 text-right"> <!-- Right column -->
+		{% if series.url_logo %}
+			<p><img src="{{ series.url_logo|add_prefix }}" width="150"/></p>
+		{% endif %}
+		{% if series.url_site %}
+			<p><a href="{{ series.url_site }}">Official Site</a></p>
+		{% endif %}
+		<p>
+		{% if series.url_vk %}
+			<a href="{{ series.url_vk }}"><img src="/static2/images/icons/vk_small_square.png" border="0"/></a>
+		{% endif %}
+		{% if series.url_facebook %}
+			&nbsp;<a href="{{ series.url_facebook }}"><img src="/static2/images/icons/fb_small_square.png" border="0"/></a>
+		{% endif %}
+		{% if series.url_instagram %}
+			&nbsp;<a href="{{ series.url_instagram }}"><img src="/static2/images/icons/in_small_square.png" border="0"/></a>
+		{% endif %}
+		{% if series.url_wiki %}
+			&nbsp;<a href="{{ series.url_wiki }}"><img src="/static2/images/icons/wiki_small_square.png" border="0"/></a>
+		{% endif %}
+		{% if series.url_telegram %}
+			&nbsp;<a href="{{ series.url_telegram }}"><img src="/static2/images/icons/tg_small_square.png" border="0"/></a>
+		{% endif %}
+		</p>
+		{% for document in series.document_set.all %}
+			<p>{% include 'results/document_link.html' %}</p>
+		{% endfor %}
+	</div>
+</div>
+
+<ul class="nav nav-tabs">
+	{% for tab_name, tab_desc in tabs %}
+		<li {% if active_tab == tab_name %} class="active"{% endif %}>
+			<a href="{% url 'results:series_details' series_id=series.id tab=tab_name %}"><strong>{{ tab_desc }}</strong></a>
+		</li>
+	{% endfor %}
+</ul>
+<div class="tab-content">
+	<div id="tab_main" class="tab-pane in active">
+		<br/>
+		{% block content %}{% endblock %}
+	</div>
+</div>
+{% endblock %}

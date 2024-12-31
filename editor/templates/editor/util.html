@@ -1,0 +1,59 @@
+{% extends 'results/base.html' %}
+{% load static %}
+{% block main %}
+
+<div class="row"><div class="col-md-8 col-md-offset-2">
+	<h3>{{ page_title }}</h3>
+	<h4>Заменить везде в названиях серий и забегов</h4>
+	<form action="{% url 'editor:replace_in_event_names' %}" method="POST" class="form-inline">
+		{% csrf_token %}
+		Подстроку (с учётом регистра)
+		<input name="replace_what" id="id_replace_what" class="form-control" value="{{ replace_what }}" />
+		на подстроку
+		<input name="replace_to" id="id_replace_to" class="form-control" value="{{ replace_to }}" />
+		&nbsp;&nbsp;
+		<input type="submit" class="btn btn-primary" name="btnCheck" value="Посмотреть, что будет" />
+		&nbsp;&nbsp;
+		<input type="submit" class="btn btn-danger" name="btnReplace" value="Заменить" />
+	</form>
+	<br/><br/><br/>
+	<a href="{% url 'editor:klb_team_leaders_emails' %}">Адреса всех имеющих права на клубы, участвующие в КЛБМатче</a>
+	<br/><br/><br/>
+	<a href="{% url 'editor:restart' %}">Перезапустить Django</a>
+	<br/><br/><br/>
+	<a href="{% url 'starrating:editor_rating_details' %}">Вообще все оценки забегам</a>
+	<br/><br/><br/>
+	<a href="{% url 'editor:ad_daily_clicks' %}">Клики по рекламным объявлениям по дням</a>
+	<br/><br/><br/>
+	<a href="{% url 'editor:klb_repeating_contact_data' %}">Повторяющиеся телефоны и емейлы в данных участников текущего КЛБМатча</a>
+	<br/><br/><br/>
+	<a href="{% url 'editor:emails_for_newsletter' %}">Электронные адреса всех пользователей, не отказавшихся от рассылки</a>
+	<br/><br/><br/>
+	<h4>Загрузка результатов на конкретной дистанции (не всего забега!) с Athlinks</h4>
+	<form action="{% url 'editor:scrape_athlinks_protocol' %}" method="POST" class="form-inline">
+		{% csrf_token %}
+		Адрес
+		<input name="url" id="id_url" class="form-control" size="100"
+			placeholder="Вроде https://www.athlinks.com/event/200468/results/Event/852444/Course/1575836/Results" />
+		&nbsp;&nbsp;
+		<input type="submit" class="btn btn-primary" name="btnReplace" value="Скачать XLSX с результатами" />
+	</form>
+	<br/><br/><br/>
+	<h4>Массовая простановка галочки «Не учитывать в статистике бегуна» у результатов на данной дистанции</h4>
+	<form action="{% url 'editor:not_count_results_present_in_both_races_for_stat' %}" method="POST" class="form-inline">
+		{% csrf_token %}
+		Поставить эту галочку у всех результатов дистанции
+		<input name="race_id" class="form-control" placeholder="Число после /race/"/>
+		, которые привязаны к бегунам, финишировавшим также на дистанции
+		<input name="other_race_id" class="form-control" placeholder="Число после /race/"/>
+		&nbsp;&nbsp;
+		<input type="submit" class="btn btn-primary" value="Пуск" />
+	</form>
+	<br/><br/><br/>
+	<h4>Загрузка результатов с results.zone</h4>
+	<p>К адресу протокола вроде <code>https://results.zone/og-2020/races/4249/results</code> дописываете суффикс <code>.xlsx</code> — получается адрес вроде <code>https://results.zone/og-2020/races/4249/results.xlsx</code>, по которому скачивается нужный файл.</p>
+	<br/><br/><br/>
+	<h4>Загрузка результатов с RussiaRunning</h4>
+	<p>Просто создайте протокол у забега с адресом на сайте RR и поставьте галочку «Попытаться загрузить протокол к нам на сервер». Сайт сам загрузит эксель со всеми дистанциями.</p>
+</div></div>
+{% endblock %}

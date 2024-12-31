@@ -1,0 +1,127 @@
+<div class="row">
+	<div class="col-md-8 col-md-offset-1 col-sm-12 col-sm-offset-0">
+		<h3 class="text-center">{{ page_title }}</h3>
+		<br/>
+<h4 id="intro">Общие замечания</h4>
+
+<p>1. После того, как вы внесли правки в какие-либо <code>*.py</code> или <code>*.html</code> файлы на сервере, изменения не становятся мгновенно видны посетителям. Чтобы они стали видны, нужно перезапустить службу uwsgi, пройдя по ссылке <a href="{% url 'editor:restart' %}">https://probeg.org{% url 'editor:restart' %}</a> или выполнив на сервере команду <code>touch /var/local/django/mainsite/touch_to_reload</code>. В случае ошибки в коде сайт может перестать работать, так что сразу после запуска обязательно проверяйте, открывается ли затронутая вами страница.</p>
+
+<p>2. После того, как вы закончили вносить правки в файлы для какого-то изменения и проверили, что сайт работает, сохраните эти изменения в <a href="https://bitbucket.org/AlexeyChernov/probeg">репозиторий</a>:</p>
+<pre>
+cd /var/local/django/mainsite
+git add -A .
+git status (тут можно проверить, какие файлы вы затронули)
+git commit -m 'Описание вашего изменения'
+git push
+</pre>
+
+<p>3. Все упомянутые ниже файлы, у которых указаны относительные пути (обычно начинаются на results/ или editor/), находятся в папке <code>/var/local/django/mainsite/</code>.</p>
+
+<p>4. Для запуска любой команды вида <code>./manage.sh ...</code> сначала нужно перейти в папку <code>/var/local/django/mainsite</code>.</p>
+
+<p>5. Технические подробности: сайт работает на Python 3.7, Django 3.0 (+ модули python-social-auth, django-simple-menu, django-tinymce, facebook-sdk, twython, xlrd), MySQL.</p>
+
+<br/><br/>
+<h4 id="open-new-klbmatch">Действия при открытии очередного КЛБМатча</h4>
+
+<p>(Последнее обновление: 26 декабря 2020 г.)</p>
+
+<p>Пусть мы хотим открыть Матч-N и потихоньку закрывать Матч-K. (Обычно N=K+1, но есть исключение: N=2022, K=2020.)</p>
+
+<ol>
+	<li>В <code>results/models_klb.py</code> ставим:
+		<pre>
+CUR_KLB_YEAR = K
+NEXT_KLB_YEAR = N
+NEXT_KLB_YEAR_AVAILABLE_FOR_ALL = False
+</pre>
+	(пока эта последняя переменная — ложь, новый матч будут видеть только админы).</li>
+
+	<li>Запускаем <code>./manage.sh create_all_for_new_match N</code>.</li>
+
+	<li>В <code>results/models_klb.py</code> проверяем все константы; если надо, уточняем функции новыми значениями.</li>
+	 
+	<li>Исправляем калькулятор — функцию <code>calculator</code> в <code>results/views/views_klb.py</code> и шаблон <code>results/templates/klb/calculator.html</code>.</li>
+
+	<li>Создаём новый текст приглашения в новом шаблоне <code>results/templates/klb/about_match_N.html</code>. Возможно, нужно будет что-то поправить в соотв. функции <code>results.views_klb.about_match</code>.</li>
+
+	<li>Всё ещё раз проверяем и открываем матч для всех — устанавливаем в <code>results/models.py</code> <code>NEXT_KLB_YEAR_AVAILABLE_FOR_ALL = True</code>.</li>
+
+	<li>Исправляем меню (файл <code>results/menus.py</code>), чтобы нужные ссылки были видны всем.</li>
+
+	<li>Вешаем заметную плашку на <code>results/templates/results/main_page.html</code>, чтобы все узнали о матче.</li>
+
+	<li>Пишем всем клубам (да можно и вообще всем подписанным на рассылку), что регистрация открыта, и об основных изменениях.</li>
+
+	<li>Пишем радостные новости, идём пить шампанское на Новый год.</li>
+</ol>
+
+<br/><br/>
+<h4 id="close-klbmatch">Действия при закрытии завершившегося КЛБМатча-K</h4>
+
+<ol>
+	<li>Запускаем <code>./manage.sh generate_klb_winners_by_regions K</code>, чтобы посчиталась статистика по регионам-федокругам-странам.</li>
+
+	<li>В <code>results/models.py</code> ставим (здесь N — год следующего, уже начавшегося КЛБМатча):
+		<pre>
+CUR_KLB_YEAR = N
+NEXT_KLB_YEAR = 0
+</pre>
+	</li>
+
+	<li>В файле <code>results/templates/klb/history.html</code> добавляем строчку про матч-K.</li>
+
+	<li>Публикуем новость с подробными итогами матча.</li>
+</ol>
+
+<br/><br/>
+<h4 id="find-template">Как понять, какой шаблон отображается по данному адресу</h4>
+
+Например, вы хотите понять, какой HTML-файл вам нужно отредактировать, чтобы изменилась страница по адресу 	<a href="https://probeg.org/user/7/">https://probeg.org/user/7/</a>.
+
+<ol>
+	<li>Открываете в уже упомянутой папке <code>/var/local/django/mainsite/</code> файл, где расписано для каждого URL, какая функция на питоне его обрабатывает:
+		<ul>
+			<li><code>editor/urls.py</code> для адресов с <code>/editor</code> в начале;</li>
+			<li><code>results/urls.py</code> для остальных адресов.</li>
+		</ul>
+	</li>
+	<li>Находите среди строчек вида <code>path(...)</code> ту, под вид которой попадает нужный адрес, если отбросить от него начало (в данном случае <code>user/7/</code>). При этом фрагмент <code>&lt;int:что-угодно&gt;</code> означает «любое число», фрагмент <code>&lt;str:что-угодно&gt;</code> — «любая строчка», и так далее. В данном случае нас интересует строчка <code>path(r'user/&lt;int:user_id&gt;/', views_user.user_details, name='user_details')</code>.</li>
+	<li>Второй аргумент функции <code>path</code> — функция, которая решает, какой шаблон в ответ на запрос показать пользователю и какие значения в него подставить. В данном случае это <code>views_user.user_details</code>, то есть функция user_details в файле <code>results/views/views_user.py</code>. Находим её в этом файле — она начинается со строки <code>def user_details</code>.</li>
+	<li>Обычно саму функцию нам редактировать не нужно, а достаточно понять, какой шаблон (файл .html) она использует. Для этого смотрим на самой конец этой функции; обычно он выглядит как <code>render(request, 'какой-то путь к файлу.html', context)</code>. В нашем случае там будет файл <code>results/user_details.html</code>.</li>
+	<li>Все шаблоны лежат внутри папок <code>results/templates</code> и <code>editor/templates</code>, и внутри нужной из этих папок вам нужно пройти по пути из аргумента функции <code>render()</code>. В нашем примере заветный шаблон — <code>results/templates/results/user_details.html</code>. Если изменить его содержимое и перезапустить службу uwsgi (см. самый верх этой страницы), ваши изменения станут всем доступны.</li>
+	<li>После этого напишите Алексею Чернову, какие именно файлы вы меняли, чтобы он случайно не отменил ваши изменения обратно. Если будете часто это делать (что здорово!), изменим процесс работы, чтобы этот шаг был не нужен.</li>
+</ol>
+<code></code>
+
+
+<br/><br/>
+<h4 id="third-party">Изменения в сторонних библиотеках</h4>
+
+<p>Может потребоваться их повторить после обновления версий библиотек.</p>
+<ol>
+	<li>В файле <code>/usr/local/venv/dj2_mysqlclient/lib/python3.6/site-packages/facebook/__init__.py</code> — строка 49 — VALID_API_VERSIONS=["12.0", ]</li>
+	<li>В файле <code>/usr/local/venv/dj2_mysqlclient/lib/python3.6/site-packages/social_core/backends/vk.py</code> — строка 182 — версия 5.131.</li>
+</ol>
+
+<br/><br/>
+<h4 id="move-payment">Человек оплатил участие в забеге, но оплата не «привязалась» к нужному участнику забега</h4>
+
+<ol>
+	<li>Смотрим на странице всех платежей ID нужного успешного платежа; например, это probeg_org_57.</li>
+	<li>В таблице dj_registrant находим нужную регистрацию на забег — можно найти её по имени участника и race_id. Если оплата не проставилась, там в поле payment_id должно быть значение NULL либо номер какого-то незавершённого платежа, а в поле is_paid — нолик.</li>
+	<li>Пишем в поле payment_id число из ID платежа — в данном случае 57, а в поле is_paid — единичку.</li>
+	<li>Проверяем, что человек теперь отображается как оплативший регистрацию.</li>
+</ol>
+	</div>
+	<div class="col-md-3 col-sm-4">
+		{% include 'results/panel_header.html' with title='Содержание' style='default' %}
+			<p><a href="#intro">Общие замечания</a></p>
+			<p><a href="#open-new-klbmatch">Действия при открытии очередного КЛБМатча</a></p>
+			<p><a href="#close-klbmatch">Действия при закрытии завершившегося КЛБМатча-K</a></p>
+			<p><a href="#find-template">Как понять, какой шаблон отображается по данному адресу</a></p>
+			<p><a href="#third-party">Изменения в сторонних библиотеках</a></p>
+			<p><a href="#move-payment">Человек оплатил участие в забеге, но оплата не «привязалась» к нужному участнику забега</a></p>
+		{% include 'results/panel_footer.html' %}
+	</div>
+</div>

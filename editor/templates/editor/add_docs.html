@@ -1,0 +1,28 @@
+{% extends 'results/base.html' %}
+{% block main %}
+
+<h4>Добавление документов в dj_document из старых полей</h4>
+
+Всего добавлено {{ docs_added }} документов,
+в том числе {{ photos_added }} ссылок на фотографии и {{ reviews_added }} ссылок на отчёты:
+
+<table class="table table-condensed table-hover">
+	<tr>
+		<th>№</th><th>ID забега</th><th>Название забега</th><th>Тип документа</th>
+		<th>Значение</th><th>Новый путь</th><th>Новый URL</th>
+	</tr>
+	{% for record in docs_to_add %}
+		<tr>
+			<td>{{ forloop.counter }}</td>
+		{% for item in record %}
+			{% if forloop.counter == 1 %}
+				<td><a href="{% url 'results:event_details' event_id=item %}">{{ item }}</a></td>
+			{% else %}
+				<td>{{ item|safe }}</td>
+			{% endif %}
+		{% endfor %}
+		</tr>
+	{% endfor %}
+</table>
+
+{% endblock %}

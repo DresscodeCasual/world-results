@@ -1,0 +1,129 @@
+{% extends 'results/base.html' %}
+{% load static %}
+{% block main %}
+
+<h3>{{ page_title|safe }}</h3>
+{{ errors }}
+<form method="POST" action="">
+	{% csrf_token %}
+	{% for error in form.non_field_errors %}
+		<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+	{% endfor %}
+	{% for field in form %}
+		{% for error in field.errors %}
+				<h4><span class="label label-danger">{{ field.name }}: {{ error|escape }}</span></h4>
+		{% endfor %}
+	{% endfor %}
+	<div class="row">
+		<div class="col-md-3">
+			<table class="table table-condensed table-borderless">
+				{% include 'results/form_field_tr.html' with field=form.country %}
+				{% include 'results/form_field_tr.html' with field=form.gender %}
+				{% include 'results/form_field_tr.html' with field=form.age_group %}
+				{% include 'results/form_field_tr.html' with field=form.distance_surface %}
+				{% include 'results/form_field_tr.html' with field=form.is_official_record %}
+				{% include 'results/form_field_tr.html' with field=form.comment %}
+				{% include 'results/form_field_tr.html' with field=form.is_from_shatilo %}
+				{% include 'results/form_field_tr.html' with field=form.is_from_hinchuk %}
+				{% include 'results/form_field_tr.html' with field=form.is_from_vfla %}
+				{% include 'results/form_field_tr.html' with field=form.is_world_record %}
+				{% include 'results/form_field_tr.html' with field=form.is_europe_record %}
+				{% include 'results/form_field_tr.html' with field=form.ignore_for_country_records %}
+			</table>
+			{% for hidden in form.hidden_fields %}
+				{{ hidden }}
+			{% endfor %}
+		</div>
+		<div class="col-md-3">
+			<table class="table table-condensed table-borderless">
+				<tr>
+					<td><label for="{{ form.runner.id_for_label }}">{{ form.runner.label }}:</label></td>
+					<td class="input-100"><select class="runner-select" name="runner" id="id_runner">
+							{% if form.instance.runner %}
+								<option value="{{ form.instance.runner.id }}" selected>{{ form.instance.runner.get_name_for_ajax_select }}</option>
+							{% endif %}
+						</select>
+					</td>
+				</tr>
+				<tr><td colspan=2 class="text-left">Если бегуна нет, укажите его данные:</td></tr>
+				{% include 'results/form_field_tr.html' with field=form.fname %}
+				{% include 'results/form_field_tr.html' with field=form.lname %}
+				<tr>
+					<td><label for="{{ form.city.id_for_label }}">{{ form.city.label }}:</label></td>
+					<td class="input-100"><select class="city-select" name="city" id="id_city">
+							{% if form.instance.city %}
+								<option value="{{ form.instance.city.id }}" selected>{{ form.instance.city.nameWithCountry|safe }}</option>
+							{% endif %}
+						</select>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div class="col-md-3">
+			<table class="table table-condensed table-borderless">
+				{% include 'results/form_field_tr.html' with field=form.race %}
+				Если название забега неизвестно, укажите его год или дату:
+				{% include 'results/form_field_tr.html' with field=form.date %}
+				{% include 'results/form_field_tr.html' with field=form.is_date_known %}
+				{% include 'results/form_field_tr.html' with field=form.timing %}
+			</table>
+		</div>
+		<div class="col-md-3">
+			<table class="table table-condensed table-borderless">
+				{% include 'results/form_field_tr.html' with field=form.result %}
+				Если результата у нас нет, укажите его в сотых секунды или в метрах:
+				{% include 'results/form_field_tr.html' with field=form.value %}
+			</table>
+		</div>
+	</div>
+	<input type="submit" name="btnSubmitRecord" value="{% if record.id %}Сохранить{% else %}Создать{% endif %}" class="btn-submit"/>
+</form>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
+<script type="text/javascript">
+$(".city-select").select2({
+	placeholder: "Введите начало названия нас. пункта",
+	width: 'element',
+	allowClear: true,
+	minimumInputLength: 3,
+	ajax: {
+		url: "{% url 'editor:cities_list_by_name' %}",
+		dataType: 'json',
+		delay: 250,
+		data: function (params) {
+			return {
+				query: params.term
+			};
+		},
+		processResults: function (data) {
+			return {
+				results: data
+			};
+		},
+		cache: true
+	},
+});
+$(".runner-select").select2({
+	placeholder: "Введите первые буквы фамилии и имени",
+	width: 'element',
+	allowClear: true,
+	minimumInputLength: 3,
+	ajax: {
+		url: "{% url 'editor:runners_list' %}",
+		dataType: 'json',
+		delay: 250,
+		data: function (params) {
+			return {
+				query: params.term
+			};
+		},
+		processResults: function (data) {
+			return {
+				results: data
+			};
+		},
+		cache: true
+	},
+});
+</script>
+{% endblock %}

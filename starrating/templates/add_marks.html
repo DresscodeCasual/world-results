@@ -1,0 +1,209 @@
+{% extends 'results/base.html' %}
+{% load results_extras %}
+{% load static %}
+{% block main %}
+<div class="row"> <!-- Header -->
+	<div class="col-md-6">
+		<h3><a href="{{ event.get_absolute_url }}">{{ event|safe }}</a>,
+			{{ event.dateFull|safe }}
+		</h3>
+	</div>
+	<div class="col-md-6 text-right">
+		{% include 'results/event_edit_buttons.html' %}
+	</div>
+</div>
+{% include 'results/event_details_row.html' with race_page=1 %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+.stars {
+	color: lightgray;
+}
+.c1 {
+	display: none;
+}
+.fa-times {
+	 color: lightgrey;
+}
+</style>
+
+
+<div class="row"><div class="col-md-8 col-md-offset-1 col-sm-12 col-sm-offset-0">
+	{% if to_move_to_next_race %}
+		<div class="row">
+			<div class="col-md-4">
+				<a href="{% url 'starrating:abstain' race.id for_user.id %}">
+					 <button type="button" class="btn btn-sm btn-warning">Не хочу оценивать этот забег</button>
+				</a>
+			</div>
+			<div class="col-md-4 text-center">
+				<a href="{% url 'starrating:postpone_adding_marks' for_user.id %}">
+					 <button type="button" class="btn btn-sm btn-warning">Отложить оценки забегов на неделю</button>
+				</a>
+			</div>
+			<div class="col-md-4 text-right">
+				<a href="{% url 'starrating:stop_adding_marks' for_user.id %}">
+					 <button type="button" class="btn btn-sm btn-warning">Больше не предлагать оценивать забеги</button>
+				</a>
+			</div>
+		</div>
+		<br/>
+	{% endif %}
+
+	<h3>Пожалуйста, оцените забег на дистанции {{ race.get_precise_name }}
+		{% if not for_current_user %}за пользователя {{ for_user.get_full_name }}{% endif %}
+		по следующим параметрам:
+	</h3>
+
+	<p>Необязательно ставить оценки по всем параметрам; если о чём-то у вас не осталось никаких впечатлений, можно ничего не ставить (для этого нажмите на крестик слева от звёздочек).
+	<br/>
+	<strong>Отзыв тоже писать необязательно, но лучше напишите хоть пару слов: это очень поможет будущим участникам!</strong></p>
+
+	<p id="no_js" style="color: red">
+	У вас отключен Javascript. Для простановки оценок необходимо включить Javascript в настройках браузера.
+	</p>
+
+	<form action="{% url 'starrating:save_marks' %}" id="rating_form" method="post">
+		{% csrf_token %}
+
+		{% for par in parameters %}
+			<hr/>
+			<div class="row">
+				<div class="col-md-6">
+					<h4>{{ par.name }}</h4>
+					{{ par.description|linebreaks  }}
+				</div>
+				<div class="col-md-6">
+					<span class="stars" id="td{{ par.id }}">
+						{% for n in values %}
+							<input class="c1" type="radio" id="q{{ par.id }}r{{ n }}" name="q{{ par.id }}" value="{{ n }}"{% if n == -1 %} checked="checked"{% endif %} >
+							{% if n != -1 %}
+								<label id="q{{ par.id }}l{{ n }}" for="q{{ par.id }}r{{ n }}" onclick="clicked({{ par.id }}, {{ n }})">
+									<i id="i{{ par.id }}r{{ n }}" class="fa {% if n == 0 %}fa-times{% else %}fa-star-o{% endif %}"></i>
+								</label>
+							{% endif %}
+							&nbsp;{% if n == 0 %}&nbsp;{% endif %}
+						{% endfor %}
+					</span>&nbsp;<span id="descr{{ par.id }}">Поставьте оценку или нажмите крестик</span>
+				</div>
+			</div>
+		<!-- <tr>
+			<td>
+				{{ par.id }}. {{ par.name }}:
+			</td>
+			<td class="stars" id="td{{ par.id }}">
+				 {% for n in values %}
+				<input class="c1" type="radio" id="q{{ par.id }}r{{ n }}" name="q{{ par.id }}" value="{{ n }}"{% if n == -1 %} checked="checked"{% endif %} >
+				{% if n != -1 %}
+				<label id="q{{ par.id }}l{{ n }}" for="q{{ par.id }}r{{ n }}" onclick="clicked({{ par.id }}, {{ n }})">
+					<i id="i{{ par.id }}r{{ n }}" class="fa {% if n == 0 %}fa-times{% else %}fa-star-o{% endif %}"></i>
+				</label>
+				{% endif %}
+				{% if n == 0 %}&nbsp;{% endif %}
+				{% endfor %}
+			</td>
+			<td id="descr{{ par.id }}">
+			&nbsp;Поставьте оценку или нажмите крестик
+			</td>
+		</tr> -->
+		{% endfor %}
+
+		<input type="hidden" name="race_id" value="{{ race.id }}">
+		<input type="hidden" name="for_user" value="{{ for_user.id }}">
+		<input type="hidden" name="for_current_user" value="{{ for_current_user }}">
+		{% if to_move_to_next_race %}<input type="hidden" name="to_move_to_next_race" value="1">{% endif %}
+		{% if test_mode %}<input type="hidden" name="test_mode" value="1">{% endif %}
+
+		<br/><br/>
+		<h4>Отзыв (необязательно):</h4>
+		<p>Особенно кстати будет отзыв, если по каким-то параметрам вы поставили низкие оценки; его смогут и учесть участники, и организаторы будущих забегов серии.</p>
+		<textarea id="review" onchange="control_checkbox_state()" onpaste="control_checkbox_state()" onkeyup="control_checkbox_state()" rows="5" form="rating_form" name="review" class="form-control"></textarea>
+
+		<input type="checkbox" onmouseover="control_checkbox_state()" onfocus="control_checkbox_state()" name="show_my_name" id="id_show_my_name" value="1" disabled>&nbsp;&nbsp;<label for="id_show_my_name" onmouseover="control_checkbox_state()">Отображать ваше имя рядом с вашим отзывом</label>
+		<br/><br/>
+		<input id="submit" type="submit" value="Отправить оценки и отзыв" class="btn btn-success" {% if not test_mode %}disabled {% endif %}/>
+	</form>
+
+	<p id="debug"></p>
+
+	<script>
+		document.getElementById("no_js").innerHTML = "";
+
+		var descr = ["{{ RATING_VALUES_DESCRIPTIONS|join:'", "' }}"]
+
+		var checked = {
+			 {% for par in parameters %}
+			 p{{ par.id }} : 0{% if not forloop.last %},{% endif %}
+			 {% endfor %}
+		}
+		n_to_check = {{ parameters|length }}
+
+	 checkbox_was_checked = false;
+	 control_checkbox_state();
+
+	 function change_colors(question_no, star_no) {
+		 console.log("ch_col " + question_no + " " + star_no)
+		 if (star_no == 0) {
+				document.getElementById("td" + question_no).style.color = "lightgray";
+		 }
+		 else {
+				document.getElementById("td" + question_no).style.color = "orange";
+		 }
+		 for (i = 1; i <= star_no; i++) {
+				document.getElementById("q" + question_no + "l" + i).innerHTML = '<i class="fa fa-star">';
+		 }
+		 for (; i <= 5; i++) {
+				document.getElementById("q" + question_no + "l" + i).innerHTML = '<i class="fa fa-star-o">';
+		 }
+		 document.getElementById("descr" + question_no).innerHTML = "— " + descr[star_no];
+		 if (star_no == 0) {
+				 document.getElementById("i" + question_no + "r0").style.color = "black";
+		 } else {
+				 document.getElementById("i" + question_no + "r0").style.color = "lightgrey";
+		 }
+
+
+	 }
+
+	 function clicked(question_no, star_no) {
+			console.log("clicked " + question_no + " " + star_no);
+			if (checked["p" + question_no] == 0) {
+					console.log("clicked-if");
+					checked["p" + question_no] = 1;
+					n_to_check--;
+					console.log("n_to_check = " + n_to_check);
+					if (n_to_check == 0) {
+							 document.getElementById("submit").disabled = false;
+					}
+			}
+			change_colors(question_no, star_no);
+			// document.getElementById("submit").disabled = false;
+	 }
+
+	 function control_checkbox_state() {
+			 if (document.getElementById("review").value.trim() == '') {
+					if (! document.getElementById("id_show_my_name").disabled) {
+						checkbox_was_checked = document.getElementById("id_show_my_name").checked;
+						document.getElementById("id_show_my_name").checked = false;
+						document.getElementById("id_show_my_name").disabled = true;
+//						document.getElementById("debug").innerHTML += 'O';
+					}
+//					else document.getElementById("debug").innerHTML += 'o';
+
+			 } else {
+					if (document.getElementById("id_show_my_name").disabled) {
+						 document.getElementById("id_show_my_name").disabled = false;
+						 document.getElementById("id_show_my_name").checked = checkbox_was_checked;
+//						 document.getElementById("debug").innerHTML += 'X';
+					}
+//					else document.getElementById("debug").innerHTML += 'x';
+			 }
+	 }
+
+	 {% for par in parameters %}
+//	 document.getElementById("q{{ par.id }}r0").checked = true;
+//	 document.getElementById("descr{{ par.id }}").innerHTML = "- " + descr[0];
+	 {% endfor %}
+
+	</script>
+</div></div>
+{% endblock %}

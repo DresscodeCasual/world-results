@@ -1,0 +1,29 @@
+{% extends 'results/base.html' %}
+{% block main %}
+
+<div class="row"><div class="col-md-12 col-lg-12">
+	{% include 'results/panel_header.html' with title='Добавить протокол в очередь' %}
+		<form method="POST" action="{% url 'editor:add_protocol_to_queue' %}" class="form-inline">
+			{% csrf_token %}
+			{% for field in formEvent %}
+				{% include 'results/form_field.html' with field=field %}
+			{% endfor %}
+			<input type="submit" name="frmProtocol_submit" value="Добавить" class="btn btn-success"/>
+		</form>
+	{% include 'results/panel_footer.html' %}
+	{% include 'results/panel_header.html' with title='Добавить всю серию в очередь' %}
+		<form method="POST" action="{% url 'editor:add_series_to_queue' %}" class="form-inline">
+			{% csrf_token %}
+			{% for field in formSeries %}
+				{% include 'results/form_field.html' with field=field %}
+			{% endfor %}
+			<input type="submit" name="frmProtocol_submit" value="Добавить все забеги серии" class="btn btn-success"/>
+		</form>
+	{% include 'results/panel_footer.html' %}
+</div></div>
+<div class="row"><div class="col-md-12 col-lg-8 col-lg-offset-2">
+	{% for section_title, queue in queues %}
+		{% include 'editor/protocol_queue_section.html' %}
+	{% endfor %}
+</div></div>
+{% endblock %}

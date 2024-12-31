@@ -1,0 +1,37 @@
+{% extends 'results/base.html' %}
+{% block main %}
+
+<div class="row"><div class="col-md-12">
+	<h4>{{ page_title|safe }}</h4>
+	<p><form action="" method="POST" name="frmAgeGroup" class="form-inline">
+			{% csrf_token %}
+			{% for field in form %}{{ field }}&nbsp;&nbsp;&nbsp;{% endfor %}
+			<input type="submit" class="btn btn-success" value="Перейти"/>
+		</form>
+	</p>
+	<p>Всего забегов: {{ n_events }}, дистанций: {{ n_races }}, результатов: {{ n_results }}.</p>
+	<table class="table table-condensed table-hover table-striped">
+		<tr class="info">
+			<th>№</th>
+			<th class="text-right">Дата</th>
+			<th>Название</th>
+			<th>Город</th>
+			<th>Дистанция</th>
+			<th>Ссылка</th>
+			<th class="text-right">Число результатов</th>
+			<th class="text-right">Дата загрузки</th>
+		</tr>
+		{% for race, update in races %}
+			<tr><td>{{ forloop.counter }}</td>
+				<td class="text-right"><a href="{{ race.event.get_absolute_url }}">{{ race.event.date|safe }}</a></td>
+				<td><a href="{{ race.event.get_absolute_url }}">{{ race.event.name|safe }}</a></td>
+				<td>{{ race.event.strCityCountry|safe }}</td>
+				<td><a href="{{ race.get_absolute_url }}">{{ race.distance }}</a></td>
+				<td><a href="{{ race.get_absolute_url }}">{{ site_url }}{{ race.get_absolute_url }}</a></td>
+				<td class="text-right">{{ race.n_participants }}</td>
+				<td class="text-right">{{ update.added_time|date:'j.m.Y' }}</td>
+			</tr>
+		{% endfor %}
+	</table>
+</div></div>
+{% endblock %}

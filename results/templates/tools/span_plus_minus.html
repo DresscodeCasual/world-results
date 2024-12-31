@@ -1,0 +1,6 @@
+{% load results_extras %}
+{% if delta > 0 %}
+	<strong><span class="text-success">+{{ delta|floatformat:3 }}</span></strong>
+{% elif delta < 0 %}
+	<strong><span class="text-danger">−{{ delta|inverse|floatformat:3 }}</span></strong>
+{% endif %}

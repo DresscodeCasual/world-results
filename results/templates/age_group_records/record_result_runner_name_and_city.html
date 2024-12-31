@@ -1,0 +1,21 @@
+{% with runner=record_result.runner %}
+	{% if runner %}
+		{% include 'tools/runner_or_user_name_with_link.html' %}
+		<br/>
+		{% if runner.city %}
+			{% if only_city_name %}
+				{{ runner.city.name }}
+			{% else %}
+				{{ runner.city.nameWithCountry|safe }}
+			{% endif %}
+		{% endif %}
+	{% else %}
+		{{ record_result.fname }} {{ record_result.lname }}
+		<br/>
+		{% if record_result.city %}
+			{{ record_result.city }}
+		{% elif record_result.runner_country %}
+			{{ record_result.runner_country.name }}
+		{% endif %}
+	{% endif %}
+{% endwith %}

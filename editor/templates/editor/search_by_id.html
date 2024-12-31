@@ -1,0 +1,260 @@
+{% extends 'results/base.html' %}
+{% load results_extras %}
+{% block main %}
+
+<h3>{{ page_title }}</h3>
+
+{% if id %}
+	<p>Серия с id={{ id }}:
+		{% if series %}
+			<a href="{{ series.get_absolute_url }}">{{ series|safe }}</a>
+			&nbsp;&nbsp;&nbsp;&nbsp;
+			<a href="{{ series.get_editor_url }}">
+				<button type="button" class="btn btn-xs btn-primary">Редактировать серию</button>
+			</a>
+		{% else %}
+			не существует.
+		{% endif %}
+	</p>
+	<p>Забег с id={{ id }}:
+		{% if event %}
+			<a href="{{ event.get_absolute_url }}">{{ event|safe }}</a>, {{ event.dateFull|safe }}
+			&nbsp;&nbsp;&nbsp;&nbsp;
+			<a href="{{ event.get_editor_url }}">
+				<button type="button" class="btn btn-xs btn-primary">Редактировать забег</button>
+			</a>
+		{% else %}
+			не существует.
+		{% endif %}
+	</p>
+	<p>Старт с id={{ id }}:
+		{% if race %}
+			<a href="{{ race.get_absolute_url }}">{{ race.distance_with_details|safe }}</a>
+			у забега <a href="{{ race.event.get_absolute_url }}">{{ race.event }}</a>, {{ race.event.dateFull|safe }}
+			&nbsp;&nbsp;&nbsp;&nbsp;
+			<a href="{{ race.get_editor_url }}">
+				<button type="button" class="btn btn-xs btn-primary">Редактировать дистанции забега</button>
+			</a>
+		{% else %}
+			не существует.
+		{% endif %}
+	</p>
+	<p>Документ с id={{ id }}:
+		{% if document %}
+			{% include 'results/document_link.html' %}
+			{% if document.event %}
+				у забега <a href="{{ document.event.get_absolute_url }}">{{ document.event }}</a>
+				&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="{{ document.get_editor_url }}">
+					<button type="button" class="btn btn-xs btn-primary">Редактировать документы забега</button>
+				</a>
+			{% elif document.series %}
+				у серии <a href="{{ document.series.get_absolute_url }}">{{ document.series }}</a>
+				&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="{{ document.get_editor_url }}">
+					<button type="button" class="btn btn-xs btn-primary">Редактировать документы серии</button>
+				</a>
+			{% endif %}
+		{% else %}
+			не существует.
+		{% endif %}
+	</p>
+	<p>Новость с id={{ id }}:
+		{% if news %}
+			<a href="{{ news.get_absolute_url }}">{{ news.title|safe }}</a>
+			{% if news.event %}
+				у забега <a href="{{ news.event.get_absolute_url }}">{{ news.event }}</a>
+			{% endif %}
+			&nbsp;&nbsp;&nbsp;&nbsp;
+			<a href="{{ news.get_editor_url }}">
+				<button type="button" class="btn btn-xs btn-primary">Редактировать новость</button></a>
+		{% else %}
+			не существует.
+		{% endif %}
+	</p>
+	<p>Город с id={{ id }}:
+		{% if city %}
+			<a href="{{ city.get_editor_url }}">{{ city }}</a>
+		{% else %}
+			не существует.
+		{% endif %}
+	</p>
+	<p>Дистанция с id={{ id }}:
+		{% if distance %}
+			<a href="{{ distance.get_editor_url }}">{{ distance }}</a>
+		{% else %}
+			не существует.
+		{% endif %}
+	</p>
+	<p>Клуб с id={{ id }}:
+		{% if club %}
+			<a href="{{ club.get_absolute_url }}">{{ club }}</a>
+		{% else %}
+			не существует.
+		{% endif %}
+	</p>
+	<p>Команда в КЛБМатче с id={{ id }}:
+		{% if klb_team %}
+			<a href="{{ klb_team.get_absolute_url }}">{{ klb_team.name }}</a> в матче–{{ klb_team.year|year_for_klbmatch }}
+		{% else %}
+			не существуют.
+		{% endif %}
+	</p>
+	<p>Участник КЛБМатчей с id={{ id }}:
+		{% if klb_person %}
+			<a href="{{ klb_person.get_absolute_url }}">{{ klb_person }}</a>
+		{% else %}
+			не существует.
+		{% endif %}
+	</p>
+	<p>Участник конкретного КЛБМатча с id={{ id }}:
+		{% if klb_participant %}
+			<a href="{{ klb_participant.klb_person.get_absolute_url }}">{{ klb_participant.klb_person }}</a>
+			в {{ klb_participant.year|year_for_klbmatch }} году
+			{% if klb_participant.team %}
+				за команду <a href="{{ klb_participant.team.get_absolute_url }}">{{ klb_participant.team.name }}</a>
+			{% else %}
+				как индивидуальный участник
+			{% endif %}
+		{% else %}
+			не существует.
+		{% endif %}
+	</p>
+	<p>Пользователь сайта с id={{ id }}:
+		{% if user %}
+			<a href="{{ user.user_profile.get_absolute_url }}">{{ user.get_full_name }}</a>
+		{% else %}
+			не существует.
+		{% endif %}
+	</p>
+	<p>Профиль пользователя сайта с id={{ id }}:
+		{% if user_profile %}
+			<a href="{{ user_profile.get_absolute_url }}">{{ user_profile.user.get_full_name }}</a>
+		{% else %}
+			не существует.
+		{% endif %}
+	</p>
+	<p>Бегун с id={{ id }}:
+		{% if runner %}
+			<a href="{{ runner.get_absolute_url }}">{{ runner }}</a>
+			&nbsp;&nbsp;&nbsp;&nbsp;
+			<a href="{{ runner.get_editor_url }}">
+				<button type="button" class="btn btn-xs btn-primary">Редактировать бегуна</button></a>
+		{% else %}
+			не существует.
+		{% endif %}
+	</p>
+	<p>Член клуба с id={{ id }}:
+		{% if club_member %}
+			Бегун <a href="{{ club_member.runner.get_absolute_url }}">{{ club_member.runner }}</a>
+			в клубе <a href="{{ club_member.club.get_absolute_url }}">{{ club_member.club.name }}</a>
+			{% if club_member.date_registered %}
+				с {{ club_member.date_registered|date:"d.m.Y" }}
+			{% endif %}
+			{% if club_member.date_removed %}
+				по {{ club_member.date_removed|date:"d.m.Y" }}
+			{% endif %}
+			&nbsp;&nbsp;&nbsp;&nbsp;
+			<a href="{{ club_member.get_editor_url }}">
+				<button type="button" class="btn btn-xs btn-primary">Редактировать членство в клубе</button></a>
+		{% else %}
+			не существует.
+		{% endif %}
+	</p>
+	<p>Результат с id={{ id }}:
+		{% if result %}
+			<a href="{{ result.get_absolute_url }}">{{ result }}</a>
+			({{ result.strName }}) на забеге <a href="{{ result.race.get_absolute_url }}">{{ result.race }}</a>
+			&nbsp;&nbsp;&nbsp;&nbsp;
+			<a href="{{ result.get_editor_url }}">
+				<button type="button" class="btn btn-xs btn-primary">Редактировать результат</button></a>
+		{% else %}
+			не существует.
+		{% endif %}
+	</p>
+	<p>КЛБ-результат с id={{ id }}:
+		{% if klb_result %}{% with result=klb_result.result participant=klb_result.klb_participant %}
+			<a href="{{ result.get_absolute_url }}">{{ result }}</a>
+			({{ result.strName }}) на забеге <a href="{{ result.race.get_absolute_url }}">{{ result.race }}</a>.
+			Год: {{ participant.year|year_for_klbmatch }},
+			участник: <a href="{{ participant.klb_person.get_absolute_url }}">{{ participant.klb_person.get_full_name_with_birthday }}</a>,
+			чистые очки: {{ klb_result.klb_score }}, бонус: {{ klb_result.bonus_score }}.
+			&nbsp;&nbsp;&nbsp;&nbsp;
+			<a href="{{ result.get_editor_url }}">
+				<button type="button" class="btn btn-xs btn-primary">Редактировать результат</button></a>
+		{% endwith %}{% else %}
+			не существует.
+		{% endif %}
+	</p>
+	<p>Изменение таблиц с id={{ id }}:
+		{% if table_update %}
+			<a href="{{ table_update.get_absolute_url }}">{{ table_update }}</a>
+		{% else %}
+			не существует.
+		{% endif %}
+	</p>
+	<p>Письмо с id={{ id }}:
+		{% if message %}
+			<a href="{{ message.get_absolute_url }}">{{ message }}</a>
+		{% else %}
+			не существует.
+		{% endif %}
+	</p>
+	{% for series_platform in series_by_platform_id %}{% with series=series_platform.series %}
+		<p>
+			Серия <a href="{{ series.get_absolute_url }}">{{ series_platform.series.name }}</a>: платформа {{ series_platform.platform_id }},
+			ID <a href="{{ series_platform.get_absolute_url }}">{{ series_platform.value }}</a>
+		</p>
+	{% endwith %}{% endfor %}
+	{% for event in events_by_platform_id %}
+		<p>
+			Забег <a href="{{ event.get_absolute_url }}">{{ event.name }}</a>: платформа {{ event.platform_id }},
+			ID <a href="{{ event.get_platform_url }}">{{ event.id_on_platform }}</a>
+		</p>
+	{% endfor %}
+	{% for race in races_by_platform_id %}
+		<p>
+			Забег <a href="{{ race.event.get_absolute_url }}">{{ race.event.name }}</a>,
+			дистанция <a href="{{ race.get_absolute_url }}">{{ race }}</a>: платформа {{ race.platform_id }},
+			ID <a href="{{ race.get_platform_url }}">{{ race.id_on_platform }}</a>
+		</p>
+	{% endfor %}
+	{% for runner_platform in runners_by_platform_id %}{% with runner=runner_platform.runner %}
+		<p>
+			Бегун <a href="{{ runner.get_absolute_url }}">{{ runner }}</a>: платформа {{ runner_platform.platform_id }},
+			ID <a href="{{ runner_platform.get_absolute_url }}">{{ runner_platform.value }}</a>
+		</p>
+	{% endwith %}{% endfor %}
+{% elif phone_number %}
+	{% for participant in participants_with_phone_number %}{% with person=participant.klb_person team=participant.team %}
+		<p>
+			{{ participant.year|year_for_klbmatch }} — <a href="{{ person.get_absolute_url }}">{{ person }}</a>,
+			{% if team %}
+				команда <a href="{{ team.get_absolute_url }}">{{ team.name }}</a>,
+			{% else %}
+				индивидуальный участник,
+			{% endif %}
+			{% if participant.email %}{{ participant.email }}, {% endif %}
+			{% if participant.phone_number %}{{ participant.phone_number }}, {% endif %}
+		</p>
+	{% endwith %}
+	{% empty %}
+		<p>К сожалению, таких участников не найдено.</p>
+	{% endfor %}
+{% else %}
+	<p>К сожалению, указанный id некорректен. Укажите какое-нибудь натуральное число.</p>
+{% endif %}
+
+<br/><br/>
+<h4>Что умеет поле поиска в строке меню</h4>
+
+<ul>
+	<li>Если ввести туда любое положительное число, получите список всех объектов в базе данных сайта с этим id.</li>
+	<li>Если ввести ровно два слова, получите список бегунов, у которых имя начинается на первое слово, а фамилия - на второе, если хоть один такой найдется.</li>
+	<li>Если ввести телефон, получите список участников КЛБМатчей с этим телефоном.</li>
+	<li>Иначе получите список забегов, в название которых входит введённая вами строка.</li>
+</ul>
+
+<p>Пишите, если хотите добавить ещё какие-то функции!</p>
+
+{% endblock %}

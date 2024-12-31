@@ -1,0 +1,15 @@
+{% if table_update.is_verified %}
+	<span class="label label-success">Одобрено</span>
+	{% if table_update.verified_by %}
+		({% include 'editor/user_name_with_link.html' with person=table_update.verified_by %})
+	{% endif %}
+{% elif write_if_not_verified %}
+	<span class="label label-danger">Не одобрено</span>
+{% endif %}
+<br/>
+<a class="send_from_info_page" href="#" data-ticket="{{ table_update.id }}"
+	{% if row.has_problem_with_club %}data-wrong-club="1"{% endif %}
+	>Написать пользователю</a>
+{% if table_update.n_messages %}
+	<br/>Уже отправлено писем: <a href="{{ table_update.get_absolute_url }}">{{ table_update.n_messages }}</a>
+{% endif %}

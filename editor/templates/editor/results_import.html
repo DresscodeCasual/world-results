@@ -1,0 +1,57 @@
+{% extends 'results/base.html' %}
+{% block main %}
+
+<h3>Импорт результатов</h3>
+
+<h4>Отчёт об импорте</h4>
+{{ report|safe }}
+
+<h4>Недостающие дистанции</h4>
+<table class="table table-condensed table-hover">
+	<tr>
+		<th>№</th><th>RACEID</th><th>Дата</th><th>ID серии</th>
+		<th>Хотим создать новые</th><th>Дистанции у АК</th>
+	</tr>
+	{% for record in report_dists %}
+		<tr>
+			<td>{{ forloop.counter }}</td>
+		{% for item in record %}
+		{% if forloop.counter == 3 %}
+			<td><a href="{% url 'results:series_details' series_id=item %}">{{ item }}</a></td>
+		{% else %}
+			<td>{{ item|safe }}</td>
+		{% endif %}
+		{% endfor %}
+		</tr>
+	{% endfor %}
+</table>
+
+<h4>Результаты импорта</h4>
+Обработано событий: {{ races_added }}
+<br/>
+Обработано результатов: {{ results_added }}
+<br>
+Обработанные забеги:
+<table class="table table-condensed table-hover">
+	<tr>
+		<th>№</th><th>AK RACEID</th><th>Дистанция</th>
+	</tr>
+	{% for record in ak_races_loaded %}
+		<tr>
+			<td>{{ forloop.counter }}</td>
+			{% for item in record %}
+				{% if forloop.first %}
+					<td><a href="{% url 'results:event_details' ak_race_id=item %}">{{ item }}</a></td>
+				{% else %}
+					<td>{{ item }}</td>
+				{% endif %}
+			{% endfor %}
+		</tr>
+	{% endfor %}
+</table>
+
+{% if last_ak_race_id %}
+<a href="{% url 'editor:load_results_from_ak_rezult' ak_start=last_ak_race_id %}">Загрузить ещё секцию</a>
+{% endif %}
+
+{% endblock %}

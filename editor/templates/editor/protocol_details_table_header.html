@@ -1,0 +1,36 @@
+{% load results_extras %}
+<tr>
+	<th class="success">
+		Считать?
+		<br/>
+		Все: <input type="checkbox" class="toggle_chkbox" onchange="javascript:disable_button();"/>
+	</th>
+	<th class="success">Заголовок?</th>
+	{% if show_gender_column %}
+		<th class="success">
+			Женщина?
+			<br/>
+			Все: <input type="checkbox" class="toggle_chkbox_gender"/>
+		</th>
+	{% endif %}
+	{% if show_category_column %}
+		<th class="success">Группа</th>
+	{% endif %}
+	{% for column in column_numbers %}
+		<th class="success">
+			{{ column.number }}
+			{% if column.warnings %}
+				<h4><span class="label label-warning">
+					{{ column.warnings }}
+					предупреждени{{ column.warnings|ending:7 }}
+				</span></h4>
+			{% endif %}
+			{% if column.errors %}
+				<h4><span class="label label-danger">
+					{{ column.errors }}
+					ошиб{{ column.errors|ending:8 }}
+				</span></h4>
+			{% endif %}
+		</th>
+	{% endfor %}
+</tr>

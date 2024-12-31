@@ -1,0 +1,135 @@
+{% extends 'results/base.html' %}
+{% load results_extras %}
+{% block main %}
+<div class="row"><div class="col-md-12">
+	{% if current_members %}
+		 <h3>Действующие члены клуба <a href="{{ club.get_absolute_url }}">{{ club.name }}</a></h3>
+	{% else %}
+		<h3>Члены клуба <a href="{{ club.get_absolute_url }}">{{ club.name }}</a> за всю историю</h3>
+	{% endif %}
+	<p>Эта страница не имеет отношения к КЛБМатчу. Здесь — все, кто, по информации от команды,
+		{% if current_members %}
+			входит в состав клуба на сегодняшний день.
+			<a href="{{ club.get_all_members_list_url }}">Список членов клуба за всегда</a>
+		{% else %}
+			когда-либо входил в состав клуба.
+			<a href="{{ club.get_members_list_url }}">Список действующих членов клуба</a>
+		{% endif %}
+	</p>
+	{% if club.is_member_list_visible %}
+		<p>Эта страница видна всем. Чтобы сделать её видимой только руководителю клуба, уберите соответствующую галочку на
+		<a href="{{ club.get_editor_url }}">странице правки данных клуба</a>.</p>
+	{% else %}
+		<p>Эта страница видна только администраторам сайта и руководителю клуба. Чтобы сделать её видимой всем, поставьте соответствующую галочку на
+		<a href="{{ club.get_editor_url }}">странице правки данных клуба</a>.</p>
+	{% endif %}
+	<table class="table table-condensed table-hover">
+		<tr class="info text-center vcenter">
+			<th rowspan="2">№</th>
+			<th rowspan="2" class="text-left">
+				Имя&nbsp;<a class="arrow{% if ordering == 'name' %}-active{% endif %}" href="{{ self_link }}order/name/">▼</a>
+			</th>
+			{% if show_personal_data %}
+				<th rowspan="2" class="text-right">
+					<abbr title="Этот столбец виден только редакторам клуба">Дата рожд.</abbr>&nbsp;<a class="arrow{% if ordering == 'birthday' %}-active{% endif %}" href="{{ self_link }}order/birthday/">▼</a>
+				</th>
+				<th rowspan="2"><abbr title="Этот столбец виден только редакторам клуба">E-mail</abbr></th>
+				<th rowspan="2"><abbr title="Этот столбец виден только редакторам клуба">Телефон</abbr></th>
+			{% endif %}
+			<th rowspan="2">
+				Населённый пункт&nbsp;<a class="arrow{% if ordering == 'city' %}-active{% endif %}" href="{{ self_link }}order/city/">▼</a>
+			</th>
+			<th rowspan="2" class="text-right">
+				Пришёл<br/>в&nbsp;клуб&nbsp;<a class="arrow{% if ordering == 'date_registered' %}-active{% endif %}" href="{{ self_link }}order/date_registered/">▼</a>
+			</th>
+			<th rowspan="2" class="text-right">
+				Ушёл<br/>из&nbsp;клуба&nbsp;<a class="arrow{% if ordering == 'date_removed' %}-active{% endif %}" href="{{ self_link }}order/date_removed/">▼</a>
+			</th>
+			<th colspan="3">В {{ cur_stat_year }} году</th>
+			<th colspan="3">Всего</th>
+		</tr>
+		<tr class="text-center info">
+			<th class="text-right">Финишей&nbsp;<a class="arrow{% if ordering == 'n_starts_cur_year' %}-active{% endif %}" href="{{ self_link }}order/n_starts_cur_year/">▼</a>
+			</th>
+			<th class="text-right">Расстояние&nbsp;<a class="arrow{% if ordering == 'total_length_cur_year' %}-active{% endif %}" href="{{ self_link }}order/total_length_cur_year/">▼</a>
+			</th>
+			<th>Время&nbsp;<a class="arrow{% if ordering == 'total_time_cur_year' %}-active{% endif %}" href="{{ self_link }}order/total_time_cur_year/">▼</a>
+			</th>
+			<th class="text-right">Финишей&nbsp;<a class="arrow{% if ordering == 'n_starts' %}-active{% endif %}" href="{{ self_link }}order/n_starts/">▼</a>
+			</th>
+			<th class="text-right">Расстояние&nbsp;<a class="arrow{% if ordering == 'total_length' %}-active{% endif %}" href="{{ self_link }}order/total_length/">▼</a>
+			</th>
+			<th>Время&nbsp;<a class="arrow{% if ordering == 'total_time' %}-active{% endif %}" href="{{ self_link }}order/total_time/">▼</a>
+			</th>
+		</tr>
+		{% for member in members %}{% with runner=member.runner user=member.runner.user %}
+			<tr class="vcenter{% if runner.gender == 1 %} success{% endif %}">
+				<td>{{ forloop.counter }}</td>
+				<td>{% if show_personal_data %}
+						<span class="pull-right">
+							<a href="{{ member.get_editor_url }}{% if not current_members %}return/all/{% endif %}"><button type="button" class="btn btn-xs btn-primary">Ред</button></a>
+						</span>
+					{% endif %}
+					{% include 'tools/runner_or_user_name_with_link.html' with with_midname=True %}
+				</td>
+				{% if show_personal_data %}
+					<td class="text-right">{{ runner.strBirthday|safe }}</td>
+					<td>{{ member.email }}</td>
+					<td>{{ member.phone_number }}</td>
+				{% endif %}
+				<td class="text-center">
+					{% if runner.city %}
+						{{ runner.city.nameWithCountry|safe }}
+					{% endif %}
+				</td>
+				<td class="text-right">{{ member.print_date_registered }}</td>
+				<td class="text-right">{{ member.print_date_removed }}</td>
+				<td class="text-right">{{ runner.n_starts_cur_year|default_if_none:'' }}</td>
+				<td class="text-right">{{ runner.get_length_curyear|safe }}</td>
+				<td class="text-center">{{ runner.get_time_curyear|safe }}</td>
+				<td class="text-right">{{ runner.n_starts|default_if_none:'' }}</td>
+				<td class="text-right">{{ runner.get_total_length|safe }}</td>
+				<td class="text-center">{{ runner.get_total_time|safe }}</td>
+			</tr>
+		{% endwith %}{% endfor %}
+		{% if show_personal_data %}
+			<tr>
+				<td colspan="3">
+					<form action="" method="POST">
+						{% csrf_token %}
+						<input type="submit" name="btnCreateSheet" class="btn btn-xs btn-primary" value="Скачать этот список в формате XLSX"/>
+					</form>
+				</td>
+				<td colspan="2">
+					<a href="#"><button type="button" id="btnCopyEmails" class="btn btn-xs btn-primary">Скопировать все адреса в буфер обмена</button></a>
+				</td>
+				<td colspan="9"></td>
+			</tr>
+		{% endif %}
+	</table>
+</div></div>
+<script type="text/javascript">
+$("#btnCopyEmails").click(function(){
+	var textArea = document.createElement("textarea");
+ 	textArea.style.position = 'fixed';
+ 	textArea.style.top = 0;
+	textArea.style.left = 0;
+	textArea.style.width = '2em';
+	textArea.style.height = '2em';
+	textArea.style.padding = 0;
+	textArea.style.border = 'none';
+	textArea.style.outline = 'none';
+	textArea.style.boxShadow = 'none';
+	textArea.style.background = 'transparent';
+	textArea.value = '{{ all_emails }}';
+	document.body.appendChild(textArea);
+	textArea.select();
+	try {
+		var successful = document.execCommand('copy');
+	} catch (err) {
+	}
+	document.body.removeChild(textArea);
+	return false;
+});
+</script>
+{% endblock %}

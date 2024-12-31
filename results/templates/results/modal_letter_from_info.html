@@ -1,0 +1,20 @@
+{% extends 'results/modal_form_base.html' %}
+{% block header %}Письмо от имени info@probeg.org{% endblock %}
+{% block main %}
+	<p>Все поля, кроме темы и текста сообщения, необязательные.</p>
+	<p>Скрытая копия будет отправлена на info@probeg.org.</p>
+	<form id="frm_send_letterAdmin" enctype="multipart/form-data">
+		{% csrf_token %}
+		{% for hidden in form.hidden_fields %}
+			{{ hidden }}
+		{% endfor %}
+		{% for field in form.visible_fields %}
+			{% include 'results/form_field.html' %}
+		{% endfor %}
+	</form>
+{% endblock %}
+{% block footer %}
+	<span id="response"></span>
+	<button type="button" class="btn btn-default" data-dismiss="modal">Закрыть окно</button>
+	<button type="button" class="btn btn-success" id="send_letterAdmin" data-ticket="{{ table_update_id }}">Отправить письмо</button>
+{% endblock %}

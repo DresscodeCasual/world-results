@@ -1,0 +1,42 @@
+{% extends 'results/base.html' %}
+{% block main %}
+
+{% if text_before_header %}
+<p>
+{{text_before_header|safe}}
+</p>
+{% endif %}
+
+{% if table_title %}
+<h2>{{table_title}}</h2>
+{% endif %}
+
+    <table class="table table-condensed">
+    <tr class="info">
+        <th class="text-center" rowspan="2">Модель</th>
+        <th class="text-center" rowspan="2">Sql-таблица</th>
+        <th class="text-center" rowspan="2">Число полей</th>
+        <th class="text-center" rowspan="2">Число полей (с унаследованными и скрытыми)</th>
+        <th class="text-center" colspan="4">Ссылки на другие модели</th>
+    </tr>
+    <tr class="info">
+        <th class="text-center">один к одному</th>
+        <th class="text-center">один ко многим</th>
+        <th class="text-center">многие к одному</th>
+        <th class="text-center">многие ко многим</th>
+    </tr>
+    {% for row in table_body %}
+    <tr>
+        {% for item in row %}
+        <td class="text-center">{{item|safe}}</td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+    </table>
+    {% if footer %}
+    <p>
+    {{footer|safe}}
+    </p>
+    {% endif %}
+
+{% endblock %}

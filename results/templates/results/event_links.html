@@ -1,0 +1,84 @@
+{% load results_extras %}
+{% load static %}
+{% if event_page or race_page %}
+	{% if event.site %}
+		<p><a href="{{ event.site }}">Официальный сайт</a></p>
+	{% endif %}
+{% else %}
+	{% if event.url_site %}
+		<p><a href="{{ event.url_site }}">Официальный сайт</a></p>
+	{% endif %}
+{% endif %}
+{% if event_page or race_page %}
+	{% if event.vk or event.fb or event.series.url_instagram or event.url_wiki %}<p>{% endif %}
+	{% if event.vk %}
+		&nbsp;<a href="{{ event.vk }}"><img src="/static2/images/icons/vk_small_square.png" alt="Ссылка на страницу ВКонтакте"/></a>
+	{% endif %}
+	{% if event.fb %}
+		&nbsp;<a href="{{ event.fb }}"><img src="/static2/images/icons/fb_small_square.png" alt="Ссылка на страницу в Facebook"/></a>
+	{% endif %}
+	{% if event.series.url_instagram %}
+		&nbsp;<a href="{{ event.series.url_instagram }}"><img src="/static2/images/icons/in_small_square.png" alt="Ссылка на страницу в Instagram"/></a>
+	{% endif %}
+	{% if event.url_wiki %}
+		&nbsp;<a href="{{ event.url_wiki }}"><img src="/static2/images/icons/wiki_small_square.png" alt="Ссылка на страницу в Википедии"/></a>
+	{% endif %}
+	{% if event.series.url_telegram %}
+		&nbsp;<a href="{{ event.series.url_telegram }}"><img src="/static2/images/icons/tg_small_square.png" alt="Ссылка на страницу в Telegram"/></a>
+	{% endif %}
+	{% if event.vk or event.fb or event.series.url_instagram or event.url_wiki %}</p>{% endif %}
+{% else %}
+	{% if event.url_vk or event.url_facebook or event.url_wiki %}<p>{% endif %}
+	{% if event.url_vk %}
+		&nbsp;<a href="{{ event.url_vk }}"><img src="/static2/images/icons/vk_small_square.png" alt="Ссылка на страницу ВКонтакте"/></a>
+	{% endif %}
+	{% if event.url_facebook %}
+		&nbsp;<a href="{{ event.url_facebook }}"><img src="/static2/images/icons/fb_small_square.png" alt="Ссылка на страницу в Facebook"/></a>
+	{% endif %}
+	{% if event.url_wiki %}
+		&nbsp;<a href="{{ event.url_wiki }}"><img src="/static2/images/icons/wiki_small_square.png" alt="Ссылка на страницу в Википедии"/></a>
+	{% endif %}
+	{% if event.url_vk or event.url_facebook or event.url_wiki %}</p>{% endif %}
+{% endif %}
+{% if event.url_itra %}
+	<p><a href="{{ event.url_itra }}">Страница забега на сайте ITRA</a></p>
+{% endif %}
+{% if event.url_registration %}
+	<p><a href="{{ event.url_registration }}">Регистрация</a></p>
+{% endif %}
+{% if event.url_registration2 %}
+	<p><a href="{{ event.url_registration2 }}">Ещё регистрация</a></p>
+{% endif %}
+{% if event_page or race_page %}
+	{% for document in event.get_documents_for_right_column %}
+		<p>{% include 'results/document_link.html' %}</p>
+	{% endfor %}
+{% else %}
+	{% for document in event.document_set.all %}
+		<p>{% include 'results/document_link.html' %}</p>
+	{% endfor %}
+{% endif %}
+{% if event_page or race_page %}
+	<p><a href="{{ event.series.get_old_url }}">Старая карточка серии</a></p>
+	{% if event_has_klb_results %}
+		<p><a href="{{ event.get_klb_results_url }}">Результаты в КЛБМатче</a>
+			{% if is_admin and 2011 <= event.start_date.year and event.start_date.year <= 2017 %}
+				<br/><span class="for-admin"><a href="{{ event.get_old_klb_url }}">(старая)</a></span>
+			{% endif %}
+		</p>
+	{% endif %}
+{% endif %}
+{% if event_page or race_page or prev_event_section %}
+	{% if event.klb_result_set.exists %}
+		<p><a href="{{ event.get_klb_results_url }}">Результаты в КЛБМатче</a>
+			{% if is_admin and 2011 <= event.start_date.year and event.start_date.year <= 2017 %}
+				<br/><span class="for-admin"><a href="{{ event.get_old_klb_url }}">(старая)</a></span>
+			{% endif %}
+		</p>
+	{% endif %}
+{% endif %}
+{% if race_page or prev_event_section %}
+	{% if event.has_news_reviews_photos %}
+		<p><a href="{{ event.get_absolute_url }}">Новости, отчёты, фото</a></p>
+	{% endif %}
+{% endif %}

@@ -1,0 +1,25 @@
+<div class="row"><div class="col-md-12">
+	<span class="pull-left">
+		<form action="" method="POST" name="frmAgeGroup" class="form-inline">
+			{% csrf_token %}
+			Возрастные группы:
+			&nbsp;&nbsp;{{ frmAgeGroup.age_group }}
+			&nbsp;&nbsp;<input type="button" class="btn btn-success"
+				onclick="window.location='{% url 'results:klb_age_group_details' %}'+document.getElementById('id_age_group').value+'/';"
+				value="Перейти"/>
+		</form>
+	</span>
+	{% if show_match_category_form %}
+		<span class="pull-left">
+			<form action="" method="POST" name="frmMatchCategory" class="form-inline">
+				{% csrf_token %}
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				Другие зачёты:
+				{{ frmMatchCategory.match_category }}
+				&nbsp;&nbsp;<input type="button" class="btn btn-success"
+					onclick="window.location='{% url 'results:klb_match_category_details' %}'+document.getElementById('id_match_category').value+'/';"
+					value="Перейти"/>
+			</form>
+		</span>
+	{% endif %}
+</div></div>

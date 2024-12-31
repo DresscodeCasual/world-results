@@ -1,0 +1,57 @@
+{% extends 'results/base.html' %}
+{% block main %}
+
+<div class="col-md-12">
+	<h2>{{ list_title }}</h2>
+{% if msgInsteadRegions %}
+	<p>{{ msgInsteadRegions }}</p>
+{% elif regions %}
+	<div class="row"><div class="col-md-12">
+		<p>Альтернативные названия стран сейчас используются только для одного: чтобы при поиске рекордов стран отсеивать результаты спортсменов из других стран.</p>
+		<form action="" method="POST" class="form-inline">
+			{% csrf_token %}
+			{% for field in form %}
+				{% include 'results/form_field.html' %}&nbsp;&nbsp;
+			{% endfor %}
+			<button type="submit" class="btn btn-success" name="btnAddCountryConversionItem">Добавить стране альтернативное название</button>
+		</form>
+	</div></div>
+
+	<table id="table_for_sort" class="table table-condensed table-hover">
+	<thead><tr class="info">
+		<th>ID страны</th><th>Страна</th>
+		<th>ID региона</th><th>Название</th><th>Полное</th><th>На английском</th><th>Фед. округ</th><th>В предложном падеже</th>
+		<th>Альтернативные названия</th><th>Число городов</th>
+	</tr></thead>
+	<tbody>
+	{% for region in regions %}
+		<tr{% if not region.active %} class="warning"{% endif %}>
+			<td>{{ region.country_id }}</td>
+			<td>{{ region.country.name }}</td>
+			<td>{{ region.id }}</td>
+			<td>{{ region.name }}</td>
+			<td>{{ region.name_full }}</td>
+			<td>{{ region.nameEn }}</td>
+			<td>{{ region.district.name }}</td>
+			<td>{{ region.prep_case }}</td>
+			<td>{% if not region.country.has_regions %}
+					{% for item in region.country.country_conversion_set.all %}
+						{{ item.country_raw }}{% if not forloop.last %}, {% endif %}
+					{% endfor %}
+				{% endif %}
+			</td>
+			<td>{% if region.country.has_regions %}
+					<a href="{% url 'editor:cities' region_id=region.id %}">{{ region.num_cities }}</a>
+				{% else %}
+					<a href="{% url 'editor:cities' country_id=region.country.id %}">{{ region.num_cities }}</a>
+				{% endif %}
+			</td>
+		</tr>
+	{% endfor %}
+	</tbody></table>
+{% else %}
+	<p>Ни одного города не найдено. :( Возможно, вы указали одновременно и страну, и не содержащийся в ней регион?</p>
+{% endif %}
+
+</div>
+{% endblock %}

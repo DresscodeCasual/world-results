@@ -1,0 +1,45 @@
+{% extends 'results/base.html' %}
+{% load results_extras %}
+{% block main %}
+
+<div class="row"><div class="col-lg-8 col-lg-offset-1 col-md-10 col-md-offset-1 col-sm-12 col-sm-offset-0">
+	<h3>Планируемые старты членов клуба <a href="{{ club.get_absolute_url }}">{{ club.name }}</a></h3>
+
+	<p>Эту страницу видят только члены команд этого клуба в проходящих прямо сейчас КЛБМатчах и действующие члены клуба.</p>
+	<p>Здесь — все забеги, на которые записались члены команд клуба,
+	зарегистрированные на нашем сайте и не убиравшие галочку «Показывать другим посетителям мой профиль на сайте»
+	на странице «<a href="{% url 'results:my_details' %}">Личные данные</a>».</p>
+
+	{% if calendar_items %}
+		<table class="table table-condensed table-hover table-striped">
+			<tr class="info">
+				<th class="text-right">Дата</th>
+				<th>Забег</th>
+				<th>Город</th>
+				<th>Собираются</th>
+			</tr>
+			{% for event, items in calendar_items.items %}
+				<tr>
+					<td class="text-right nobr">{{ event.dateFull|safe }}</td>
+					<td><a href="{{ event.get_absolute_url }}">{{ event|safe }}</a></td>
+					<td>{{ event.strCityCountry|safe }}</td>
+					<td class="nobr">{% for item in items %}
+							<a href="{{ item.user.user_profile.get_absolute_url }}">{{ item.user.get_full_name }}</a>
+							{% if item.race %}
+								({{ item.race }})
+							{% endif %}
+							{% if not forloop.last %}
+								<br/>
+							{% endif %}
+						{% endfor %}
+					</td>
+				</tr>
+			{% endfor %}
+		</table>
+	{% else %}
+		<p>Не найдено ни одной записи. Либо участники слишком расслабились, либо слишком мало их зарегистрировано у нас на сайте и не указывают, где собираются бегать.
+			Расскажите им, что стоит зарегистрироваться!
+		</p>
+	{% endif %}
+</div></div>
+{% endblock %}

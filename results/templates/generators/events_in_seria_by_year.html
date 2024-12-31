@@ -1,0 +1,73 @@
+<p class="for-admin">Последнее обновление: {{ last_update }}</p>
+<table class="table table-condensed table-hover table-bordered" cellspacing="0" width="100%">
+	{% regroup seria by region as regions %}
+	{% for region in regions %}
+		<tr class="info"><td colspan="7"><h4>{{ region.grouper }}</h4></td></tr>
+		<tr>
+			<th>№</th><th>Серия</th><th>Город</th>
+			{% for year in years %}
+				<th>Забеги–{{ year }}</th>
+			{% endfor %}
+		</tr>
+		{% for row in region.list %}{% with series=row.series %}
+			<tr>
+				<td>{{ forloop.counter }}</td>
+				<td><a href="{{ series.get_absolute_url }}">{{ series.name|safe }}</a>
+					{% if series.contacts %}
+						<br/>{{ series.contacts }}
+					{% endif %}
+					{% if series.url_site %}
+						<br/><a href="{{ series.url_site }}">Официальный сайт</a>
+					{% endif %}
+					{% if series.url_vk or series.url_facebook %}
+						<br/>
+					{% endif %}
+					{% if series.url_vk %}
+						<a href="{{ series.url_vk }}"><img src="/static2/images/icons/vk_small_square.png" border="0"/></a>
+					{% endif %}
+					{% if series.url_facebook %}
+						<a href="{{ series.url_facebook }}"><img src="/static2/images/icons/fb_small_square.png" border="0"/></a>
+					{% endif %}
+				</td>
+				<td>{% if series.city %}
+						{{ series.city.name_full|safe }}
+					{% endif %}
+				</td>
+				{% for year_events in row.events %}
+					<td>
+						{% for event in year_events %}
+							{% if not forloop.first %}
+								<br/><br/>
+							{% endif %}
+							<a href="{{ event.get_absolute_url }}">{{ event.name|safe }}</a> ({{ event.start_date }})
+							{% if event.cancelled %}
+								<br/><strong>Отменён</strong>
+							{% endif %}
+							{% if event.city %}
+								<br/>Город: {{ event.strCityCountry|safe }}
+							{% endif %}
+							{% if event.email %}
+								<br/>{{ event.email }}
+							{% endif %}
+							{% if event.contacts %}
+								<br/>{{ event.contacts }}
+							{% endif %}
+							{% if event.url_site %}
+								<br/>{{ event.url_site }}
+							{% endif %}
+							{% if event.url_vk or event.url_facebook %}
+								<br/>
+							{% endif %}
+							{% if event.url_vk %}
+								<a href="{{ event.url_vk }}"><img src="/static2/images/icons/vk_small_square.png" alt="Ссылка на страницу ВКонтакте"/></a>
+							{% endif %}
+							{% if event.url_facebook %}
+								<a href="{{ event.url_facebook }}"><img src="/static2/images/icons/fb_small_square.png" alt="Ссылка на Facebook"/></a>
+							{% endif %}
+						{% endfor %}
+					</td>
+				{% endfor %}
+			</tr>
+		{% endwith %}{% endfor %}
+	{% endfor %}
+</table>

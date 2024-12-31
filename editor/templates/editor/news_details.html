@@ -1,0 +1,92 @@
+{% extends 'results/base.html' %}
+{% load static %}
+{% block main %}
+
+{% block media_links %}
+{% if frmNews %}{{ frmNews.media }}{% endif %}
+{% endblock %}
+
+{% include 'results/panel_header_before_title.html' %}
+	{% if create_new %}
+		Создание новости
+	{% else %}
+		Новость «<a class="underlined" href="{% url 'results:news_details' news_id=news.id %}">{{ news }}</a>» (id {{ news.id }})
+	{% endif %}
+{% include 'results/panel_header_after_title.html' %}
+
+{% for error in frmNews.non_field_errors %}
+	<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+{% endfor %}
+
+<form id="frmNews" method="POST" enctype="multipart/form-data" action="
+	{% if create_new %}
+		{% if cloned_news_id %}
+			{% url 'editor:news_create' news_id=cloned_news_id %}
+		{% else %}
+			{% url 'editor:news_create' %}
+		{% endif %}
+	{% else %}
+		{% url 'editor:news_update' news_id=news.id %}
+	{% endif %}" 
+>
+	{% csrf_token %}
+	<div class="row">
+		<div class="col-md-4">
+			<table class="table table-condensed table-borderless">
+				{% include 'results/form_field_tr.html' with field=frmNews.is_for_social %}
+				{% include 'results/form_field_tr.html' with field=frmNews.is_for_blog %}
+				{% include 'results/form_field_tr.html' with field=frmNews.title td_class='input-100' %}
+				{% include 'results/form_field_tr.html' with field=frmNews.author td_class='input-100' %}
+				{% include 'results/form_field_tr.html' with field=frmNews.date_posted %}
+				{% include 'results/form_field_tr.html' with field=frmNews.image td_class='input-100' %}
+				{{ frmNews.event.as_hidden }}
+			</table>
+		</div>
+		<div class="col-md-8">
+			{{ frmNews.manual_preview.label_tag|safe }}
+			<br/>
+			{{ frmNews.manual_preview }}
+			<br/><br/>
+			{{ frmNews.content.label_tag|safe }}
+			<br/>
+			{{ frmNews.content }}
+			{% if frmNews.content.errors %}
+					{% for error in frmNews.content.errors %}
+							<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+					{% endfor %}
+			{% endif %}
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-md-5">
+			<input type="submit"
+				name="frmNews_submit"
+				value="{% if create_new %}Создать{% else %}Сохранить{% endif %}"
+				class="btn btn-success"
+			/>
+		</div>
+		<div class="col-md-4">
+			{% if news.country %}
+				<a href="{% url 'editor:all_news' country_id=news.country.id %}">
+					<button type="button" class="btn btn-primary">Все новости в стране {{ news.country.name }}</button>
+				</a>
+				<br/><br/>
+			{% endif %}
+			{% if news.city %}
+				<a href="{% url 'editor:all_news' city_id=news.city.id %}">
+					<button type="button" class="btn btn-primary">Все новости в городе {{ news.city.name }}</button>
+				</a>
+			{% endif %}
+		</div>
+	</div>
+</form>
+{% include 'results/panel_footer.html' %}
+
+{% if not create_new %}
+	<form id="frmDeleteNews" method="POST" action="{% url 'editor:news_delete' news_id=news.id %}" class="form-inline">
+		{% csrf_token %}
+		<input type="submit" name="frmDeleteNews_submit" value="Удалить новость «{{ news }}»" class="btn btn-danger"/>
+	</form>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,79 @@
+<tr {% if row_class %}class="{{ row_class }}"{% endif %}>
+	<td class="text-center">{% if counter_value %}
+			{{ counter_value|safe }}
+		{% elif to_display_counter %}
+			{{ forloop.counter }}
+		{% endif %}
+	</td>
+	{% if show_runner_places %}
+		<td class="text-center">{{ record_result.runner_place|default_if_none:'' }}</td>
+	{% elif show_runner_places_column %}
+		<td></td>
+	{% endif %}
+	<td>{% include 'age_group_records/record_result_runner_name_and_city.html' %}</td>
+	<td class="nobr text-center">{{ record_result.get_age_on_event_date }}</td>
+	<td>
+		{% if record_result.result %}
+			<a href="{{ record_result.result.race.get_absolute_url }}">{{ record_result|safe }}</a>
+		{% else %}
+			<span>{{ record_result|safe }}</span>
+		{% endif %}
+		{% include 'age_group_records/record_result_note_signs.html' %}
+		{% if record_result.result.wind is not None %}
+			<br/>ветер: {% if record_result.result.wind > 0 %}+{% endif %}{{ record_result.result.wind }} м/с
+		{% endif %}
+		{% if not record_result.race_has_correct_surface %}
+			<br/><span class="label label-danger small-label">неподх. тип покрытия</span>
+		{% endif %}
+	</td>
+	<td class="text-right nobr">{{ record_result.get_date|safe }}</td>
+	<td>{% if record_result.race %}
+			<a href="{{ record_result.race.get_absolute_url }}">{{ record_result.race.event.name }}</a>
+			<br/>
+			{{ record_result.event_city|safe }}
+		{% else %}{% with city_country=record_result.get_event_city_country %}
+			неизвестен
+			{% if city_country %}
+				<br/>
+				{{ city_country|safe }}
+			{% endif %}
+		{% endwith %}{% endif %}
+		{% if record_result.comment %}
+			<p>Комментарий: {{ record_result.comment }}</p>
+		{% endif %}
+	</td>
+	<td>{% if record_result.protocol %}
+			{% include 'results/document_link.html' with document=record_result.protocol %}
+		{% endif %}
+	</td>
+	{% if commission_session %}
+		<td class="text-center">
+			{% if record_result.session %}
+				учтён на заседании {{ record_result.session.get_number }}
+			{% elif is_admin and not is_global_record %}
+				<form action="{{ record_result.get_add_to_cur_session_url }}" method="POST">
+					{% csrf_token %}
+					<input type="submit" name="btnAddToSession" value="Добавить" class="btn btn-xs btn-primary"/>
+				</form>
+			{% endif %}
+		</td>
+	{% endif %}
+	{% if is_admin %}
+		<td class="for-admin">
+			{% if not is_global_record %}
+				{% include 'editor/user_name_with_link.html' with person=record_result.created_by %}
+			{% endif %}
+		</td>
+		<td class="text-center">
+			<form action="{{ record_result.get_delete_url }}" method="POST">
+				{% csrf_token %}
+				<input type="submit" name="btnDeleteRecord" value="Удалить из рекордов" class="btn btn-xs btn-danger"/>
+			</form>
+			{% if record_result.result_id %}
+				<a href="{{ record_result.get_admin_editor_url }}"><button type="button" class="btn btn-xs btn-primary">Редактировать</button></a>
+			{% else %}
+				<a href="{{ record_result.get_editor_url }}"><button type="button" class="btn btn-xs btn-primary">Редактировать</button></a>
+			{% endif %}
+		</td>
+	{% endif %}
+</tr>

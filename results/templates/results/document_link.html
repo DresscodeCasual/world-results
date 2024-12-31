@@ -1,0 +1,37 @@
+{% if document.url_source %}	
+	<a href="{{ document.url_source }}">{{ document }} <span class="glyphicon glyphicon-new-window" aria-hidden="true"></span></a>
+	{% if is_admin and document.is_on_our_google_drive %}
+		&nbsp;<span class="for-admin">(лежит на нашем Google Drive)</span>
+	{% endif %}
+	{% if is_admin and document.is_eligible_for_queue %}
+		{% if document.protocol_queue %}
+			&nbsp;<span class="for-admin">В очереди: {{ document.protocol_queue.get_result_display }}</span>
+		{% else %}
+			&nbsp;<a href="{{ document.get_add_to_queue_url }}">
+			<button type="button" class="btn btn-xs btn-primary">Добавить в очередь</button></a>
+		{% endif %}
+	{% endif %}
+	{% if document.upload %}
+		{% if document.hide_local_link == 0 %}
+			<br/>
+			<a href="{{ document.get_upload_url }}">
+				{% if short %}(копия){% else %}(сохранённая копия){% endif %}
+			</a>
+		{% elif is_admin or is_editor %}
+			<br/>
+			<a href="{{ document.get_upload_url }}">
+				<span class="for-admin">{% if short %}(копия){% else %}(сохранённая копия){% endif %}</span>
+			</a>
+		{% endif %}
+	{% endif %}
+{% elif document.hide_local_link != 2 %}
+	<a href="{{ document.get_upload_url }}">{{ document }}</a>
+{% elif is_admin or is_editor %}
+	<a href="{{ document.get_upload_url }}"><span class="for-admin">{{ document }}</span></a>
+{% endif %}
+{% if is_admin or is_extended_editor or is_editor and event.can_be_edited %}
+	{% if event and document.is_xls_protocol %}
+		&nbsp;<a href="{% url 'editor:protocol_details' event_id=event.id protocol_id=document.id %}">
+			<button type="button" class="btn btn-xs btn-primary">Обработать</button></a>
+	{% endif %}
+{% endif %}

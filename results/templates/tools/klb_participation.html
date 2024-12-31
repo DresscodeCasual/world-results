@@ -1,0 +1,32 @@
+<p>{% if with_link_to_person_page %}
+		<a href="{{ klb_person.get_absolute_url }}">Выступлений: {{ participant.n_starts }}</a>.
+	{% else %}
+		Выступлений: {{ participant.n_starts }}.
+	{% endif %}
+	Набранные очки: {{ participant.score_sum }} (в том числе бонусы: {{ participant.bonus_sum }}).
+	{% if participant.n_starts and participant.get_diplom_url %}
+		<br/><a href="{{ participant.get_diplom_url }}">Диплом участника</a>; <a href="{% url 'about' %}#faq">как сохранить его в файл</a>.
+	{% endif %}
+	{% if show_places and participant.score_sum and participant.place %}
+		<br/>{{ participant.place }} место в абсолютном зачёте,
+		<br/>{{ participant.place_gender }} место среди {% if person.gender == 1 %}женщин{% else %}мужчин{% endif %},
+		<br/>{{ participant.place_group }} место в группе <a href="{{ participant.age_group.get_absolute_url }}">{{ participant.age_group.name }}</a>.
+	{% endif %}
+	{% if participant.date_registered %}
+		<br/>
+		<span>Заявлен{% if participant.klb_person.runner.gender == 1 %}а{% endif %}
+		в матч {{ participant.date_registered|date:"j E Y" }}</span>
+	{% endif %}
+	{% if participant.date_removed %}
+		<br/>
+		<span>Отзаявлен{% if participant.klb_person.runner.gender == 1 %}а{% endif %}
+		из матча {{ participant.date_removed|date:"j E Y" }}</span>
+	{% endif %}
+	{% if is_admin %}
+		{% if participant.payment %}
+			<br/><span class="for-admin">Участие <a href="{{ participant.payment.get_absolute_url }}">оплачено</a></span>
+		{% else %}
+			<br/><span class="for-admin">Участие не оплачено</span>
+		{% endif %}
+	{% endif %}
+</p>	

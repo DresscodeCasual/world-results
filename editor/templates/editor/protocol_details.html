@@ -1,0 +1,253 @@
+{% extends 'results/base.html' %}
+{% load results_extras %}
+{% block main %}
+
+{% if n_parse_errors %}
+	<h4><span class="label label-danger">Ошибок при предварительной обработке протокола: {{ n_parse_errors }}.
+		Их необходимо исправить.</span></h4>
+{% endif %}
+{% if n_parse_warnings %}
+	<h4><span class="label label-warning">Предупреждений при предварительной обработке протокола: {{ n_parse_warnings }}.
+		Их можно оставить, но проверьте, правильно ли они обработаны.</span></h4>
+{% endif %}
+
+{% include 'results/panel_header_before_title.html' %}
+	Обработка протоколов забега
+	<a class="underlined" href="{{ event.get_absolute_url }}">{{ event.name|safe }} ({{ event.dateFull|safe }})</a>
+	в серии
+	<a class="underlined" href="{{ event.series.get_absolute_url }}">{{ event.series.name|safe }}</a>
+	&nbsp;&nbsp;&nbsp;&nbsp;
+	<a href="{{ event.get_editor_url }}">
+		<button type="button" class="btn btn-xs btn-primary">Редактировать забег</button></a>
+	&nbsp;&nbsp;&nbsp;&nbsp;
+	<a href="{{ event.get_history_url }}">
+		<button type="button" class="btn btn-xs btn-primary">История изменений</button></a>
+	&nbsp;&nbsp;&nbsp;&nbsp;
+	<a class="underlined" href="{{ event.series.get_old_url }}">
+		Карточка на probeg.org</a>
+{% include 'results/panel_header_after_title.html' %}
+
+<form id="frmProtocol"
+	action="{% url 'editor:protocol_details' event_id=event.id protocol_id=protocol.id %}"
+	method="POST" class="form-inline">
+	{% csrf_token %}
+	<div class="row">
+		<div class="col-md-4">
+			<h4>Результаты на какую дистанцию загружаем:</h4>
+			{% for ev_race in races %}{% with n=ev_race.get_official_results.count %}
+				{% if ev_race == race %}
+					<strong>
+						&nbsp;&nbsp;&nbsp;{{ ev_race.distance_with_heights }}
+						{% if n %}
+							({{ n }} результат{{ n|ending:1 }})
+						{% endif %}
+					</strong>
+				{% else %}
+					<button class="btn btn-link" type="submit" name="new_race_id" value="{{ ev_race.id }}">
+						{{ ev_race.distance_with_heights }}
+						{% if n %}
+							({{ n }} результат{{ n|ending:1 }})
+						{% endif %}
+					</button>
+				{% endif %}
+				<br/>
+			{% endwith %}{% endfor %}
+		</div>
+		<div class="col-md-4">
+			<h4>Из какого протокола берём данные:</h4>
+			<strong>{{ protocol }}</strong>
+			(<a href="{{ protocol.get_upload_url }}">скачать файл</a>)
+			<br/>
+			{% if protocol.is_processed %}
+				(помечен как полностью обработанный)
+			{% else %}
+				<a class="btn btn-warning" href="{{ protocol.get_mark_processed_url }}">
+					Пометить как полностью обработанный
+				</a>
+			{% endif %}
+			<p/>
+			{% if protocols.count > 1 %}
+				<h4>Взять другой протокол:</h4>
+				{% for prot in protocols %}
+					{% if prot != protocol %}
+						<a href="{% url 'editor:protocol_details' race_id=race.id protocol_id=prot.id %}">
+							{{ prot }}</a>
+						{% if prot.is_processed %}
+							(помечен как полностью обработанный)
+						{% endif %}
+						<br/>
+					{% endif %}
+				{% endfor %}
+			<p/>
+			<input type="hidden" name="protocol_id" value="{{ protocol.id }}"/>
+			{% endif %}
+			<h4>Какой лист протокола обрабатываем:</h4>
+			{% for name in sheetnames %}
+				{% if forloop.counter0 == sheet_index %}
+					&nbsp;&nbsp;&nbsp;<strong>{{ name }}</strong>
+				{% else %}
+					<button class="btn btn-link" type="submit" name="new_sheet_index" value="{{ forloop.counter0 }}">
+						{{ name }}
+					</button>
+				{% endif %}
+				<br/>
+			{% endfor %}
+			<input type="hidden" name="race_id" value="{{ race.id }}"/>
+			<input type="hidden" name="sheet_index" value="{{ sheet_index }}"/>
+			<input type="hidden" name="show_gender_column" value="{{ show_gender_column|yesno:"1,0" }}"/>
+			<input type="hidden" name="show_category_column" value="{{ show_category_column|yesno:"1,0" }}"/>
+		</div>
+		<div class="col-md-4">
+			<h4>Настройки</h4>
+			{% if race.get_official_results.exists %}{% with n=race.get_official_results.count %}
+				<p>
+					Для этой дистанции в базе уже есть
+					<a href="{{ race.get_absolute_url }}">{{ n }} результат{{ n|ending:1 }}</a>.
+				</p>
+				<p>
+					Что делаем со старыми результатами?
+					<select name="save_old_results">
+						<option value="4"{% if save_old_results == 4 %} selected{% endif %}>оставляем всё</option>
+						<option value="1"{% if save_old_results == 1 %} selected{% endif %}>удаляем всё</option>
+						<option value="2"{% if save_old_results == 2 %} selected{% endif %}>удаляем только мужчин</option>
+						<option value="3"{% if save_old_results == 3 %} selected{% endif %}>удаляем только женщин</option>
+					</select>
+				</p>
+			{% endwith %}{% endif %}
+			{% if has_empty_results %}
+				<p>
+					Считаем пустые значения в графе «Результат» за:
+					<select name="status_for_empty">
+						<option value="{{ STATUS_DNF }}"{% if status_for_empty == STATUS_DNF %} selected{% endif %}>DNF</option>
+						<option value="{{ STATUS_DSQ }}"{% if status_for_empty == STATUS_DSQ %} selected{% endif %}>DSQ</option>
+						<option value="{{ STATUS_DNS }}"{% if status_for_empty == STATUS_DNS %} selected{% endif %}>DNS</option>
+					</select>
+				</p>
+			{% endif %}
+			{% if show_cumulative_splits %}
+				<p>
+					<input type="checkbox" name="cumulative_splits"{% if cumulative_splits %} checked{% endif %}/>
+					В сплитах записано время с предыдущего сплита, а не с начала
+				</p>
+			{% endif %}
+			{% if show_category_prefix_choices %}
+				<p>
+					Добавить к названиям групп:
+					<select name="category_prefix">
+						{% for item in CATEGORY_PREFIXES %}
+							<option value="{{ item.0 }}"{% if category_prefix == item.0 %} selected{% endif %}>{{ item.1 }}</option>
+						{% endfor %}
+					</select>
+				</p>
+			{% endif %}
+			{% if allow_places_from_protocol %}
+				<p>
+					<input type="checkbox" name="use_places_from_protocol"{% if use_places_from_protocol %} checked{% endif %}/>
+					Взять места из протокола, а не проставлять заново (нужно, только если загружаете лишь часть результатов забега)
+				</p>
+			{% endif %}
+			<p>
+				<input type="checkbox" name="refresh_row_headers"/>
+				Заново обработать строку с заголовками столбцов при нажатии «Обновить»
+			</p>
+		</div>
+	</div>
+
+	{% if data %}
+		<p></p>
+		<div class="row"><div class="col-md-12">
+			{% include 'editor/protocol_buttons.html' %}
+			<p/>
+			<table class="table table-condensed table-hover table-bordered">
+				{% include 'editor/protocol_details_table_header.html' %}
+				{% for row in data %}
+					<tr>
+						<td class="success">
+							<input type="checkbox" onchange="javascript:disable_button();" class="chkbox"
+								name="count_row_{{ forloop.counter0 }}"{% if row.checked %} checked{% endif %}
+								/>
+						</td>
+						<td class="success">
+							<input type="radio" name="header_row" value="{{ forloop.counter0 }}"
+								{% if forloop.counter0 == header_row %} checked{% endif %} onchange="javascript:disable_button();"/>
+							{{ forloop.counter0 }}
+						</td>
+						{% if show_gender_column %}
+							<td class="success">
+								<input type="checkbox" class="chkbox_gender"
+									name="gender_row_{{ forloop.counter0 }}"{% if row.gender %} checked{% endif %}/>
+								Ж
+							</td>
+						{% endif %}
+						{% if show_category_column %}
+							<td class="success">
+								<input type="text" size=8 maxlength=100 class="category_row"
+									name="category_row_{{ forloop.counter0 }}" value="{{ row.category }}"/>
+							</td>
+						{% endif %}
+						{% for cell in row.data %}
+							<td{% if row.checked and forloop.counter0 in used_rows %} class="info"{% endif %}>
+								{% if cell.value != None %}{{ cell.value|safe }}{% endif %}
+								{% if cell.comment %}
+									<h4><span class="label label-success">{{ cell.comment }}</span></h4>
+								{% endif %}
+								{% if cell.warning %}
+									<h4><span class="label label-warning">{{ cell.warning }}</span></h4>
+								{% endif %}
+								{% if cell.error %}
+									<h4><span class="label label-danger">{{ cell.error }}</span></h4>
+								{% endif %}
+							</td>
+						{% endfor %}
+					</tr>
+					{% if forloop.counter0 == header_row %}
+						<tr>
+							<td></td><td></td>
+							{% if show_gender_column %}
+								<td>Женщина?</td>
+							{% endif %}
+							{% if show_category_column %}
+								<td></td>
+							{% endif %}
+							{% for default_value in column_data_types %}
+								<td class="success">
+									<select name="select_{{ forloop.counter0 }}" onchange="javascript:disable_button();">
+										{% for value, name in cell_data_choices.items %}
+											<option value="{{ value }}"{% if value == default_value.value %} selected{% endif %}>
+												{{ name }}
+											</option>
+										{% endfor %}
+									</select>
+									{% if default_value.value == 20 %}
+										<br/>
+										<select name="select_split_{{ forloop.counter0 }}" onchange="javascript:disable_button();">
+											<option value="">если сплит</option>
+											{% for distance in distances %}
+												<option value="{{ distance.id }}"
+													{% if distance.id == default_value.split %} selected{% endif %}>
+													{{ distance }}
+												</option>
+											{% endfor %}
+										</select>
+									{% endif %}
+								</td>
+							{% endfor %}
+						</tr>
+					{% endif %}
+				{% endfor %}
+				{% include 'editor/protocol_details_table_header.html' %}
+			</table>
+			{% include 'editor/protocol_buttons.html' %}
+		</div></div>
+	{% elif sheetnames %}
+		Этот лист пуст.
+	{% endif %}
+</form>
+<script language="javascript">
+function disable_button(){
+	$(".btnImport").prop("disabled", true);
+	return false;
+}
+</script>
+{% include 'results/panel_footer.html' %}
+{% endblock %}

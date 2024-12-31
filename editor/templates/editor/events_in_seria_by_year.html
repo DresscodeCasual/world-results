@@ -1,0 +1,17 @@
+{% extends 'results/base.html' %}
+{% load static %}
+{% block main %}
+
+<div class="row">
+	<div class="col-md-12">
+		<span class="pull-right">
+			<a href="{% url 'editor:gen_nadya_calendar' %}"><button type="button" class="btn btn-xs btn-primary">Обновить</button></a>
+		</span>
+		<h3>{{ page_title }}</h3>
+	</div>
+</div>
+
+<div class="row"><div class="col-md-12">
+	{% include 'generated/events_in_seria_by_year.html' %}
+</div></div>
+{% endblock %}

@@ -1,0 +1,5 @@
+{% if city %}
+	<a href="{{ city.get_races_url }}">{{ city.nameWithCountry|safe }}</a>{% if cityFinish %}&nbsp;–
+		<a href="{{ cityFinish.get_races_url }}">{{ cityFinish.nameWithCountry|safe }}</a>
+	{% endif %}
+{% endif %}

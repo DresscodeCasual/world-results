@@ -1,0 +1,120 @@
+{% extends 'results/base.html' %}
+{% load static %}
+{% block media_links %}
+{% if form %}{{ form.media }}{% endif %}
+{% endblock %}
+{% block main %}
+<div class="row"><div class="col-md-12">
+	{% include 'results/panel_header_before_title.html' %}
+		{% if club.id %}
+			Клуб <a class="underlined" href="{{ club.get_absolute_url }}">{{ club }}</a>
+			&nbsp;&nbsp;&nbsp;&nbsp;
+			<a href="{{ club.get_history_url }}">
+				<button type="button" class="btn btn-sm btn-primary">История изменений</button></a>
+		{% else %}
+			Создание нового клуба
+		{% endif %}
+	{% include 'results/panel_header_after_title.html' %}
+		{% for error in form.non_field_errors %}
+			<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+		{% endfor %}
+		<form id="form" method="POST" enctype="multipart/form-data" action="
+			{% if club.id %}
+				{{ club.get_editor_url }}
+			{% else %}
+				{% url 'editor:club_create' %}
+			{% endif %}" 
+		>
+			{% csrf_token %}
+			<div class="row">
+				<div class="col-md-8">
+					<table class="table table-condensed table-borderless">
+						{% include 'results/form_field_tr.html' with field=form.name %}
+						{% include 'results/form_field_tr.html' with field=form.region %}
+						{% include 'results/form_field_tr.html' with field=form.city_id %}
+						{% include 'results/form_field_tr.html' with field=form.birthday %}
+						{% include 'results/form_field_tr.html' with field=form.n_members %}
+						{% include 'results/form_field_tr.html' with field=form.url_site %}
+						{% include 'results/form_field_tr.html' with field=form.url_vk %}
+						{% include 'results/form_field_tr.html' with field=form.url_facebook %}
+						{% include 'results/form_field_tr.html' with field=form.email %}
+						{% include 'results/form_field_tr.html' with field=form.phone_club %}
+						{% include 'results/form_field_tr.html' with field=form.other_contacts %}
+						{% include 'results/form_field_tr.html' with field=form.address_street %}
+						{% include 'results/form_field_tr.html' with field=form.tales %}
+						{% include 'results/form_field_tr.html' with field=form.training_timetable %}
+						{% include 'results/form_field_tr.html' with field=form.training_cost %}
+						{% include 'results/form_field_tr.html' with field=form.members_can_pay_themselves %}
+						{% include 'results/form_field_tr.html' with field=form.logo %}
+						{% if club.id %}
+							<tr>
+								<td class="text-right"><strong>Дата последнего обновления:</strong></td>
+								<td>{{ club.last_update_time|default:'никогда' }}</td>
+							</tr>
+							{% include 'results/form_field_tr.html' with field=form.is_member_list_visible %}
+							{% include 'results/form_field_tr.html' with field=form.is_actual %}
+						{% endif %}
+						{% if is_admin %}
+							<tr>
+								<td></td>
+								<td><strong class="for-admin">Поля ниже видят только администраторы сайта</strong></td>
+							</tr>
+							{% include 'results/form_field_tr.html' with field=form.is_active %}
+						{% endif %}
+					</table>
+				</div>
+				<div class="col-md-4">
+					<table class="table table-condensed table-borderless">
+						<tr><td></td><td><h4>Руководитель клуба</h4></td></tr>
+						{% include 'results/form_field_tr.html' with field=form.head_name %}
+						<tr><td></td><td>Все данные ниже будут доступны только имеющим права на клуб и администраторам.</td></tr>
+						{% include 'results/form_field_tr.html' with field=form.head_address %}
+						{% include 'results/form_field_tr.html' with field=form.head_email %}
+						{% include 'results/form_field_tr.html' with field=form.phone_mob %}
+						{% include 'results/form_field_tr.html' with field=form.phone_rab %}
+						{% include 'results/form_field_tr.html' with field=form.phone_dom %}
+						{% include 'results/form_field_tr.html' with field=form.head_vk %}
+						{% include 'results/form_field_tr.html' with field=form.head_facebook %}
+						{% include 'results/form_field_tr.html' with field=form.head_skype %}
+						{% include 'results/form_field_tr.html' with field=form.head_ICQ %}
+						{% include 'results/form_field_tr.html' with field=form.head_other_contacts %}
+						<tr><td></td><td>&nbsp;</td></tr>
+						<tr><td></td><td><h4>Представитель клуба</h4></td></tr>
+						<tr><td></td><td>
+							Его имя и адрес будут доступны только имеющим права на клуб и администраторам.
+							Если представитель совпадает с руководителем, оставьте эти поля пустыми.
+						</td></tr>
+						{% include 'results/form_field_tr.html' with field=form.speaker_name %}
+						{% include 'results/form_field_tr.html' with field=form.speaker_email %}
+					</table>
+					{% if club.logo %}
+						<span class="pull-right"><img src="http://probeg.org/{{ club.logo_thumb }}"/></span>
+					{% endif %}
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-5">
+					<input type="submit"
+						name="frmClub_submit"
+						value="{% if club.id %}Сохранить{% else %}Создать{% endif %}"
+						class="btn btn-success"
+					/>
+				</div>
+			</div>
+		</form>
+	{% include 'results/panel_footer.html' %}
+	{% if club.id and is_admin and not club.has_dependent_objects %}
+		<form id="frmForClub" method="POST" action="{{ club.get_delete_url }}" class="form-inline">
+			{% csrf_token %}
+			<input type="submit" name="frmForClub_submit" value="Удалить клуб «{{ club }}»" class="btn btn-danger pull-right"/>
+		</form>
+	{% endif %}
+</div></div>
+<script language="javascript">
+var ajax_city_prefix = "id_";
+var ajax_city_fullname = 1;
+{% if club.city %}
+var ajax_city_default = "{{ club.city.id }}";
+{% endif %}
+</script>
+{% endblock %}

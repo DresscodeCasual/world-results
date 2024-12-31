@@ -1,0 +1,116 @@
+{% load results_extras %}
+{% load static %}
+<a name="news{{ news.id }}"></a>
+{% if news.is_for_social %}
+	{% include 'results/panel_header_before_title.html' with style='default' %}
+{% else %}
+	{% include 'results/panel_header_before_title.html' %}
+{% endif %}
+	{% if news.is_for_social %}
+		<span class="pull-right">
+			&nbsp;&nbsp;(только для соцсетей)
+		</span>
+	{% endif %}
+	{% if is_admin or is_extended_editor or is_editor and event.can_be_edited %}
+		<span class="pull-right">
+			&nbsp;&nbsp;&nbsp;
+			<a href="{{ news.get_editor_url }}">
+				<button type="button" class="btn btn-xs btn-primary">Редактировать</button></a>
+		</span>
+	{% endif %}
+	<span class="pull-right">
+		&nbsp;&nbsp;&nbsp;
+		<a href="{{ news.get_old_url }}" class="underlined">Старая версия</a>
+	</span>
+	<a href="{{ news.get_absolute_url }}"><strong>{{ news|safe }}</strong></a>
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<span class="nobr">{{ news.date_posted|date:"j E Y" }}</span>
+{% include 'results/panel_header_after_title.html' %}
+	<div class="row"><div class="col-md-12">
+		{% if news.image %}
+			<a href="{{ news.get_image_url }}">
+				<img src="{{ news.get_image_thumb_url }}" border="0" alt="Увеличить" hspace="5" vspace="5"
+					align="{% if news.image_align == "l" %}left{% else %}right{% endif %}"
+				/>
+			</a>
+		{% endif %}
+		{{ news.content|safe }}
+		<p><small>
+			<span class="pull-right">Просмотров: {{ news.n_views }}</span>
+			{% if news.author %}
+				/{{ news.author }}/
+			{% endif %}
+		</small></p>
+	</div></div>
+	{% if is_admin or is_editor and event.can_be_edited %}
+		<form id="frmPosts" method="POST" action="{% url 'editor:news_post' news_id=news.id %}">
+			{% csrf_token %}
+			<div class="row">
+				<div class="col-md-8">
+					<h3>Публикации</h3>
+					{% for post in news.social_post_set.all %}
+						<p>
+							{% if post.social_page.page_type == 1 %}
+								<img src="/static2/images/icons/fb_small_square.png" border="0" width="15"/>
+							{% elif post.social_page.page_type == 2 %}
+								<img src="/static2/images/icons/vk_small_square.png" border="0" width="15"/>
+							{% else %}
+								<img src="/static2/images/icons/tw_small_square.png" border="0" width="15"/>
+							{% endif %}
+							<a href="{{ post.get_absolute_url }}">{{ post.social_page.name }}</a>
+							<br/>
+							{% if post.social_page.page_type == 3 %}
+								Твит: «{{ post.tweet }}»
+								<br/>
+							{% endif %}
+							{% if post.created_by %}
+								({% include 'editor/user_name_with_link.html' with person=post.created_by %}), 
+							{% endif %}
+							{{ post.date_posted }}
+						</p>
+					{% empty %}
+						Пока нет
+					{% endfor %}
+					</ol>
+				</div>
+				<div class="col-md-4">
+					<h3>Опубликовать</h3>
+					{% for page in social_pages %}
+						<input type="checkbox" name="page_{{ page.id }}" class="chkbox"
+							{% if page.is_for_all_news or district and page.district %}
+								{% if not news|has_posts_in_social_page:page %}
+									checked
+								{% endif %}
+							{% endif %}
+						/>
+						{% if page.page_type == 1 %}
+							<img src="/static2/images/icons/fb_small_square.png" border="0" width="15"/>
+						{% elif page.page_type == 2 %}
+							<img src="/static2/images/icons/vk_small_square.png" border="0" width="15"/>
+						{% else %}
+							<img src="/static2/images/icons/tw_small_square.png" border="0" width="15"/>
+						{% endif %}
+						<a href="{{ page.url }}">{{ page.name }}</a>
+							{% if news|has_posts_in_social_page:page %}
+								(уже опубликовано)
+							{% endif %}
+						<br/>
+					{% endfor %}
+					<br/>
+					<p>
+						<input type="submit" name="frmPosts_submit"
+							value="Опубликовать в отмеченных группах" class="btn btn-primary"/>
+					</p>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-12 form-group">
+					Для публикаций в твиттер введите текст заметки (не больше {{ news.twitter_max_length }} символов, ссылку на новость вставлять сюда не надо):
+					<input type="text" name="twitter_text" class="form-control" maxlength="{{ news.twitter_max_length }}"
+						oninput="javascript:$('#n_symbols_left').html({{ news.twitter_max_length }} - this.value.length);"/>
+					Осталось символов: <span id="n_symbols_left">{{ news.twitter_max_length }}<span>
+				</div>
+			</div>
+		</form>
+	{% endif %}
+{% include 'results/panel_footer.html' %}

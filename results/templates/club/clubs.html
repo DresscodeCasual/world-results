@@ -1,0 +1,151 @@
+{% extends 'results/base.html' %}
+{% load static %}
+{% load results_extras %}
+{% block main %}
+<div class="row">
+	<div class="col-md-12">
+		<h3>{{ page_title }}</h3>
+		<p>Перед вами — полный список клубов любителей бега, участвовавших хотя бы в одном <a href="{% url 'results:about_match' %}">КЛБМатче</a>.</p>
+		<p>Хотите добавить информацию о вашем клубе? Инструкция, как это сделать, в самом низу этой страницы.</p>
+	</div>
+	<div class="col-md-12">
+		<table id="table_for_sort" class="table table-condensed table-hover table-bordered" cellspacing="0" width="100%">
+		<thead><tr class="info">
+			<th>№</th><th>Название</th><th>Город</th><th>Контактная информация</th><th>Команды <nobr>в КЛБМатче–{{ CUR_KLB_YEAR|year_for_klbmatch }}</nobr></th>
+			<th>Тренировки клуба</th>
+			{% if is_admin %}
+				<th class="for-admin">Председатель</th>
+				<th class="for-admin">Редакторы</th>
+				<th class="no-sort"></th>
+			{% endif %}
+		</tr></thead>
+		<tbody>
+		{% for club in clubs %}
+			<tr class="vcenter{% if not club.is_active %} info{% endif %}">
+				<td>{{ forloop.counter }}</td>
+				<td><a href="{{ club.get_absolute_url }}">{{ club.name }}</a></td>
+				<td>{{ club.strCity|safe }}</td>
+				<td>
+					{% if club.url_vk %}
+						<span class="pull-right">&nbsp;&nbsp;
+							<a href="{{ club.url_vk }}"><img src="/static2/images/icons/vk_small_square.png"
+							alt="Ссылка на страницу ВКонтакте"/></a>
+						</span>
+					{% endif %}
+					{% if club.url_facebook %}
+						<span class="pull-right">&nbsp;&nbsp;
+							<a href="{{ club.url_facebook }}"><img src="/static2/images/icons/fb_small_square.png"
+							alt="Ссылка на страницу в Facebook"/></a>
+						</span>
+					{% endif %}
+					{{ club.url_site|urlize }}
+					{% if club.url_site and club.email %}
+						<br/>
+					{% endif %}
+					{{ club.email|urlize }}
+				</td>
+				<td>
+					{% for team in club.klb_team_set.all %}
+						<a href="{{ team.get_absolute_url }}">{{ team.name }}</a>
+						{% if not forloop.last %}<br/>{% endif %}
+					{% endfor %}
+				</td>
+				<td>
+					{{ club.training_timetable }}
+					{% if club.training_timetable and club.training_cost %}
+						<br/>
+					{% endif %}
+					{{ club.training_cost }}
+				</td>
+				{% if is_admin %}
+					<td class="for-admin">
+						{% if club.head_vk %}
+							<span class="pull-right">&nbsp;&nbsp;
+								<a href="{{ club.head_vk }}"><img src="/static2/images/icons/vk_small_square.png"
+								alt="Ссылка на страницу ВКонтакте"/></a>
+							</span>
+						{% endif %}
+						{% if club.head_facebook %}
+							<span class="pull-right">&nbsp;&nbsp;
+								<a href="{{ club.head_facebook }}"><img src="/static2/images/icons/fb_small_square.png"
+								alt="Ссылка на страницу в Facebook"/></a>
+							</span>
+						{% endif %}
+						{% if club.head_name %}
+							{{ club.head_name }}
+							{% if club.head_email %}
+								<br/>{{ club.head_email|urlize }}
+							{% endif %}
+							{% if club.head_skype %}
+								<br/>Skype: {{ club.head_skype }}
+							{% endif %}
+							{% if club.head_ICQ %}
+								<br/>ICQ: {{ club.head_ICQ }}
+							{% endif %}
+							{% if club.head_other_contacts %}
+								<br/>Другие контакты: {{ club.head_other_contacts }}
+							{% endif %}
+							{% if club.head_address %}
+								<br/>Домашний адрес: {{ club.head_address }}
+							{% endif %}
+						{% endif %}
+						{% if club.speaker_name %}
+							<br/>
+							Контактное лицо:
+							<br/>
+							{{ club.speaker_name }}
+							{{ club.speaker_email|urlize }}
+						{% endif %}
+					</td>
+					<td class="for-admin">
+						{% for person in club.editors.all %}
+							{% include 'editor/user_name_with_link.html' %}
+							{% if not forloop.last %}<br/>{% endif %}
+						{% endfor %}
+					</td>
+					<td>
+						<a href="{{ club.get_editor_url }}"><button type="button" class="btn btn-xs btn-primary">Ред</button></a>
+						<br/>
+						<a href="{{ club.get_history_url }}"><button type="button" class="btn btn-xs btn-primary">Ист</button></a>
+					</td>
+				{% endif %}
+			</tr>
+		{% endfor %}
+		</tbody>
+		</table>
+		{% if is_admin %}
+			<p class="for-admin">
+				Синим цветом выделены неактивные клубы. Их видят только администраторы.
+			</p>
+		{% endif %}
+		<br/><br/>
+		<p>
+			<h4 id="new_club">Хотите добавить на эту страницу свой клуб?</h4>
+			{% if user_is_authenticated %}
+				<form method="POST" action="{% url 'editor:club_create' %}">
+					{% csrf_token %}
+					Напишите, чему равна средняя скорость в километрах в час спортсмена, пробежавшего стометровку за 10 секунд:
+					<br/>
+					<input type="text" name="check_speed" width="6"/>
+					<br/><br/>
+					Поставьте галочку, если утверждение верно (это — обязательное условие):
+					<br/>
+					<input type="checkbox" name="is_responsible" id="chkIsResponsible"/>
+					Я — руководитель клуба, или представитель клуба, которого руководитель уполномочил создать страничку клуба
+					<br/><br/>
+					И жмите кнопку:
+					<br/>
+					<input type="submit" class="btn btn-primary" id="btnSubmit" value="Создать клуб" disabled/>
+				</form>
+				<script language="javascript">
+$("#chkIsResponsible").click(function(e) {
+	$("#btnSubmit").prop("disabled", !(this.checked));
+});
+				</script>
+			{% else %}
+				Сначала <a href="{% url 'auth:login' %}">зарегистрируйтесь или авторизуйтесь на сайте</a>.
+			{% endif %}
+		</p>
+	</div>
+</div>
+{% endblock %}

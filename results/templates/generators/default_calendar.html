@@ -1,0 +1,126 @@
+{% load results_extras %}
+{% load starrating %}
+{% spaceless %}
+<h3>{{ list_title|safe }}</h3>
+<table class="table table-condensed table-hover table-striped">
+<tr class="info">
+	<th class="text-right">№</th>
+	<th class="text-right">Дата</th>
+	<th>Название</th>
+	<th>Город</th>
+	<th class="text-right" style="max-width:200px;">Дистанции</th>
+	<th class="text-right">Ссылки</th>
+</tr>
+{% for event_group in event_groups %}{% if event_group.is_single_event or event_group.events %}{% with event=event_group.events|first %}
+	<tr style="font-size: 11px;">
+		<td class="text-right">{{ forloop.counter }}</td>
+		<td class="text-right">{{ event.dateWoYear|safe }}</a></td>
+		<td{% if event_group.hide_cities %} colspan="2"{% endif %}>
+			{% if event_group.is_single_event %}
+				<a href="{{ event.get_absolute_url }}">{{ event|safe }}</a>
+				{% if event.cancelled %}
+					<p><strong>Забег отменён!</strong></p>
+				{% else %}
+					{% if event.calendar_set.count %}{% with calendar_count=event.calendar_set.count %}
+						<br/>
+						Планиру{{ calendar_count|ending:10 }}т участвовать
+						<a href="{{ event.get_absolute_url }}">
+							{{ calendar_count }}
+							человек{{ calendar_count|ending:9 }}
+						</a>
+					{% endwith %}{% endif %}
+					{% if event.registration.is_open_now %}
+						<p><a href="{{ event.get_reg_url }}">
+							<button type="button" class="btn btn-xs btn-success">Зарегистрироваться через наш сайт</button>
+						</a></p>
+					{% endif %}
+				{% endif %}
+				<span class="pull-right">{% show_overall_rating event.series True %}</span>
+			{% else %}
+				{% for cur_event in event_group.events %}
+					{% if forloop.first %}
+						<a href="{{ cur_event.get_absolute_url }}">{{ cur_event.name|shorten_weekly_event_name|safe }}</a>
+					{% else %}
+						<span>, </span><a href="{{ cur_event.get_absolute_url }}">{{ cur_event.name|shorten_weekly_event_name|safe }}</a>
+					{% endif %}
+				{% endfor %}
+			{% endif %}
+		</td>
+		{% if not event_group.hide_cities %}
+			<td>
+				{% include 'results/event_cities_with_links.html' %}
+			</td>
+		{% endif %}
+		<td class="text-right" style="max-width:250px;">
+			{% if event.race_set.count > 5 %}
+				{% for race in event.race_set.all %}
+					<span class="nobr">
+						{% if race.itra_score %}
+							<span class="label label-info small-label">ITRA {{ race.itra_score }}</span>
+						{% endif %}
+						{% if race.certificate %}
+							<a href="/{{ race.certificate.file_cert.name }}">
+								<span class="label label-info small-label">сертификат WA-AIMS</span>
+							</a>
+						{% endif %}
+						{{ race.distance_with_heights }}</span>{% if not forloop.last %}, {% endif %}
+				{% endfor %}
+			{% else %}
+				{% for race in event.race_set.all %}
+					{% if race.itra_score %}
+						<span class="label label-info small-label">ITRA {{ race.itra_score }}</span>
+					{% endif %}
+					{% if race.certificate %}
+						<a href="/{{ race.certificate.file_cert.name }}">
+							<span class="label label-info small-label">сертификат IAAF-AIMS</span>
+						</a>
+					{% endif %}
+					{{ race.distance_with_heights }}
+					{% if not forloop.last %}<br/>{% endif %}
+				{% endfor %}
+			{% endif %}
+		</td>
+		<td class="text-right">
+			{% if event_group.events|length <= 1 %}
+				{% if event.url_site %}
+					<a href="{{ event.url_site }}">Сайт</a><br/>
+				{% endif %}
+				{% if event.url_registration and event.is_in_future %}
+					<a href="{{ event.url_registration }}">Регистрация</a><br/>
+				{% endif %}
+				<span class="nobr">
+					{% if event.vk %}
+						&nbsp;<a href="{{ event.vk }}"><img src="/static2/images/icons/vk_small_square.png" alt="Ссылка на страницу ВКонтакте"/></a>
+					{% endif %}
+					{% if event.fb %}
+						&nbsp;<a href="{{ event.fb }}"><img src="/static2/images/icons/fb_small_square.png" alt="Ссылка на страницу в Facebook"/></a>
+					{% endif %}
+					{% if event.series.url_instagram %}
+						&nbsp;<a href="{{ event.series.url_instagram }}"><img src="/static2/images/icons/in_small_square.png" alt="Ссылка на страницу в Instagram"/></a>
+					{% endif %}
+				</span>
+				{% if event.vk or event.fb or event.series.url_instagram %}
+					<br/>
+				{% endif %}
+				{% for document in event.document_set.all %}
+					{% include 'results/document_link.html' with short=1 %}
+					<br/>
+				{% endfor %}
+				{% if event.news_set.exists %}
+					<a href="{{ event.get_absolute_url }}">Новости</a><br/>
+				{% endif %}
+				{% if event.photo_set.exists %}
+					<a href="{{ event.get_absolute_url }}">Фотографии</a><br/>
+				{% endif %}
+				{% if event.review_set.exists %}
+					<a href="{{ event.get_absolute_url }}">Отчёты</a><br/>
+				{% endif %}
+			{% endif %}
+		</td>
+	</tr>
+{% endwith %}{% endif %}{% endfor %}
+</table>
+{% if show_link_to_full_calendar %}
+	<h4><a href="{% url 'results:races_year_ahead' %}">Календарь забегов на год вперёд</a></h4>
+{% endif %}
+{% endspaceless %}

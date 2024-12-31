@@ -1,0 +1,61 @@
+{% extends 'results/base.html' %}
+{% load static %}
+{% block main %}
+<h3>{% if is_admin %}
+		<span class="pull-right">
+			<a href="{% url 'editor:better_age_group_results' country_id=country.id is_indoor=0 %}">
+				<button type="button" class="btn btn-xs btn-primary">Потенциальные рекорды</button></a>
+		</span>
+	{% endif %}	
+	{{ page_title }}
+	<small><a href="{% url 'results:age_group_records' country_id=country.id %}">Рекорды в возрастных группах</a></small>
+</h3>
+<h4>Проект сайта «ПроБЕГ» и Игоря Агишева</h4>
+
+<br/><br/>
+
+<p>Наша цель — собрать для общепринятых ультрамарафонских дистанций:</p>
+
+<p>1. по десять лучших результата за всю историю России и Беларуси;</p>
+
+<p>2. все бывшие рекорды.</p>
+
+<p>В таблицах ниже представлены только лучшие пять результатов; если нажмёте на результат в любой ячейке, попадёте на страницу с подробностями об этой дистанции. Если нажмёте на имя спортсмена, попадёте на страницу со всеми известными нам его (её) результатами.</p>
+
+<p>Если вы знаете о результатах, которые нужно добавить в эту таблицу, или найдёте любые ошибки, пожалуйста, напишите нам на <a href="mailto:info@probeg.org">info@probeg.org</a> или <a href="#" id="send_to_info_page">прямо отсюда</a>.</p>
+
+<p><strong>Мы будем рады помощи в обработке протоколов.</strong> Если вы готовы помочь, пожалуйста, напишите нам любым из тех же способов.</p>
+
+{% for gender, data_gender in table.data.items %}
+	<div class="row"><div class="col-md-12 text-center">
+		{% include 'misc/adsense_bottom.html' %}
+	</div></div>
+	<br/><br/>
+	<h3 class="text-center">{{ data_gender.name }}</h3>
+	<table class="table table-condensed text-small table-hover table-striped">
+		<tr class="info vcenter text-center">
+			<th></th>
+			{% for distance, dist_code in table.distances %}
+				<th colspan="2"><a href="{% url 'results:ultra_record_details' country_id=country.id distance_code=dist_code gender_code=data_gender.gender_code %}">{{ distance }}</a></th>
+			{% endfor %}
+			<th></th>
+		</tr>
+		{% for results_row in data_gender.results %}
+			<tr class="vcenter{% if forloop.counter == 1 %} warning{% endif %}">
+				<td class="text-center">{{ forloop.counter }}</td>
+				{% for record_result in results_row %}
+					{% if record_result %}
+						<td>{% include 'age_group_records/record_result_runner_name_and_city.html' %}</td>
+						<td class="nobr">
+							<a href="{{ record_result.get_ultra_group_url }}">{{ record_result|safe }}</a>
+						</td>
+					{% else %}
+						<td colspan="2"></td>
+					{% endif %}
+				{% endfor %}
+				<td class="text-center">{{ forloop.counter }}</td>
+			</tr>
+		{% endfor %}
+	</table>
+{% endfor %}
+{% endblock %}

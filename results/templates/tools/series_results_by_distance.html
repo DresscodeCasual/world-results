@@ -1,0 +1,61 @@
+{% regroup races by distance as distances %}
+<table class="table table-hover table-striped vcenter">
+	<tr class="info">
+		<th rowspan="2" class="text-right">Distance</th>
+		<th rowspan="2" class="text-center">Date</th>
+		{% if city_needed %}<th rowspan="2" class="text-center">City</th>{% endif %}
+		<th colspan="3" class="text-center">Finishers</th>
+		<th rowspan="2" colspan="3">Male Winner</th>
+		<th rowspan="2" colspan="3">Female Winner</th>
+	</tr>
+	<tr class="info">
+		<th class="text-right">Total</th>
+		<th class="text-left">Males</th>
+		<th class="text-right">Females</th>
+	</tr>
+	{% for distance in distances %}
+		{% for row in distance.list %}{% with race=row.race %}
+			<tr {% if race.event == event %}class="warning"{% endif %}>
+				<td class="text-right">{% if forloop.first %}{{ distance.grouper }}{% endif %}</td>
+				<td class="text-center"><a href="{{ race.get_absolute_url }}">{{ race.event.date|safe }}</a>
+					{% if race.precise_name %}
+						<br/>({{ race.precise_name }})</a>
+					{% endif %}
+					{% if race.distance_real %}
+						<br/>
+						(actual: {{ race.distance_real }})
+					{% endif %}
+				</td>
+				{% if city_needed %}<td class="text-center">{{ race.event.strCityCountry|safe }}</td>{% endif %}
+				{% if race.n_participants_finished %}
+					<td class="text-right">{{ race.n_participants_finished }}</td>
+					{% if race.n_participants_finished_male != None %}
+						{% include 'tools/progress_bar_ratio.html' with all=race.n_participants_finished men=race.n_participants_finished_male %}
+					{% else %}
+						<td colspan="2" class="text-center">unknown</td>
+					{% endif %}
+				{% else %}
+					<td></td><td colspan="2" class="text-center">unknown</td>
+				{% endif %}
+				<td>{% include 'tools/result_runner_name_with_link.html' with result=race.winner_male %}</td>
+				<td>{{ race.winner_male.strCity }}</td>
+				<td class="text-center">
+					{% if race.is_course_record_male %}
+						<strong>{{ race.winner_male }}<br/>(course record)</strong>
+					{% else %}
+						{{ race.winner_male|default_if_none:'' }}
+					{% endif %}
+				</td>
+				<td class="success">{% include 'tools/result_runner_name_with_link.html' with result=race.winner_female %}</td>
+				<td class="success">{{ race.winner_female.strCity }}</td>
+				<td class="text-center success">{% if race.is_course_record_female %}
+					<strong>{{ race.winner_female }}
+					<br/>(course record)</strong>
+					{% else %}
+						{{ race.winner_female|default_if_none:'' }}
+					{% endif %}
+				</td>
+			</tr>
+		{% endwith %}{% endfor %}
+	{% endfor %}
+</table>

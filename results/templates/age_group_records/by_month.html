@@ -1,0 +1,79 @@
+{% extends 'results/base.html' %}
+{% load results_extras %}
+{% block main %}
+<div class="row"><div class="col-md-12">
+	<h3 class="text-center">
+		<a href="{% url 'results:age_group_records' country_id=country.id %}">{{ page_title_first }}</a>{{ page_title_second }}
+	</h3>
+	<h4 class="text-center">по данным сайта «ПроБЕГ»</h4>
+</div></div>
+<br/>
+<div class="row"><div class="col-md-12">
+	<form action="{% url 'results:age_group_records_by_month_initial' country_id=country.id %}" method="POST" name="frmAgeGroupRecord" class="form-inline">
+		{% csrf_token %}
+		{% for field in form %}
+			{% include 'results/form_field.html' with field=field %}&nbsp;&nbsp;
+		{% endfor %}
+		<button type="submit" class="btn btn-success" name="btnFilter">Перейти</button>
+	</form>
+</div></div>
+<br/><br/>
+<div class="row"><div class="col-md-12">
+	{% if records %}
+		<table id="table_for_sort_age_group_records" class="table table-condensed table-hover">
+			<thead><tr class="info">
+				<th class="text-right min-width">№</th>
+				<th class="text-right">Дата</th>
+				<th>Забег</th>
+				<th class="text-right">Дистанция</th>
+				<th class="text-left">&nbsp;&nbsp;Имя</th>
+				<th class="text-center min-width">&nbsp;&nbsp;Результат</th>
+				<th class="text-center">Возраст на день забега</th>
+				<th class="text-center">Возрастная группа</th>
+				<th></th>
+			</tr></thead>
+			<tbody>
+			{% for record_result in records %}{% with runner=record_result.runner result=record_result.result %}
+				<tr{% if runner.gender == 1 %} class="success"{% endif %}>
+					<td class="text-right min-width">{{ forloop.counter }}</td>
+					<td class="text-right nobr">{{ record_result.get_date|safe }}</td>
+					<td><a href="{{ record_result.race.get_absolute_url }}">{{ record_result.race.event.name }}</a></td>
+					<td class="text-right"><a href="{{ record_result.race.get_absolute_url }}">{{ record_result.race.distance.name }}</a>
+						{% if race.distance_real %}
+							<br/>
+							<span class="nobr">(факт.: {{ race.distance_real }})</span>
+						{% endif %}
+					</td>
+					<td data-order="{{ runner.lname }} {{ runner.fname }}">
+						&nbsp;<a href="{{ runner.get_absolute_url }}">{{ runner.fname }} {{ runner.lname }}</a>
+					</td>
+					<td class="text-center min-width" data-order="{{ result.result }}">
+						<span>{{ record_result|safe }}</span>
+						{% include 'age_group_records/record_result_note_signs.html' %}
+					</td>
+					<td class="nobr text-center">
+						{{ record_result.age_on_event_date|default_if_none:'неизвестен' }}
+						{% if record_result.age_on_event_date %}
+							{{ record_result.age_on_event_date|ending:11 }}
+						{% endif %}
+					</td>
+					<td class="text-center"><a href="{{ record_result.get_group_url }}">{{ record_result.get_age_group }}</a></td>
+					<td>{{ record_result.get_explanation }}</td>
+				</tr>
+			{% endwith %}{% endfor %}
+			</tbody>
+		</table>
+<script language="javascript">
+$('#table_for_sort_age_group_records').DataTable( {
+	"paging": false,
+	"bInfo": false,
+	"language": {
+		"search": "Поиск по всем столбцам"
+			}
+});
+</script>
+	{% else %}
+		<p>Пока нам неизвестно ни одного.</p>
+	{% endif %}
+</div></div>
+{% endblock %}

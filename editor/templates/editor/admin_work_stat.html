@@ -1,0 +1,46 @@
+{% extends 'results/base.html' %}
+{% block main %}
+
+<div class="row"><div class="col-md-12">
+	<h3 class="text-center">{{ page_title }}</h3>
+	<br/>
+	<p>Здесь учтена далеко не вся работа: например, не учитываются отвеченные письма, составленные и подписанные договоры, раздача призов, поддержка хостинга и так далее.</p>
+	<br/><br/>	
+	<table class="table table-condensed table-hover">
+		{% include 'editor/admin_work_stat_thead.html' %}
+		{% for month in months %}
+			<tr><td colspan="24"><strong>{{ month.month }}</strong></td></tr>
+			{% for user in month.users %}
+				<tr class="text-right">
+					<td>{% include 'editor/user_name_with_link.html' with person=user.user %}</td>
+					<td>{{ user.series_created }}</td>
+					<td>{{ user.series_updated }}</td>
+					<td>{{ user.events_created }}</td>
+					<td>{{ user.events_updated }}</td>
+					<td>{{ user.races_created }}</td>
+					<td>{{ user.races_updated }}</td>
+					<td>{{ user.runners_created }}</td>
+					<td>{{ user.runners_updated }}</td>
+					<td>{{ user.documents_created }}</td>
+					<td>{{ user.documents_updated }}</td>
+					<td>{{ user.news_created }}</td>
+					<td>{{ user.news_updated }}</td>
+					<td>{{ user.off_results_created }}</td>
+					<td>{{ user.off_results_uploaded }}</td>
+					<td>{{ user.off_results_updated }}</td>
+					<td>{{ user.unoff_results_created }}</td>
+					<td>{{ user.klb_participants_created }}</td>
+					<td>{{ user.klb_participants_updated }}</td>
+					<td>{{ user.social_posts_created }}</td>
+					<td>{{ user.off_results_approved }}</td>
+					<td>{{ user.unoff_results_approved }}</td>
+					<td>{{ user.klb_results_created }}</td>
+					<td>{{ user.created_total }}</td>
+					<td>{{ user.verified_total }}</td>
+				</tr>
+			{% endfor %}
+		{% endfor %}
+		{% include 'editor/admin_work_stat_thead.html' %}
+	</table>
+</div></div>
+{% endblock %}

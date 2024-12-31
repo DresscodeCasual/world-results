@@ -1,0 +1,9 @@
+{% load results_extras %}
+{% with n=race.get_official_results.count %}
+	<input type="submit" name="frmProtocol_update" value="Обновить типы колонок и столбцы" class="btn btn-primary"/>
+	{% if ok_to_import %}
+		&nbsp;&nbsp;&nbsp;&nbsp;
+		<input type="submit" name="frmProtocol_submit" class="btn btn-success btnImport"
+			value="Загрузить результаты для дистанции {{ race.distance_with_heights }}{% if n %} ({{ n }} результат{{ n|ending:1 }} уже есть){% endif %}"/>
+	{% endif %}
+{% endwith %}

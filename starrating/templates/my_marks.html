@@ -1,0 +1,36 @@
+<html>
+<body>
+
+{% url 'starrating:rating_details' level='group' id_=group_id as rating_details_url %}
+
+<p>
+Альтернативный формат:
+<a href="{{  rating_details_url }}">
+         {{  rating_details_url }}
+</a>
+</p>
+
+{% if marks %}
+<ul>
+{% for mark in marks %}
+<li>{{ mark.id }}. par={{ mark.parameter_id }} value={{ mark.value }}</li>
+{% endfor %}
+</ul>
+{% else %}
+<p>Нет оценок</p>
+{% endif %}
+
+{% if review %}
+<p>Отзыв:</p>
+<textarea readonly>{{ review.content }}</textarea>
+<p>Показывать ли имя пользователя рядом с отзывом: {{ review.show_user_name }}.
+
+	{% if review.response %}
+	<p>Ответ:</p>
+	<textarea readonly>{{ review.response }}</textarea>
+	{% endif %}
+
+{% endif %}
+
+</body>
+</html>

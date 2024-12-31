@@ -1,0 +1,19 @@
+<hr/>
+<div class="row"><div class="col-md-12">
+	<form id="frmSearch" action="" method="POST" class="form-inline">
+		{% csrf_token %}
+		Фильтр:
+		{% for field in filterForm %}
+			&nbsp;&nbsp;{{ field }}
+		{% endfor %}
+		<input type="hidden" name="ordering" value="{{ ordering }}"/>
+		{% if page %}
+			<input type="hidden" name="page" id="id_page" value="{{ page.number }}"/>
+		{% endif %}
+		&nbsp;&nbsp;<input type="submit" class="btn btn-success" name="frmSearch_submit" value="Применить фильтр"/>
+		<span class="pull-right">
+			{% include 'results/pagination.html' %}
+		</span>
+	</form>
+</div></div>
+<br/>

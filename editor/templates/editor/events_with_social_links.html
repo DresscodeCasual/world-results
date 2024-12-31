@@ -1,0 +1,31 @@
+{% extends 'results/base.html' %}
+{% block main %}
+<h3>{{ page_title }}</h3>
+
+<table id="table_for_sort" class="table table-condensed table-hover">
+	<thead><tr class="info">
+		<th>№</th><th>Серия</th><th>Забег</th><th>Страна</th><th>Город</th><th>Дата</th>
+		<th>Серия: ВК</th><th>Серия: FB</th><th>Серия: Inst</th>
+		<th>Забег: ВК</th><th>Забег: FB</th>
+		<th>E-mail</th>
+	</tr></thead>
+	<tbody>
+	{% for event in events %}
+		<tr>
+			<td>{{ forloop.counter }}</td>
+			<td><a href="{{ event.series.get_absolute_url }}">{{ event.series.name }}</td>
+			<td><a href="{{ event.get_absolute_url }}">{{ event.name }}</td>
+			<td>{{ event.series.city.region.country.name }}</td>
+			<td>{% include 'results/event_cities_with_links.html' %}</td>
+			<td>{{ event.date }}</td>
+			<td>{{ event.series.url_vk }}</td>
+			<td>{{ event.series.url_facebook }}</td>
+			<td>{{ event.series.url_instagram }}</td>
+			<td>{{ event.url_vk }}</td>
+			<td>{{ event.url_facebook }}</td>
+			<td>{{ event.email }}</td>
+		</tr>
+	{% endfor %}
+	</tbody>
+</table>
+{% endblock %}

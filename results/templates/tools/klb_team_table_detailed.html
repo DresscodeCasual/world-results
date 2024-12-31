@@ -1,0 +1,57 @@
+{% load results_extras %}
+<div class="col-md-5">
+	<h4>Состав команды</h4>
+	<table class="table table-condensed table-hover">
+		<tr><th>№</th><th>Участник</th><th>Дата рожд.</th><th class="text-center">Стартов</th>
+			<th class="text-right">
+				<abbr title="Жирным выделены 15 лучших результатов участников – только они учитываются в очках команды">Очки</abbr>
+			</th>
+			<th class="text-right">Бонусы</th><th class="text-right">Всего</th>
+		</tr>
+		<tr class="info">
+			<td></td>
+			<td><strong>Всего</strong></td>
+			<td></td>
+			<td class="text-center"></td>
+			<td class="text-right">{{ team.get_clean_score|floatformat:3 }}</td>
+			<td class="text-right">{{ team.bonus_score|floatformat:3 }}</td>
+			<td class="text-right"><strong>{{ team.score|floatformat:3 }}</strong></td>
+		</tr>
+		{% for participant in participants %}{% with person=participant.klb_person %}
+			<tr{% if person.gender == 1 %} class="success"{% endif %}>
+				<td>{{ forloop.counter }}</td>
+				<td>{% if participant.n_starts > 0 %}
+					<a href="#person{{ person.id }}" class="dash-underlined">{{ person.lname }} {{ person.fname }}</a>
+					{% else %}
+						{{ person.lname }} {{ person.fname }}
+					{% endif %}
+					<a href="{{ person.get_absolute_url }}"><span class="glyphicon glyphicon-new-window pull-right" aria-hidden="true"></span></a>
+				</td>
+				<td>{% if person.birthday %}{{ person.birthday|date:'d.m.Y' }}{% endif %}</td>
+				<td class="text-center">{{ participant.n_starts }}</td>
+				<td class="text-right">
+					{% if participant.is_in_best %}
+						<strong>{{ participant.clean_sum|floatformat:3 }}</strong>
+					{% else %}
+						{{ participant.clean_sum|floatformat:3 }}
+					{% endif %}
+				</td>
+				<td class="text-right">{{ participant.bonus_sum|floatformat:3 }}</td>
+				<td class="text-right"><strong>{{ participant.score_sum|floatformat:3 }}</strong></td>
+			</tr>
+			<tr{% if person.gender == 1 %} class="success"{% endif %}>
+				<td></td>
+				<td colspan="7">
+					{% if participant.date_registered %}
+						Заявлен{% if person.gender == 1 %}а{% endif %}
+						{{ participant.date_registered }}{% if participant.date_removed %}.{% endif %}
+					{% endif %}
+					{% if participant.date_removed %}
+						Удален{% if person.gender == 1 %}а{% endif %} из клуба
+						{{ participant.date_removed }}
+					{% endif %}
+				</td>
+			</tr>
+		{% endwith %}{% endfor %}
+	</table>
+</div>

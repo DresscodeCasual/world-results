@@ -1,0 +1,17 @@
+{% load results_extras %}
+{% if runner.eddington %}
+	<p><abbr title="Maximal N such that the runner completed at least N events, each at least N kilometers long">Eddington index</abbr>:
+		{{ runner.eddington }}{% if not runner.deathday %}; needs
+			{{ runner.eddington_for_next_level }} event{{ runner.eddington_for_next_level|pluralize }}
+			of {{ runner.eddington|add:1 }} km each to increase the value.
+		{% endif %}
+	</p>
+{% endif %}
+{% if runner.eddington_cur_year %}
+	<p>Eddington index in year {{ cur_stat_year }}:
+		{{ runner.eddington_cur_year }}{% if cur_stat_year == cur_year %}; needs
+			{{ runner.eddington_for_next_level_cur_year }} event{{ runner.eddington_for_next_level_cur_year|pluralize }}
+			of {{ runner.eddington_cur_year|add:1 }} km each to increase the value.
+		{% endif %}
+	</p>
+{% endif %}

@@ -1,0 +1,73 @@
+{% extends 'results/base.html' %}
+{% block main %}
+{% spaceless %}
+<div class="row">
+	<div class="col-md-8 col-sm-12">
+		<h3>{{ page_title }}</h3>
+		Дата генерации: {{ last_update }}
+		<br/>
+		Всего возможных результатов на странице: {{ n_results_found }}
+		<br/>
+	</div>
+	<div class="col-md-4 col-sm-6">
+		{% include 'results/panel_header.html' with title='Содержание' style='default' %}
+			<div class="row">
+				<div class="col-md-6">
+					<p>Мужчины</p>
+					<ul>
+						{% for _, _, _, anchor, name in contents.2 %}
+							<li><a href="#{{ anchor }}">{{ name }}</a></li>
+						{% endfor %}
+					</ul>
+				</div>
+				<div class="col-md-6">
+					<p>Женщины</p>
+					<ul>
+						{% for _, _, _, anchor, name in contents.1 %}
+							<li><a href="#{{ anchor }}">{{ name }}</a></li>
+						{% endfor %}
+					</ul>
+				</div>
+			</div>
+		{% include 'results/panel_footer.html' %}
+	</div>
+</div>
+<form action="{% url 'editor:add_possible_age_group_records' %}" method="POST">
+	{% csrf_token %}
+	{% for data in items %}
+		<br/>
+		<h4><a href="{{ data.age_group_url }}" id="{{ data.anchor_id }}">
+			{{ data.gender_name.0 }}{{ data.age_group }}, {{ data.distance }}
+			{% if data.surface_desc %}
+				({{ data.surface_desc }})
+			{% endif %}
+		</a></h4>
+		{% if data.record_results %}
+			<p>Рекордные результаты:
+				{% for record_result in data.record_results %}{% with runner=record_result.runner %}
+					<br/>
+					{{ record_result|safe }} —
+					{% if runner %}
+						<a href="{{ runner.get_runner_or_user_url }}">{{ runner.name }}</a>,
+					{% else %}
+						{{ record_result.fname }} {{ record_result.lname }},
+					{% endif %}
+
+					{% if record_result.race %}
+						<a href="{{ record_result.race.get_absolute_url }}">{{ record_result.race.event.name }}</a>, {{ record_result.race.event.dateFull|safe }}
+					{% elif record_result.is_date_known %}
+						{{ record_result.date }}
+					{% else %}
+						{{ record_result.date.year }} г.
+					{% endif %}
+				{% endwith %}{% endfor %}
+			</p>
+		{% else %}
+			Рекорда пока нет.
+		{% endif %}
+		{% include 'editor/age_groups/results_and_runners_table.html' with results=data.best_results bad_results=data.bad_results %}
+	{% endfor %}
+	<input type="submit" value="Добавить отмеченные результаты в рекорды" class="btn btn-primary"/>
+</form>
+{% endspaceless %}
+{% endblock %}

@@ -1,0 +1,37 @@
+{% if paginator.num_pages > 1 %}
+Всего записей: {{ paginator.count }}.
+Показаны записи с {{ first_index }} по {{ last_index }}.
+Страницы:
+<div class="btn-group">
+	{% if show_first_page %}
+		<button type="button" class="btn btn-default btn-pagination" name="button_1" onclick="submitSearchForm(1);">1</button>
+	{% endif %}
+	{% if show_left_ellipsis %}
+		<button type="button" class="btn btn-default" disabled=1>...</button>
+	{% endif %}
+	{% if show_minus_two_page %}
+		<button type="button" class="btn btn-default btn-pagination" name="button_{{ page.number|add:-2 }}"
+			onclick="submitSearchForm({{ page.number|add:-2 }}); return false;">{{ page.number|add:-2 }}</button>
+	{% endif %}
+	{% if page.has_previous %}
+		<button type="button" class="btn btn-default btn-pagination" name="button_{{ page.previous_page_number }}"
+			onclick="submitSearchForm({{ page.previous_page_number }}); return false;">{{ page.previous_page_number }}</button>
+	{% endif %}
+	<button type="button" class="btn btn-success" disabled=1>{{ page.number }}</button>
+	{% if page.has_next %}
+		<button type="button" class="btn btn-default btn-pagination" name="button_{{ page.next_page_number }}"
+			onclick="submitSearchForm({{ page.next_page_number }}); return false;">{{ page.next_page_number }}</button>
+	{% endif %}
+	{% if show_plus_two_page %}
+		<button type="button" class="btn btn-default btn-pagination" name="button_{{ page.number|add:2 }}"
+			onclick="submitSearchForm({{ page.number|add:2 }}); return false;">{{ page.number|add:2 }}</button>
+	{% endif %}
+	{% if show_right_ellipsis %}
+		<button type="button" class="btn btn-default" disabled=1>...</button>
+	{% endif %}
+	{% if show_last_page %}
+		<button type="button" class="btn btn-default btn-pagination" name="button_{{ paginator.num_pages }}"
+			onclick="submitSearchForm({{ paginator.num_pages }}); return false;">{{ paginator.num_pages }}</button>
+	{% endif %}
+</div>
+{% endif %}

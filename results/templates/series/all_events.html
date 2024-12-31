@@ -1,0 +1,15 @@
+{% extends 'results/base_series.html' %}
+{% block content %}
+	{% for event, sr_event in events_list %}
+		{% include 'results/panel_header_before_title.html' %}
+			<a class="underlined" name="event{{ event.id }}" href="{{ event.get_absolute_url }}">{{ event|safe }}</a>
+			{% include 'results/event_edit_buttons.html' with series_page=1 %}
+		{% include 'results/panel_header_after_title.html' %}
+			{% include 'results/event_details_row.html' with races=event.race_set.all series_page=1 sr_event=sr_event %}
+		{% include 'results/panel_footer.html' %}
+		{% if forloop.first %}
+			<div class="text-center">{% include 'misc/adsense_bottom.html' %}</div>
+			<p></p>
+		{% endif %}
+	{% endfor %}
+{% endblock %}

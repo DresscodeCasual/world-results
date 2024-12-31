@@ -1,0 +1,58 @@
+{% extends 'results/base.html' %}
+{% block main %}
+<div class="row">
+	<div class="col-lg-4 col-md-5">
+		<h4 class="text-center">Пробежавшие какой угодно забег в самом большом числе регионов {{ country.prep_case }}</h4>
+		<table class="table table-condensed table-hover vcenter">
+			<thead>
+				<tr class="info">
+					<th class="text-right">Место</th>
+					<th></th>
+					<th class="text-center">Финишей</th>
+					<th class="text-center">Число регионов</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for item in any_distance %}{% with runner=item.runner %}
+					<tr{% if runner.gender == 1 %} class="success"{% endif %}>
+						<td class="text-right">{{ item.place }}</td>
+						<td>{% include 'tools/runner_or_user_name_with_link.html' %}</td>
+						<td class="text-center">{{ item.n_finishes }}</td>
+						<td class="text-center">
+							<strong><a href="{% url 'results:regions_for_runner' runner_id=runner.id country_id=country.id distance_code='any' %}"> {{ item.value }}</strong>
+						</td>
+					</tr>
+				{% endwith %}{% endfor %}
+			</tbody>
+		</table>
+		<p class="text-center">Всего людей в таблице: {{ any_distance|length }}.</p>
+	</div>
+	<div class="col-lg-4 col-md-2"></div>
+	<div class="col-lg-4 col-md-5">
+		<h4 class="text-center">Пробежавшие марафон в самом большом числе регионов {{ country.prep_case }}</h4>
+		<table class="table table-condensed table-hover vcenter">
+			<thead>
+				<tr class="info">
+					<th class="text-right">Место</th>
+					<th></th>
+					<th class="text-center">Финишей</th>
+					<th class="text-center">Число регионов</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for item in marathoners %}{% with runner=item.runner %}
+					<tr{% if runner.gender == 1 %} class="success"{% endif %}>
+						<td class="text-right">{{ item.place }}</td>
+						<td>{% include 'tools/runner_or_user_name_with_link.html' %}</td>
+						<td class="text-center">{{ item.n_finishes }}</td>
+						<td class="text-center">
+							<strong><a href="{% url 'results:regions_for_runner' runner_id=runner.id country_id=country.id distance_code='marathon' %}"> {{ item.value }}</strong>
+						</td>
+					</tr>
+				{% endwith %}{% endfor %}
+			</tbody>
+		</table>
+		<p class="text-center">Всего людей в таблице: {{ marathoners|length }}.</p>
+	</div>
+</div>
+{% endblock %}

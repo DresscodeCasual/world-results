@@ -1,0 +1,43 @@
+{% load results_extras %}
+<div class="row"><div class="col-md-12">
+	<h3>Клуб
+		{% if show_link_to_club_page %}
+			<a href="{{ club.get_absolute_url }}">«{{ club.name }}»</a>
+		{% else %}
+			«{{ club.name }}»
+		{% endif %}
+		{% if club.city %}
+			({{ club.strCity|safe }})
+		{% endif %}
+		{% if is_admin or is_editor %}
+			<span class="pull-right">
+				&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="{{ club.get_history_url }}">
+					<button type="button" class="btn btn-xs btn-primary">История изменений</button></a>
+			</span>
+			<span class="pull-right">
+				&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="{{ club.get_editor_url }}">
+					<button type="button" class="btn btn-xs btn-primary">Редактировать</button></a>
+			</span>
+			{% if next_year_team_name %}
+			<span class="pull-right">
+			&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="{{ club.get_add_next_year_team_url }}">
+					<button type="button" class="btn btn-xs btn-primary">
+						Заявить команду «{{ next_year_team_name }}» в КЛБМатч–{{ NEXT_KLB_YEAR|year_for_klbmatch }}
+					</button></a>
+			</span>
+			{% endif %}
+			{% if cur_year_team_name %}
+			<span class="pull-right">
+				&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="{{ club.get_add_cur_year_team_url }}">
+					<button type="button" class="btn btn-xs btn-primary">
+						Заявить команду «{{ cur_year_team_name }}» в КЛБМатч–{{ CUR_KLB_YEAR|year_for_klbmatch }}
+					</button></a>
+			</span>
+			{% endif %}
+		{% endif %}
+	</h3>
+</div></div>

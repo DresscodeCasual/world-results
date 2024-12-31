@@ -1,0 +1,7 @@
+{% if result.bib_given_to_unknown %}
+	По нашим данным, бежал кто-то другой.
+	{% if result.comment %}
+		<br/>
+	{% endif %}
+{% endif %}
+{{ result.comment|safe }}

@@ -1,0 +1,7 @@
+{% if result.result_on_strava %}
+	<span class="pull-right">
+		<a href="{{ result.result_on_strava }}" target="_blank">
+			<img src="/static2/images/icons/{% if result.result_on_strava.tracker == 1 %}strava{% else %}garmin{% endif %}_60x60.png" width="15" height="15" alt="Ссылка на пробежку в {% if result.result_on_strava.tracker == 1 %}Strava{% else %}Garmin Connect{% endif %}"/>
+		</a>
+	</span>
+{% endif %}

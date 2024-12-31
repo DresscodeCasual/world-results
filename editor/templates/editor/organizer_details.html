@@ -1,0 +1,88 @@
+{% extends 'results/base.html' %}
+{% load static %}
+{% block main %}
+
+<div class="row"><div class="col-md-12">
+	{% include 'results/panel_header_before_title.html' %}
+		{% if organizer.id %}
+			Организатор <a class="underlined" href="{{ organizer.get_absolute_url }}">{{ organizer }}</a>
+			&nbsp;&nbsp;&nbsp;&nbsp;
+			<a href="{{ organizer.get_history_url }}">
+				<button type="button" class="btn btn-sm btn-primary">История изменений</button></a>
+		{% else %}
+			Создание нового организатора
+		{% endif %}
+	{% include 'results/panel_header_after_title.html' %}
+		{% for error in form.non_field_errors %}
+			<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+		{% endfor %}
+		<form id="form" method="POST" enctype="multipart/form-data" action="
+			{% if organizer.id %}
+				{{ organizer.get_update_url }}
+			{% else %}
+				{% url 'editor:organizer_create' %}
+			{% endif %}" 
+		>
+			{% csrf_token %}
+			<table class="table table-condensed table-borderless">
+				{% for field in form %}
+					{% include 'results/form_field_tr.html' with field=field %}
+				{% endfor %}
+			</table>
+			<div class="row">
+				<div class="col-md-5">
+					<input type="submit"
+						name="frmOrganizer_submit"
+						value="{% if organizer.id %}Сохранить{% else %}Создать{% endif %}"
+						class="btn btn-success"
+					/>
+				</div>
+			</div>
+		</form>
+	{% include 'results/panel_footer.html' %}
+	{% if organizer.id %}
+		<form id="frmForOrganizer" method="POST" action="{{ organizer.get_delete_url }}" class="form-inline">
+			{% csrf_token %}
+			{% if organizer.has_dependent_objects %}
+				{% include 'results/panel_header.html' with title='Заменить текущего организатора во всех результатах на другого и удалить текущего' %}
+				После запуска организатор {{ organizer.get_name_and_id }} будет присоединён к организатору с выбранным ниже id, заменён на него
+				везде в таблице probeg, после чего удалён.
+				<br/>
+				Будьте очень осторожны!
+				<p/>
+				<select class="organizers-list" name="select_organizer" style="width: 50%" data-organizer="{{ organizer.id }}"></select>
+				<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css" rel="stylesheet" />
+				<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
+				<script type="text/javascript">
+$(".organizers-list").select2({
+	placeholder: "Введите первые буквы названия организатора",
+	width: 'element',
+	allowClear: true,
+	ajax: {
+		url: "{% url 'editor:organizers_list' organizer_id=organizer.id %}",
+		dataType: 'json',
+		delay: 250,
+		data: function (params) {
+			return {
+				query: params.term
+			};
+		},
+		processResults: function (data) {
+			return {
+				results: data
+			};
+		},
+		cache: true
+	},
+});
+				</script>
+				&nbsp;&nbsp;&nbsp;&nbsp;
+				<input type="submit" name="frmForOrganizer_submit" value="Удалить организатора «{{ organizer.name }}» (id {{ organizer.id }})" class="btn btn-danger"/>
+				{% include 'results/panel_footer.html' %}
+			{% else %}
+				<input type="submit" name="frmForOrganizer_submit" value="Удалить организатора «{{ organizer.name }}» (id {{ organizer.id }})" class="btn btn-danger"/>
+			{% endif %}
+		</form>
+	{% endif %}
+</div></div>
+{% endblock %}

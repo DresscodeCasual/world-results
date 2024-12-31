@@ -1,0 +1,86 @@
+{% extends 'results/base.html' %}
+{% load static %}
+{% block main %}
+<div class="row"><div class="col-md-8 col-md-offset-2">
+	<h3>{{ page_title }}</h3>
+	<p>Здесь вы можете проставить ссылки на пробежки на сервисе Strava сразу по всем своим стартам.
+		Откройте в соседней вкладке страницу <a href="https://www.strava.com/athlete/training/log" target="_blank">https://www.strava.com/athlete/training/log</a> или <a href="https://www.strava.com/athlete/calendar" target="_blank">https://www.strava.com/athlete/calendar</a> и копируйте оттуда ссылки на пробежки, соответствующие забегам, одну за другой.</p>
+	<p>Почему это здорово сделать:</p>
+	<ul>
+		<li>Все пользователи, которые захотят пробежать следующий забег той же серии, смогут проверить, какова была реальная длина дистанции, и оценить перепад высот и другие параметры;</li>
+		<li>Мы сможем оценить точнее длину дистанции для учёта очков в <a href="{% url 'results:about_match' %}" target="_blank">КЛБМатче</a>;</li>
+		<li>Вы сами сможете быстро найти нужную пробежку на <a href="{% url 'results:home' %}" target="_blank">своей странице с результатами</a>.</li>
+	</ul>
+</div></div>
+<div class="row"><div class="col-md-12">
+	{% if results %}
+		<form action="" method="POST">
+			{% csrf_token %}
+			<table class="table table-condensed table-hover">
+				<thead><tr class="info">
+					<th>№</th><th>Дата</th>
+					<th>Забег</th><th>Город</th>
+					<th>Дистанция</th><th>Результат</th><th>Место<br/><nobr>(среди М/Ж)</nobr></th>
+					<th>Группа<br/><nobr>(место в ней)</nobr></th>
+					<th>Ссылка на пробежку<br/>(должна содержать strava.com/activities/<br/>или strava.app.link/<br/>или connect.garmin.com/modern/activity/)</th>
+					<th></th>
+				</tr></thead>
+				<tbody>
+				{% for result, data in results %}
+					<tr>
+						<td>{{ forloop.counter }}</td>
+						<td><a href="{{ result.race.get_absolute_url }}">{{ result.race.event.dateFull|safe }}</a></td>
+						<td><a href="{{ result.race.get_absolute_url }}">{{ result.race.event|safe }}</a></td>
+						<td>{% include 'results/event_cities_with_links.html' with event=result.race.event %}</td>
+						<td class="nobr">{{ result.race.distance }}
+							{% if result.race.distance_real %}
+								<br/>
+								(факт.: {{ result.race.distance_real }})
+							{% endif %}
+						</td>
+						<td>{% include 'tools/tracker_logo.html' %}
+							{% if result.id in results_with_splits %}
+								<a href="{{ result.get_absolute_url }}">{{ result }}</a>
+							{% else %}
+								{{ result }}
+							{% endif %}
+						</td>
+						{% if result.source %}
+							<td></td>
+							<td></td>
+						{% else %}
+							{% if result.place %}
+								<td>&nbsp;{{ result.get_place|safe }}
+									{% if result.place_gender %}
+										<br/>
+										({{ result.get_gender_place|safe }})
+									{% endif %}
+								</td>
+							{% else %}
+								<td></td>
+							{% endif %}
+							<td>{% include 'tools/result_category_name_and_place.html' %}</td>
+						{% endif %}
+						<td><input type="text" name="strava_for_{{ result.id }}" value="{{ data.link }}" size="45"/>
+							{% if data.error %}
+								<br/><span class="label label-danger small-label">некорректная ссылка</span>
+							{% endif %}
+						</td>
+						<td>
+							{% if data.is_saved %}
+								<span class="pull-right"><span class="label label-success small-label">сохранили</span></span>
+							{% elif data.is_removed %}
+								<span class="pull-right"><span class="label label-warning small-label">удалили</span></span>
+							{% endif %}
+						</td>
+					</tr>
+				{% endfor %}
+			</tbody></table>
+			<input type="submit" name="btnStravaLinks" value="Сохранить" class="btn btn-success">
+		</form>
+	{% else %}
+		К сожалению, к Вам пока не привязано ни одного результата. Поищите их <a href="{% url 'results:find_results' %}">на специальной страничке</a>
+		или в <a href="{% url 'results:races' %}">календаре забегов</a>!
+	{% endif %}
+</div></div>
+{% endblock %}

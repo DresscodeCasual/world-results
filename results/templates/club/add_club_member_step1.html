@@ -1,0 +1,67 @@
+{% extends 'results/base.html' %}
+{% load results_extras %}
+{% block main %}
+{% include 'club/club_header.html' with show_link_to_club_page=1 %}
+<br/>
+<div class="row">
+	{% include 'club/club_members_column.html' %}
+	<div class="col-md-7">
+		<h4>Добавление нового члена клуба: шаг 1</h4>
+		<p><strong>Эта страница — не про добавление участников в КЛБМатч.</strong>
+			Для добавления участников в команду КЛБМатча
+			{% if cur_klb_teams %}
+				нажмите нужную кнопку на странице команды
+				{% for team in cur_klb_teams %}
+					<a href="{{ team.get_absolute_url }}">{{ team.name }}</a>{% if forloop.last %}.{% else %} или {% endif %}
+				{% endfor %}
+			{% else %}
+				сначала заявите команду в КЛБМатч на <a href="{{ club.get_absolute_url }}">странице клуба</a>.
+			{% endif %}
+		</p>
+		<p>У людей, которые выступали за ваш клуб раньше, можно изменить даты вступления и выхода из клуба
+			на <a href="{{ club.get_all_members_list_url }}">этой странице</a> — просто нажмите «Редактировать» у нужного человека.
+		</p>
+		<p>После выбора страны или региона нужно либо выбрать город из выпадающего меню, либо ввести название города в нижнем поле.</p>
+		<p>Все поля, кроме отчества, телефона и адреса электронной почты, обязательные. Они нужны, чтобы точнее привязывать результаты к бегунам.
+			Вы можете указать контактную информацию, если хотите иметь контакты всей команды под рукой.
+		</p>
+		<form id="frmAddNewMembers" action="" method="POST" class="form-horizontal">
+			{% csrf_token %}
+			{% for error in form.non_field_errors %}
+				<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+			{% endfor %}
+			{% for field in form %}
+				<div class="form-group">
+					{{ field|label_with_classes:"col-sm-4 control-label" }}
+					<div class="col-sm-8">
+						{{ field }}
+						{% if field.errors %}
+							{% for error in field.errors %}
+								<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+							{% endfor %}
+						{% endif %}
+					</div>
+				</div>
+			{% endfor %}
+			<input type="checkbox" name="is_responsible" id="chkIsResponsible"/>
+			Я&nbsp;или&nbsp;руководитель клуба получили согласие этого человека на хранение его (её)&nbsp;персональных данных
+			(ФИО, год рождения, город, контактная информация) администрацией сайта probeg.org.
+			<br/><br/>
+			<input type="submit" name="step1_submit" value="Добавить отмеченных участников в команду {{ team.name }}"
+				class="btn btn-success" id="btnSubmit" disabled
+			/>
+			<span class="pull-right">
+				<a href="{{ club.get_absolute_url }}">Вернуться на страницу клуба</a>
+			</span>
+		</form>
+	</div>
+</div>
+<script language="javascript">
+var ajax_city_prefix = "id_";
+var ajax_city_fullname = 1;
+{% if form.instance.city.id %}
+	var ajax_city_default = "{{ form.instance.city.id }}";
+{% endif %}
+</script>
+<br/><br/>
+{% endblock %}

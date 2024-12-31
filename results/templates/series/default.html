@@ -1,0 +1,388 @@
+{% extends 'results/base_series.html' %}
+{% load static %}
+{% load results_extras %}
+{% block content %}
+	{% if event_next %}{% with event=event_next %}
+		{% include 'results/event_edit_buttons.html' %}
+		<h3>Next event in the series: <a href="{{ event.get_absolute_url }}">{{ event.name|safe }}, {{ event.dateWithTime|safe }}</a>
+			{% if n_future_events %}
+				<small>&nbsp;<a href="{% url 'results:series_details' series_id=series.id tab='all_events' %}">and {{ n_future_events }} event{{ n_future_events|pluralize }} in the future</a></small>
+			{% endif %}
+		</h3>
+		<div class="row"> <!-- Event details row -->
+			<div class="col-md-10"> <!-- Main part -->
+				<div class="row">
+					<div class="col-md-5"> <!-- Left column -->
+						{% if event.invisible %}
+							<p class="for-admin"><strong>Only admins can see this event.</strong></p>
+						{% endif %}
+						{% if event.cancelled %}
+							<p><strong>The event is cancelled!</strong></p>
+						{% else %}{% with races=event_next_race_set %}
+							{% if event.city %}
+								<p>{% include 'results/event_cities_with_links.html' %}</p>
+							{% endif %}
+							{% if event.surface_type %}
+								<p>Surface: {{ event.get_surface_type_display }}</p>
+							{% endif %}
+							{% if races %}
+								<p>
+									Distance{{ races.count|pluralize }}:
+									{% include 'results/distances_comma.html' %}
+								</p>
+							{% endif %}
+						{% endwith %}{% endif %}
+					</div> <!-- Left column -->
+					<div class="col-md-{% if event.get_url_logo %}4{% else %}7{% endif %}"> <!-- Middle column -->
+						{% if event.start_place %}
+							<p>Start location: {{ event.start_place|safe|urlize }}</p>
+						{% endif %}
+						{% if event.email or event.contacts %}
+							<p>Contacts of the organizers:
+							{% if event.email %}
+								{% if event.email_correct %}
+									<a href="mailto:{{ event.email }}">{{ event.email }}</a>
+									{% if is_admin %}
+										&nbsp;&nbsp;&nbsp;<a class="send_from_info_page" href="#"
+											data-event="{{ event.id }}"><button type="button" class="btn btn-primary btn-xs">Написать</button></a>
+									{% endif %}
+								{% else %}
+									{{ event.email }}
+								{% endif %}
+								<br/>
+							{% endif %}
+							{{ event.contacts }}</p>
+						{% endif %}
+						{% if event.comment %}
+							<p>Comments: {{ event.comment|safe }}</p>
+						{% endif %}
+						{% if is_admin or is_editor %}
+							{% if event.comment_private %}
+								<p class="for-admin">Comments for admins: {{ event.comment_private|safe }}</p>
+							{% endif %}
+							{% if event.source %}
+								<p class="for-admin">Source: {{ event.source|safe|urlize }}</p>
+							{% endif %}
+							{% if event.show_date_added %}
+								<p class="for-admin">Added to calendar on {{ event.date_added_to_calendar }}</p>
+							{% endif %}
+						{% endif %}
+					</div> <!-- Middle column -->
+					{% with url_logo=event.get_url_logo %}{% if 0 and url_logo %}
+						<div class="col-md-3">
+							<a href="#" class="showLogo" data-event="{{ event.id }}">
+								<img src="{{ url_logo|add_prefix }}" align="right" style="max-height: 200px; max-width: 100%;"/>
+							</a>
+						</div>
+					{% endif %}{% endwith %}
+				</div>
+				<br/>
+				<div class="row"> <!-- Second row -->
+					<div class="col-md-5"> <!-- Left column -->
+						{% with calendar_count=event.calendar_set.count %}{% if calendar_count %}
+							<a href="{{ event.get_absolute_url }}">
+								{{ calendar_count }} person{{ calendar_count|pluralize }} are going to participate.
+							</a>
+							<br/><br/>
+						{% endif %}{% endwith %}
+						{% if user_is_authenticated %}
+							{% if calendar %}
+								<p><strong>I am going to participate
+									{% if calendar.race and race_count > 1 %}
+										at the {{ calendar.race.distance }} distance.
+									{% endif %}
+								</strong>
+								<br/>
+								<a href="{{ event.get_remove_from_calendar_url }}">
+									<button type="button" class="btn btn-warning">I don't plan to run it any more</button></a>
+								</p>
+							{% else %}
+								<form action='{{ event.get_add_to_calendar_url }}' method="GET">
+									<input type="submit" value="I am going to run it!" class="btn btn-warning"/>
+									{% if event_next_race_set.count > 1 %}
+										Distance:
+										<select name="race_id">
+											<option value="">I don't know yet</option>
+											{% for race in event_next_race_set %}
+												<option value="{{ race.id }}">{{ race.distance }}</option>
+											{% endfor %}
+										</select>
+									{% endif %}
+								</form>
+							{% endif %}
+						{% endif %}
+						<br/>{% include 'results/addtocalendar.html' %}
+						<br/><br/>
+					</div>
+					<div class="col-md-7"> <!-- Center column -->
+						{% if event.announcement %}
+							<h4>Details</h4>
+							<p>{{ event.announcement|safe }}</p>
+						{% endif %}
+					</div>
+				</div> <!-- Second row -->
+			</div><!-- Main part -->
+			<div class="col-md-2 text-right"> <!-- Right column -->
+				{% include 'results/event_links.html' %}
+			</div> <!-- Right column -->
+		</div> <!-- First row -->
+	{% endwith %}{% else %}
+		<br/>
+		<h4>We don't know anything about future events in this series.</h4>
+	{% endif %}
+	{% if event_prev or prev_distances %}
+		<br/><hr/><br/>
+	{% endif %}
+
+
+	{% if event_prev %}{% with event=event_prev %}
+		{% include 'results/event_edit_buttons.html' %}
+		<h3>Latest event in this series: <a href="{{ event.get_absolute_url }}">{{ event.name|safe }}, {{ event.dateFull|safe }}</a></h3>
+		<br/>
+		<div class="row"> <!-- Event details row -->
+			<div class="col-md-10"> <!-- Main part -->
+				{% if event.invisible %}
+					<p class="for-admin"><strong>It is visible to admins only!</strong></p>
+				{% endif %}
+				{% if event.cancelled %}
+					<p><strong>The event is cancelled!</strong></p>
+				{% else %}
+					<div class="row">
+						<div class="col-md-6">
+							{% if event.city %}
+								<p>{% include 'results/event_cities_with_links.html' %}</p>
+							{% endif %}
+							{% if event.surface_type %}
+								<p>Surface: {{ event.get_surface_type_display }}</p>
+							{% endif %}
+							{% if is_admin %}
+								{% with calendar_count=event.calendar_set.count %}{% if calendar_count %}
+									<p class="for-admin">
+										<a href="{{ event.get_absolute_url }}">
+											{{ calendar_count }} person{{ calendar_count|pluralize }}
+										</a>were going to participate.
+										&nbsp;&nbsp;
+										<a class="send_from_info_page" href="#" data-event-participants="{{ event.id }}">
+											<button type="button" class="btn btn-xs btn-primary">Send a letter to all who planned to run</button></a>
+									</p>
+								{% endif %}{% endwith %}
+							{% endif %}
+							{% if not event_prev_has_results %}
+								{% if event_prev_race_set.exists and not event_prev_has_partially_loaded_races %}
+									<p>We don't have the official results of the event.</p>
+								{% endif %}
+								{% if event_prev_race_set.exists %}
+									<p>
+										Distance{{ event_prev_race_set.count|pluralize }}:
+										{% include 'results/distances_comma.html' with races=event_prev_race_set %}
+									</p>
+									{% if user_has_no_results_on_event_prev %}
+										<p><button type="button" class="btn btn-warning btnAddResult" data-event="{{ event.id }}">
+											Add your result
+										</button></p>
+									{% endif %}
+								{% endif %}
+							{% endif %}
+						</div>
+						<div class="col-md-6">
+							{% if event.start_place %}
+								<p>Start place: {{ event.start_place|safe|urlize }}</p>
+							{% endif %}
+							{% if event.email or event.contacts %}
+								<p>Organizers' contacts:
+								{% if event.email %}
+									{% if event.email_correct %}
+										<a href="mailto:{{ event.email }}">{{ event.email }}</a>
+										{% if is_admin %}
+											&nbsp;&nbsp;&nbsp;<a class="send_from_info_page" href="#"
+												data-event="{{ event.id }}"><button type="button" class="btn btn-primary btn-xs">Send them an email</button></a>
+										{% endif %}
+									{% else %}
+										{{ event.email }}
+									{% endif %}
+									<br/>
+								{% endif %}
+								{{ event.contacts }}</p>
+							{% endif %}
+							{% if event.comment %}
+								<p>Comments: {{ event.comment|safe }}</p>
+							{% endif %}
+							{% if is_admin or is_editor %}
+								{% if event.comment_private %}
+									<p class="for-admin">Comments for admins: {{ event.comment_private|safe }}</p>
+								{% endif %}
+								{% if event.source %}
+									<p class="for-admin">Source: {{ event.source|safe|urlize }}</p>
+								{% endif %}
+								{% if event.show_date_added %}
+									<p class="for-admin">Added to calendar on {{ event.date_added_to_calendar }}</p>
+								{% endif %}
+							{% endif %}
+						</div>
+					</div>
+
+					{% if event_prev_has_results %}
+						<table class="table table-hover table-striped vcenter">
+							<tr class="info">
+								<th rowspan="2" class="text-right">Distance</th>
+								<th colspan="3" class="text-center">Finished</th>
+								<th rowspan="2" colspan="3">Male Winner</th>
+								<th rowspan="2" colspan="3">Female Winner</th>
+							</tr>
+							<tr class="info">
+								<th class="text-center">Total</th>
+								<th class="text-left">Males</th>
+								<th class="text-right">Females</th>
+							</tr>
+							{% if event_prev_race_set.count > 1 %}
+								<tr>
+									<td class="text-right"><strong>Total</strong></td>
+									<td class="text-center">{{ event_prev_n_finishers }}</td>
+									{% if event_prev_n_finishers and event_prev_n_finishers_male != None %}
+										{% include 'tools/progress_bar_ratio.html' with all=event_prev_n_finishers men=event_prev_n_finishers_male %}
+										<td colspan="3"></td>
+										<td colspan="3" class="success"></td>
+									{% else %}
+										<td colspan="5"></td>
+										<td colspan="3" class="success"></td>
+									{% endif %}
+								</tr>
+							{% endif %}
+							{% for race in event_prev_race_set %}
+								<tr>
+									<td class="text-right">
+										{% if race.itra_score %}
+											<span class="pull-left vcenter"><span class="label label-info">ITRA {{ race.itra_score }}</span></span>&nbsp;
+										{% endif %}
+										{% if race.load_status %}
+											<a href="{{ race.get_absolute_url }}">{{ race.distance }}</a>
+										{% else %}
+											{{ race.distance }}
+										{% endif %}
+										{% if race.precise_name %}
+											<br/>({{ race.precise_name }})</a>
+										{% endif %}
+										{% if race.distance_real %}
+											<br/>(факт. {{ race.distance_real }})</a>
+										{% endif %}
+									</td>
+									{% if race.n_participants_finished and race.n_participants_finished_male != None  %}
+										<td class="text-center">{{ race.n_participants_finished }}</td>
+										{% include 'tools/progress_bar_ratio.html' with all=race.n_participants_finished men=race.n_participants_finished_male %}
+									{% else %}
+										<td colspan="3"></td>
+									{% endif %}
+
+									<td>{% with result=race.winner_male %}
+										{% if result.user and result.user.user_profile.is_public %}
+											<a href="{{ result.user.user_profile.get_absolute_url }}"><strong>{{ result.user.get_full_name }}</strong></a>&nbsp;<span class="glyphicon glyphicon-user small-label" aria-hidden="true"></span><span class="sr-only">Зарегистрирован на сайте</span>
+										{% elif result.runner %}
+											<a href="{{ result.runner.get_absolute_url }}"><strong>{{ result.runner.name }}</strong></a>
+										{% else %}
+											<strong>{{ result.strName }}</strong>
+										{% endif %}{% endwith %}
+									</td>
+									<td>{{ race.winner_male.city|default:'' }}</td>
+									<td class="text-center">{% if race.is_male_course_record %}
+										<strong>{{ race.winner_male }}
+										<br/>(course record)</strong>
+										{% else %}
+											{{ race.winner_male|default_if_none:'' }}
+										{% endif %}
+									</td>
+
+									<td class="success">{% with result=race.winner_female %}
+										{% if result.user and result.user.user_profile.is_public %}
+											<a href="{{ result.user.user_profile.get_absolute_url }}"><strong>{{ result.user.get_full_name }}</strong></a>&nbsp;<span class="glyphicon glyphicon-user small-label" aria-hidden="true"></span><span class="sr-only">Зарегистрирован на сайте</span>
+										{% elif result.runner %}
+											<a href="{{ result.runner.get_absolute_url }}"><strong>{{ result.runner.name }}</strong></a>
+										{% else %}
+											<strong>{{ result.strName }}</strong>
+										{% endif %}{% endwith %}
+									</td>
+									<td class="success">{{ race.winner_female.city|default:'' }}</td>
+									<td class="text-center success">{% if race.is_female_course_record %}
+										<strong>{{ race.winner_female }}
+										<br/>(course record)</strong>
+										{% else %}
+											{{ race.winner_female|default_if_none:'' }}
+										{% endif %}
+									</td>
+								</tr>
+							{% endfor %}
+						</table>
+					{% endif %}
+				{% endif %}
+			</div>
+			<div class="col-md-2 text-right"> <!-- Right column -->
+				{% include 'results/event_links.html' with prev_event_section=1 %}
+			</div> <!-- Right column -->
+		</div> <!-- First row -->
+		{% if prev_distances %}
+			<br/><hr/><br/>
+		{% endif %}
+	{% endwith %}{% else %}
+		<br/>
+		<h4>We don't know anything about past events in this series.</h4>
+	{% endif %}
+
+
+	{% if prev_distances %}
+		<h3>Series records</h3>
+		<p>We know about {{ n_events_in_past }} event{{ n_events_in_past|pluralize }} in this series;
+			The first event ran on <a href="{{ event_first.get_absolute_url }}">{{ event_first.dateFull|safe }}</a>.
+			{% if n_prev_events_with_results != n_events_in_past %}
+				We have the results from {{ n_prev_events_with_results }} event{{ n_prev_events_with_results|pluralize }}.
+			{% endif %}
+		</p>
+
+		{% if max_event and prev_distances|length > 1 %}
+			<p>Average number of the event participants: {{ mean_event_size|floatformat:"-1" }};
+			Most participants — {{ max_event_size }} —
+			ran on <a href="{{ max_event.get_absolute_url }}">{{ max_event.dateFull|safe }}</a>.</p>
+		{% endif %}
+
+		<table class="table table-hover table-striped vcenter">
+			<tr class="info">
+				<th class="text-right">Distance</th>
+				<th class="text-center">Events Completed</th>
+				<th class="text-center">First</th>
+				<th class="text-center">Last</th>
+				<th class="text-center"><abbr title="По числу финишировавших">Participants<br/>(Average)</abbr></th>
+				<th class="text-center"><abbr title="По числу финишировавших">Participants<br/>(Max)</abbr></th>
+				<th colspan="3">Course Record (Male)</th>
+				<th colspan="3">Course Record (Female)</th>
+			</tr>
+			{% for data in prev_distances %}
+				<tr>
+					<td class="text-right">{{ data.distance }}</td>
+					<td class="text-center">{{ data.n_starts }}</td>
+					{% if data.n_starts == 1 %}
+						<td colspan="2" class="text-center"><a href="{{ data.first_race.1.get_absolute_url }}">{{ data.first_race.0|date:'d.m.Y' }}</td>
+					{% else %}
+						<td class="text-center"><a href="{{ data.first_race.1.get_absolute_url }}">{{ data.first_race.0|date:'d.m.Y' }}</td>
+						<td class="text-center"><a href="{{ data.last_race.1.get_absolute_url }}">{{ data.last_race.0|date:'d.m.Y' }}</td>
+					{% endif %}
+					{% if data.max_size %}
+						<td class="text-center">{{ data.mean_size|floatformat:"-1" }}</td>
+						<td class="text-center">{{ data.max_size }}<br/><a href="{{ data.max_event.get_absolute_url }}">{{ data.max_event.date|safe }}</a></td>
+					{% else %}
+						<td></td><td></td>
+					{% endif %}
+
+					{% if data.race_with_male_record %}{% with race=data.race_with_male_record %}{% with result=race.winner_male %}
+						{% include 'tools/course_record_name_with_link.html' %}
+					{% endwith %}{% endwith %}{% else %}
+						<td colspan="3"></td>
+					{% endif %}
+
+					{% if data.race_with_female_record %}{% with race=data.race_with_female_record female=1 %}{% with result=race.winner_female %}
+						{% include 'tools/course_record_name_with_link.html' %}
+					{% endwith %}{% endwith %}{% else %}
+						<td colspan="3"></td>
+					{% endif %}
+				</tr>
+			{% endfor %}
+		</table>
+	{% endif %}
+{% endblock %}

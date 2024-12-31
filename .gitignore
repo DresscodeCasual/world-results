@@ -1,0 +1,12 @@
+*.pyc
+world/private_settings.py
+uwsgi.ini
+results/migrations/
+starrating/migrations/
+aims/migrations/
+results/templates/generated/
+logs/
+cache/
+*~
+dumps/
+touch_to_reload

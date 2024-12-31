@@ -1,0 +1,640 @@
+{% extends 'results/base.html' %}
+{% load results_extras %}
+{% block main %}
+
+{% if frmActions.errors %}
+	{% for error in frmActions.errors %}
+		<div class="alert alert-danger" role="alert">
+			{{ error }}
+		</div>
+	{% endfor %}
+{% endif %}
+
+<form id="frmResults" action="{% url 'editor:action_history' %}" method="POST" class="form-inline">
+	{% csrf_token %}
+
+	<div class="row"><div class="col-md-12">
+		{% include 'results/panel_header.html' with title='Параметры поиска' %}
+			{% include 'results/form_field.html' with field=frmActions.country %}
+			{% include 'results/form_field.html' with field=frmActions.region %}
+			{% include 'results/form_field.html' with field=frmActions.city_id %}
+			<br/>
+			{% include 'results/form_field.html' with field=frmActions.unverified %}
+			{% include 'results/form_field.html' with field=frmActions.user %}
+			{% include 'results/form_field.html' with field=frmActions.object_type %}
+			{% include 'results/form_field.html' with field=frmActions.action_type %}
+			<br/>
+			{% include 'results/form_field.html' with field=frmActions.date_from %}
+			{% include 'results/form_field.html' with field=frmActions.date_to %}
+			<input type="submit" name="frmSearchActions_submit" value="Показать действия" class="btn btn-success"/>
+		{% include 'results/panel_footer.html' %}
+		<script language="javascript">
+			var ajax_city_prefix = "id_";
+			{% if city %}
+				var ajax_city_default = {{ city.id }};
+			{% endif %}
+		</script>
+	</div></div>
+
+	<h4>Содержание</h4>
+	{% if events_unoff_results %}
+		<p>
+			<a href="#events_unoff_results">Неофициальные результаты</a> ({{ n_events_unoff_results }})
+			{% if n_events_unoff_results > N_RESULTS_TO_SHOW %}
+				(показаны первые 50)
+			{% endif %}
+		</p>
+	{% endif %}
+	{% if events_off_results %}
+		<p>
+			<a href="#events_off_results">Официальные результаты</a> ({{ n_events_off_results }})
+			{% if n_events_off_results > N_RESULTS_TO_SHOW %}
+				(показаны первые 50)
+			{% endif %}
+		</p>
+	{% endif %}
+	{% if seria %}
+		<p><a href="#seria">Серии</a> ({{ seria|length }})</p>
+	{% endif %}
+	{% if events %}
+		<p><a href="#events">Забеги</a> ({{ events|length }})</p>
+	{% endif %}
+	{% if newses %}
+		<p><a href="#newses">Новости, не привязанные к забегам</a> ({{ newses|length }})</p>
+	{% endif %}
+	{% if cities %}
+		<p><a href="#cities">Города</a> ({{ cities|length }})</p>
+	{% endif %}
+	{% if distances %}
+		<p><a href="#distances">Дистанции</a> ({{ distances|length }})</p>
+	{% endif %}
+	{% if runners %}
+		<p><a href="#runners">Бегуны</a> ({{ runners|length }})</p>
+	{% endif %}
+	{% if klb_persons %}
+		<p><a href="#klb_persons">Участники КЛБМатчей</a> ({{ klb_persons|length }})</p>
+	{% endif %}
+	{% if user_profiles %}
+		<p><a href="#user_profiles">Пользователи</a> ({{ user_profiles|length }})</p>
+	{% endif %}
+	{% if extra_names %}
+		<p><a href="#extra_names">Имена пользователей</a> ({{ extra_names|length }})</p>
+	{% endif %}
+	{% if clubs %}
+		<p><a href="#clubs">Клубы</a> ({{ clubs|length }})</p>
+	{% endif %}
+	{% if teams %}
+		<p><a href="#teams">Команды</a> ({{ teams|length }})</p>
+	{% endif %}
+
+	<div class="row"><div class="col-md-12">
+		<h3>{{ page_title }}</h3>
+		{% if events_unoff_results %}
+			<h4><a name="events_unoff_results"></a>Неофициальные результаты</h4>
+			{% regroup events_unoff_results by event as table_updates %}
+			<table class="table table-condensed table-hover table-break-word">
+				<colgroup>
+					<col width="10%"/>
+					<col width="20%"/>
+					<col width="60%"/>
+					<col width="10%"/>
+				</colgroup>
+				<tr class="info">
+					<th>Пробег</th>
+					<th>Добавил результат</th><th>Нужно проверить</th>
+					<th>Одобрить?</th>
+				</tr>
+				{% for event in table_updates %}
+					<tr>
+						<td colspan="4">
+							<a href="{{ event.grouper.get_absolute_url }}">{{ event.grouper.name }}</a>
+							({{ event.grouper.dateFull|safe }})
+						</td>
+					</tr>
+					{% for row in event.list %}
+					{% with table_update=row.table_update runner=row.runner result=row.result team=row.team race=row.result.race %}
+						<tr>
+							<td></td>
+							<td>{% if table_update.user %}
+									{% include 'editor/user_name_with_link.html' with person=table_update.user %}
+									<br/>
+								{% endif %}
+								{{ table_update.added_time|date:'d E Y, H:i' }}
+							</td>
+							<td>
+								Имя: <strong><a href="{{ runner.get_absolute_url }}">{{ runner.fname }} {{ runner.lname }}</a></strong>
+								{% if runner.city %}
+									({{ runner.city.name }})
+								{% endif %}
+								<br/>
+								Дистанция: <strong><a href="{{ race.get_absolute_url }}">{{ race.distance }}</a></strong>
+								<br/>
+								Результат: <strong>{{ result }}</strong>
+								<br/>
+								{% if runner.birthday_known %}
+									Дата рождения: <strong>{{ runner.birthday }}</strong>
+									<br/>
+									(Лет на день забега: <strong>{{ result.get_runner_age }}</strong>)
+								{% elif runner.birthday %}
+									Год рождения: <strong>{{ runner.birthday.year }}</strong>
+									(возрастная группа и возраст не должны ему противоречить)
+								{% endif %}
+								{% if table_update.get_loaded_from %}
+									<br/>
+									Источник: <strong>{{ table_update.get_loaded_from.new_value|urlize }}</strong>
+								{% endif %}
+								{% if table_update.get_comment %}
+									<br/>
+									Комментарий: <strong>{{ table_update.get_comment.new_value|urlize }}</strong>
+								{% endif %}
+								{% if table_update.is_for_klb %}
+									<br/>
+									{% if team %}
+										{% if row.user_set_correct_club %}
+											<br/>Неважно, какой клуб указан в протоколе:
+											<br/>Клуб в профиле: <strong>{{ row.user_club }}</strong>
+											&nbsp;{% include 'tools/span_yes_no.html' with value=1 %}
+										{% else %}
+											{% if row.user_club %}
+												<br/>Клуб в профиле: <strong>{{ row.user_club }}</strong>
+												{% if row.changed_club_late %}
+													, но пользователь изменил клуб {{ row.club_name_last_changed|date:'d.m.Y' }}, после забега.
+												{% endif %}
+											{% endif %}
+											<br/>В протоколе должен быть указан клуб <strong>«{{ team.club.name }}»</strong>
+											{% if team.name != team.club.name %}
+												или команда <strong>«{{ team.name }}»</strong>
+											{% endif %}
+											или не указано никакого.
+										{% endif %}
+									{% else %}
+										<br/>
+										Индивидуальный участник КЛБМатча
+									{% endif %}
+									{% if row.too_late %}
+										<br/>
+										Прошло больше 90 дней между забегом и запросом. Если в протоколе нет клуба, считайте только бонусы!
+									{% endif %}
+								{% endif %}
+							</td>
+							<td>{% if not table_update.is_verified %}
+									<input type="checkbox" name="table_update_{{ table_update.id }}" class="chkbox"/> Одобрить
+									{% if table_update.is_for_klb %}
+										{% if row.has_no_protocol %}
+											<br/>
+											<strong>У забега нет протокола, провести в КЛБМатч пока нельзя.</strong>
+										{% else %}
+											<br/>
+											<input type="checkbox" name="update_for_klb_{{ table_update.id }}"/> в Матч
+											<br/>
+											<input type="checkbox" name="klb_only_bonus_{{ table_update.id }}"/> считать только бонусы
+										{% endif %}
+										<br/>
+										Надо или одобрить в Матч, или написать письмо человеку!
+									{% endif %}
+								{% endif %}
+								{% include 'editor/tools/action_verified_details.html' %}
+							</td>
+						</tr>
+					{% endwith %}{% endfor %}
+				{% endfor %}
+			</table>
+		{% endif %}
+
+		{% if events_off_results %}
+			<h4><a name="events_off_results"></a>Официальные результаты</h4>
+			{% regroup events_off_results by event as table_updates %}
+			<table class="table table-condensed table-hover">
+				<colgroup>
+					<col width="3%"/>
+					<col width="20%"/>
+					<col width="20%"/>
+					<col width="20%"/>
+					<col width="27%"/>
+					<col width="10%"/>
+				</colgroup>
+				<tr class="info">
+					<th>Пробег</th>
+					<th>Привязал</th><th>Результат</th><th>Бегун</th><th>Поля</th>
+					<th>Одобрить?</th>
+				</tr>
+				{% for event in table_updates %}
+					<tr>
+						<td colspan="6">
+							<a href="{{ event.grouper.get_absolute_url }}">{{ event.grouper.name|safe }}</a>
+							({{ event.grouper.dateFull|safe }})
+						</td>
+					</tr>
+					{% for row in event.list %}
+					{% with table_update=row.table_update runner=row.runner result=row.result team=row.team race=row.result.race %}
+						<tr>
+							<td></td>
+							<td>{% if table_update.user %}
+									{% include 'editor/user_name_with_link.html' with person=table_update.user %}
+									<br/>
+								{% endif %}
+								{{ table_update.added_time|date:'d E Y, H:i' }}
+							</td>
+							<td>
+								Имя: <strong>{{ result.fname }} {{ result.lname }}</strong>
+								&nbsp;{% include 'tools/span_yes_no_maybe.html' with value=row.name_is_ok warning_message=row.name_message %}
+								<br/>
+								Дистанция: <a href="{{ race.get_absolute_url }}">{{ race.distance }}</a>
+								<br/>
+								Результат: <strong><a href="{{ result.get_absolute_url }}">{{ result }}</a></strong>
+								{% if result.club_name %}
+									<br/>Клуб: <strong>{{ result.club_name }}</strong>
+									{% if table_update.is_for_klb and team %}
+										{% if row.user_set_correct_club %}
+											&nbsp;<span class="label label-default small-label">неважно</span>
+											<br/>Клуб в профиле: <strong>{{ row.user_club }}</strong>
+											&nbsp;{% include 'tools/span_yes_no.html' with value=1 %}
+										{% else %}
+											&nbsp;{% include 'tools/span_yes_no.html' with value=row.club_is_ok %}
+											{% if row.user_club %}
+												<br/>Клуб в профиле: <strong>{{ row.user_club }}</strong>{% if row.changed_club_late %}, но пользователь изменил клуб
+													{{ row.club_name_last_changed|date:'d.m.Y' }}, после забега.
+												{% endif %}
+											{% endif %}
+										{% endif %}
+									{% endif %}
+								{% endif %}
+								{% if result.birthday_known %}
+									<br/>Дата рождения: <strong>{{ result.birthday }}</strong>
+									{% if runner.birthday %}
+										&nbsp;{% include 'tools/span_yes_no.html' with value=row.birthday_is_ok %}
+									{% endif %}
+								{% elif result.birthday %}
+									<br/>Год рождения: <strong>{{ result.birthday.year }}</strong>
+									{% if runner.birthday %}
+										&nbsp;{% include 'tools/span_yes_no.html' with value=row.birthday_is_ok %}
+									{% endif %}
+								{% endif %}
+								{% if result.age %}
+									<br/>Возраст: <strong>{{ result.age }}</strong>
+									{% if runner.birthday_known %}
+										&nbsp;{% include 'tools/span_yes_no_maybe.html' with value=row.age_is_ok warning_message=age_message %}
+									{% endif %}
+								{% endif %}
+								{% if result.category_size %}
+									<br/>Группа: <strong>{{ result.category_size.name }}</strong>
+								{% endif %}
+								{% if result.comment %}
+									<br/>Комментарий: <strong>{{ result.comment }}</strong>
+								{% endif %}
+							</td>
+							<td>
+								Имя: <strong><a href="{{ runner.get_absolute_url }}">{{ runner.fname }} {{ runner.lname }}</a></strong>
+								{% if runner.city %}
+									({{ runner.city.name }})
+								{% endif %}
+								<br/>
+								{% if runner.birthday_known %}
+									Дата рождения: <strong>{{ runner.birthday }}</strong>
+									<br/>
+									(Лет на день забега: <strong>{{ result.get_runner_age }}</strong>)
+									<br/>
+								{% elif runner.birthday %}
+									Год рождения: <strong>{{ runner.birthday.year }}</strong>
+									<br/>
+								{% endif %}
+								{% if table_update.is_for_klb %}
+									{% if team %}
+										<br/>
+										Должен быть указан клуб <strong>«{{ team.club.name }}»</strong>
+										{% if team.name != team.club.name %}
+											или команда <strong>«{{ team.name }}»</strong>
+										{% endif %}
+										или не указано никакого.
+									{% endif %}
+									{% if row.too_late %}
+										<br/>
+										Прошло больше 90 дней между забегом и запросом. Если в протоколе нет клуба, считайте только бонусы!
+									{% endif %}
+								{% endif %}
+							</td>
+							<td>{% for field_change in table_update.field_update_set.all %}
+									{{ field_change.field_name }}='{{ field_change.new_value }}'
+									<br/>
+								{% endfor %}
+							</td>
+							<td>{% if not table_update.is_verified %}
+									<input type="checkbox" name="table_update_{{ table_update.id }}" class="chkbox"/> Одобрить
+									{% if table_update.is_for_klb %}
+										<br/>
+										<input type="checkbox" name="update_for_klb_{{ table_update.id }}"/> в Матч
+										<br/>
+										<input type="checkbox" name="klb_only_bonus_{{ table_update.id }}"/> считать только бонусы
+										<br/>
+										Надо или одобрить в Матч, или написать письмо человеку!
+									{% endif %}
+									{% if result.lname and not row.name_is_ok %}
+										<br/>
+										<input type="checkbox" name="add_extra_name_{{ table_update.id }}"/> Добавить бегуну такое имя
+									{% endif %}
+								{% endif %}
+								{% include 'editor/tools/action_verified_details.html' %}
+							</td>
+						</tr>
+					{% endwith %}{% endfor %}
+				{% endfor %}
+			</table>
+		{% endif %}
+
+		{% if seria %}
+			<h4><a name="seria"></a>Серии</h4>
+			{% regroup seria by series as table_updates %}
+			<table class="table table-condensed table-hover table-break-word">
+				<colgroup>
+					<col width="10%"/>
+					<col width="8%"/>
+					<col width="58%"/>
+					<col width="10%"/>
+					<col width="8%"/>
+					<col width="6%"/>
+				</colgroup>
+				<tr class="info">
+					<th>Серия</th>
+					{% include 'editor/action_header.html' %}
+				</tr>
+				{% for series in table_updates %}
+					<tr>
+						<td><a href="{{ series.grouper.get_absolute_url }}">{{ series.grouper.name }}</a></td>
+						<td><a href="{{ series.grouper.get_editor_url }}">
+							<button type="button" class="btn btn-xs btn-primary">Редактировать серию</button></a>
+						</td>
+						<td><a href="{{ series.grouper.get_history_url }}">
+							<button type="button" class="btn btn-xs btn-primary">История изменений серии</button></a>
+						</td>
+						<td colspan="3"></td>
+					</tr>
+					{% include 'editor/action_rows.html' with list=series.list n_cols=1 %}
+				{% endfor %}
+			</table>
+		{% endif %}
+
+		{% if events %}
+			<h4><a name="events"></a>Пробеги</h4>
+			{% regroup events by event as table_updates %}
+			<table class="table table-condensed table-hover table-break-word">
+				<colgroup>
+					<col width="10%"/>
+					<col width="8%"/>
+					<col width="10%"/>
+					<col width="10%"/>
+					<col width="38%"/>
+					<col width="10%"/>
+					<col width="8%"/>
+					<col width="6%"/>
+				</colgroup>
+				<tr class="info">
+					<th>Серия</th><th>Дата</th><th>Пробег</th>
+					{% include 'editor/action_header.html' %}
+				</tr>
+				{% for event in table_updates %}
+					<tr>
+						<td><a href="{{ event.grouper.series.get_absolute_url }}">{{ event.grouper.series.name|safe }}</a></td>
+						<td>{{ event.grouper.dateFull|safe }}</td>
+						<td><a href="{{ event.grouper.get_absolute_url }}">{{ event.grouper.name|safe }}</a></td>
+						<td><a href="{{ event.grouper.get_editor_url }}">
+							<button type="button" class="btn btn-xs btn-primary">Редактировать пробег</button></a>
+						</td>
+						<td><a href="{{ event.grouper.get_history_url }}">
+							<button type="button" class="btn btn-xs btn-primary">История изменений пробега</button></a>
+						</td>
+						<td colspan="3"></td>
+					</tr>
+					{% include 'editor/action_rows.html' with list=event.list n_cols=3 %}
+				{% endfor %}
+			</table>
+		{% endif %}
+
+		{% if newses %}
+			<h4><a name="newses"></a>Новости, не привязанные к пробегам</h4>
+			{% regroup newses by news as table_updates %}
+			<table class="table table-condensed table-hover table-break-word">
+				<colgroup>
+					<col width="10%"/>
+					<col width="15%"/>
+					<col width="10%"/>
+					<col width="41%"/>
+					<col width="10%"/>
+					<col width="8%"/>
+					<col width="6%"/>
+				</colgroup>
+				<tr class="info">
+					<th>Дата</th><th>Название</th>
+					{% include 'editor/action_header.html' %}
+				</tr>
+				{% for news in table_updates %}
+					<tr>
+						<td>{{ news.grouper.date_posted }}</td>
+						<td><a href="{{ news.grouper.get_absolute_url }}">{{ news.grouper.title }}</a></td>
+						<td><a href="{{ news.grouper.get_editor_url }}">
+							<button type="button" class="btn btn-xs btn-primary">Редактировать новость</button></a>
+						</td>
+						<td><a href="{{ news.grouper.get_history_url }}">
+							<button type="button" class="btn btn-xs btn-primary">История изменений новости</button></a>
+						</td>
+						<td colspan="3"></td>
+					</tr>
+					{% include 'editor/action_rows.html' with list=news.list n_cols=2 %}
+				{% endfor %}
+			</table>
+		{% endif %}
+
+		{% if cities %}
+			<h4><a name="cities"></a>Города</h4>
+			{% regroup cities by city as table_updates %}
+			<table class="table table-condensed table-hover table-break-word">
+				<tr class="info">
+					<th>Страна</th><th>Регион</th><th>Название</th>
+					{% include 'editor/action_header.html' %}
+				</tr>
+				{% for city in table_updates %}
+					<tr>
+						<td>{{ city.grouper.region.country }}</td>
+						<td>{% if city.grouper.region.active %}{{ city.grouper.region }}{% endif %}</td>
+						<td><a href="{{ city.grouper.get_editor_url }}">{{ city.grouper.name_full|safe }}</a></td>
+						<td><a href="{{ city.grouper.get_history_url }}">
+							<button type="button" class="btn btn-xs btn-primary">История изменений города</button></a>
+						</td>
+						<td colspan="4"></td>
+					</tr>
+					{% include 'editor/action_rows.html' with list=city.list n_cols=3 %}
+				{% endfor %}
+			</table>
+		{% endif %}
+
+		{% if distances %}
+			<h4><a name="distances"></a>Дистанции</h4>
+			{% regroup distances by distance as table_updates %}
+			<table class="table table-condensed table-hover table-break-word">
+				<tr class="info">
+					<th>Тип</th><th>Длина</th><th>Название</th><th>Старая длина</th><th>Старый тип</th>
+					{% include 'editor/action_header.html' %}
+				</tr>
+				{% for distance in table_updates %}
+					<tr>
+						<td>{{ distance.grouper.get_distance_type_display }}</td>
+						<td>{{ distance.grouper.length }}</td>
+						<td><a href="{{ distance.grouper.get_editor_url }}">{{ distance.grouper.name }}</a></td>
+						<td>{{ distance.grouper.distance_raw }}</td>
+						<td>{{ distance.grouper.race_type_raw }}</td>
+						<td><a href="{{ distance.grouper.get_history_url }}">
+							<button type="button" class="btn btn-xs btn-primary">История изменений дистанции</button></a>
+						</td>
+						<td colspan="4"></td>
+					</tr>
+					{% include 'editor/action_rows.html' with list=distance.list n_cols=5 %}
+				{% endfor %}
+			</table>
+		{% endif %}
+
+		{% if runners %}
+			<h4><a name="runners"></a>Бегуны</h4>
+			{% regroup runners by runner as table_updates %}
+			<table class="table table-condensed table-hover table-break-word">
+				<tr class="info">
+					<th>Бегун</th><th>Дата рождения</th><th>Город</th>
+					<th>КЛБМ</th><th>user</th><th>p ID</th>
+					{% include 'editor/action_header.html' %}
+				</tr>
+				{% for row in table_updates %}{% with runner=row.grouper %}
+					<tr>
+						<td><a href="{{ runner.get_absolute_url }}">
+							{{ runner.fname }} {{ runner.lname }}</a>
+						</td>
+						<td>{{ runner.strBirthday|safe }}</td>
+						<td>{{ runner.city.name }}</td>
+						{% comment %}
+							<td>{% if runner.ak_person_id %}
+									{{ runner.ak_person_id }}
+								{% endif %}
+							</td>
+						{% endcomment %}
+						<td>{% if runner.klb_person_id %}
+								{{ runner.klb_person_id }}
+							{% endif %}
+						</td>
+						<td>{% if runner.user_id %}
+								{{ runner.user_id }}
+							{% endif %}
+						</td>
+						<td>{% if runner.parkrun_id %}
+								{{ runner.parkrun_id }}
+							{% endif %}
+						</td>
+						<td colspan="4"></td>
+					</tr>
+					{% include 'editor/action_rows.html' with list=row.list n_cols=6 %}
+				{% endwith %}{% endfor %}
+			</table>
+		{% endif %}
+
+		{% if klb_persons %}
+			<h4><a name="klb_persons"></a>Участники КЛБМатчей</h4>
+			{% regroup klb_persons by klb_person as table_updates %}
+			<table class="table table-condensed table-hover table-break-word">
+				<tr class="info">
+					<th>Имя</th>
+					{% include 'editor/action_header.html' %}
+				</tr>
+				{% for row in table_updates %}{% with person=row.grouper %}
+					<tr>
+						<td><a href="{{ person.get_absolute_url }}">
+							{{ person }}</a>
+						</td>
+						<td colspan="5"></td>
+					</tr>
+					{% include 'editor/action_rows.html' with list=row.list n_cols=1 %}
+				{% endwith %}{% endfor %}
+			</table>
+		{% endif %}
+
+		{% if user_profiles %}
+			<h4><a name="user_profiles"></a>Профили пользователей</h4>
+			{% regroup user_profiles by user_profile as table_updates %}
+			<table class="table table-condensed table-hover table-break-word">
+				<tr class="info">
+					<th>Пользователь</th><th>Фамилия</th><th>Имя</th>
+					{% include 'editor/action_header.html' %}
+				</tr>
+				{% for user_profile in table_updates %}
+					<tr>
+						<td><a href="{{ user_profile.grouper.user.user_profile.get_absolute_url }}">
+							{{ user_profile.grouper.user.get_full_name }}</a>
+						</td>
+						<td>{{ user_profile.grouper.lname }}</td>
+						<td>{{ user_profile.grouper.fname }}</td>
+						<td colspan="4"></td>
+					</tr>
+					{% include 'editor/action_rows.html' with list=user_profile.list n_cols=3 %}
+				{% endfor %}
+			</table>
+		{% endif %}
+
+		{% if extra_names %}
+			<h4><a name="extra_names"></a>Имена пользователей</h4>
+			{% regroup extra_names by extra_name as table_updates %}
+			<table class="table table-condensed table-hover table-break-word">
+				<tr class="info">
+					<th>Бегун</th><th>Фамилия</th><th>Имя</th><th>Отчество</th><th>Комментарий</th>
+					{% include 'editor/action_header.html' %}
+				</tr>
+				{% for extra_name in table_updates %}
+					<tr>
+						<td><a href="{{ extra_name.grouper.runner.get_absolute_url }}">{{ extra_name.grouper.runner.name }}</a></td>
+						<td>{{ extra_name.grouper.lname }}</td>
+						<td>{{ extra_name.grouper.fname }}</td>
+						<td>{{ extra_name.grouper.midname }}</td>
+						<td>{{ extra_name.grouper.comment }}</td>
+						<td colspan="4"></td>
+					</tr>
+					{% include 'editor/action_rows.html' with list=extra_name.list n_cols=5 %}
+				{% endfor %}
+			</table>
+		{% endif %}
+
+		{% if clubs %}
+			<h4><a name="clubs"></a>Клубы</h4>
+			{% regroup clubs by club as table_updates %}
+			<table class="table table-condensed table-hover table-break-word">
+				<tr class="info">
+					<th>Клуб</th><th>Город</th>
+					{% include 'editor/action_header.html' %}
+				</tr>
+				{% for club in table_updates %}
+					<tr>
+						<td><a href="{{ club.grouper.get_absolute_url }}">{{ club.grouper.name }}</a></td>
+						<td>{{ club.grouper.city }}</td>
+						<td colspan="4"></td>
+					</tr>
+					{% include 'editor/action_rows.html' with list=club.list n_cols=2 %}
+				{% endfor %}
+			</table>
+		{% endif %}
+
+		{% if teams %}
+			<h4><a name="teams"></a>Команды</h4>
+			{% regroup teams by klb_team as table_updates %}
+			<table class="table table-condensed table-hover table-break-word">
+				<tr class="info">
+					<th>Клуб</th><th>Команда</th>
+					{% include 'editor/action_header.html' %}
+				</tr>
+				{% for team in table_updates %}
+					<tr>
+						<td><a href="{{ team.grouper.club.get_absolute_url }}">{{ team.grouper.club.name }}</a></td>
+						<td><a href="{{ team.grouper.get_absolute_url }}">{{ team.grouper.name }}</a></td>
+						<td colspan="4"></td>
+					</tr>
+					{% include 'editor/action_rows.html' with list=team.list n_cols=2 %}
+				{% endfor %}
+			</table>
+		{% endif %}
+	</div></div>
+
+	<input type="submit" name="frmActions_submit" value="Одобрить отмеченные объекты" class="btn btn-success"/>
+</form>
+{% endblock %}

@@ -1,0 +1,188 @@
+{% extends 'results/base.html' %}
+{% load static %}
+{% block main %}
+
+<div class="row"><div class="col-md-12">
+	{% include 'results/panel_header_before_title.html' %}
+		{% if runner.id %}
+			Бегун <a class="underlined" href="{{ runner.get_absolute_url }}">{{ runner }}</a>
+			&nbsp;&nbsp;&nbsp;&nbsp;
+			<a href="{{ runner.get_history_url }}">
+				<button type="button" class="btn btn-sm btn-primary">История изменений</button></a>
+		{% else %}
+			Создание нового бегуна
+		{% endif %}
+	{% include 'results/panel_header_after_title.html' %}
+		{% for error in form.non_field_errors %}
+			<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+		{% endfor %}
+		<form id="form" method="POST" action="
+			{% if runner.id %}
+				{{ runner.get_update_url }}
+			{% else %}
+				{% url 'editor:runner_create' %}
+			{% endif %}" 
+		>
+			{% csrf_token %}
+			<table class="table table-condensed table-borderless">
+				{% for field in form %}
+					{% include 'results/form_field_tr.html' %}
+				{% endfor %}
+			</table>
+			<div class="row">
+				<div class="col-md-5">
+					<input type="submit"
+						name="frmRunner_submit"
+						value="{% if runner.id %}Сохранить{% else %}Создать{% endif %}"
+						class="btn btn-success"
+					/>
+				</div>
+			</div>
+		</form>
+	{% include 'results/panel_footer.html' %}
+	{% if runner.id %}
+		{% include 'results/panel_header.html' with title='Другие имена' %}
+			Здесь вы можете указать сразу несколько имён бегуна: например, имя латиницей для зарубежных забегов, имя с девичьей фамилией и так далее.
+			<br/>
+			<form id="frmName" action="{{ runner.get_add_name_url }}" method="POST">
+				{% csrf_token %}
+				{% for error in frmName.non_field_errors %}
+					<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+				{% endfor %}
+				<table class="table table-condensed">
+					<tr class="info"><th>Фамилия</th><th>Имя</th><th>Отчество</th><th>Комментарий</th><th></th></tr>
+					{% for name in names %}
+						<tr>
+							<td>{{ name.lname }}</td>
+							<td>{{ name.fname }}</td>
+							<td>{{ name.midname }}</td>
+							<td>{{ name.comment }}</td>
+							<td><a href="{% url 'editor:runner_name_delete' runner_id=runner.id name_id=name.id %}">Удалить</a></td>
+						</tr>
+					{% endfor %}
+					<tr>{% for field in frmName %}
+						<td>{% include 'results/form_field.html' with no_title=1 %}</td>
+						{% endfor %}
+						<td>
+							<input type="submit" name="frmName_submit" value="Добавить имя" class="btn btn-success"/>
+						</td>
+					</tr>
+				</table>
+			</form>
+		{% include 'results/panel_footer.html' %}
+
+		{% include 'results/panel_header.html' with title='ID бегуна на платформах' %}
+			<form id="frmPlatform" action="{{ runner.get_add_platform_url }}" method="POST">
+				{% csrf_token %}
+				{% for error in frmPlatform.non_field_errors %}
+					<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+				{% endfor %}
+				<table class="table table-condensed">
+					<tr class="info"><th>Платформа</th><th>Значение</th><th>Заполнили с неё данные?</th><th>Когда добавлена</th><th></th></tr>
+					{% for runner_platform in runner_platforms %}
+						<tr>
+							<td>{{ runner_platform.platform.name }}</td>
+							<td><a href="{{ runner_platform.get_absolute_url }}">{{ runner_platform.value }}</a></td>
+							<td>{{ runner_platform.updated_from_source }}</td>
+							<td>{{ runner_platform.added_time }}</td>
+							<td><a href="{% url 'editor:runner_platform_delete' runner_id=runner.id runner_platform_id=runner_platform.id %}">Удалить</a></td>
+						</tr>
+					{% endfor %}
+					<tr>{% for field in frmPlatform %}
+						<td>{% include 'results/form_field.html' with no_title=1 %}</td>
+						{% endfor %}
+						<td></td><td></td>
+						<td>
+							<input type="submit" name="frmPlatform_submit" value="Добавить платформу" class="btn btn-success"/>
+						</td>
+					</tr>
+				</table>
+			</form>
+		{% include 'results/panel_footer.html' %}
+
+		{% include 'results/panel_header.html' with title='Ссылки на интернет-страницы о бегуне' %}
+			Выше есть отдельные поля для страницы Википедии о человеке и для ссылок на страницы человека в основных базах спортсменов. Добавлять эти ссылки сюда не нужно.
+			<br/>
+			<form id="frmRunnerLink" action="{{ runner.get_add_link_url }}" method="POST">
+				{% csrf_token %}
+				{% for error in frmLink.non_field_errors %}
+					<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+				{% endfor %}
+				<table class="table table-condensed">
+					<tr class="info"><th>Адрес</th><th>Описание (будет видно всем)</th><th></th></tr>
+					{% for runner_link in runner_links %}
+						<tr>
+							<td>{{ runner_link.link }}</td>
+							<td>{{ runner_link.description }}</td>
+							<td><a href="{% url 'editor:runner_link_delete' runner_id=runner.id link_id=runner_link.id %}">Удалить</a></td>
+						</tr>
+					{% endfor %}
+					<tr>{% for field in frmLink %}
+						<td>{% include 'results/form_field.html' with no_title=1 %}</td>
+						{% endfor %}
+						<td>
+							<input type="submit" name="frmLink_submit" value="Добавить ссылку" class="btn btn-success"/>
+						</td>
+					</tr>
+				</table>
+			</form>
+		{% include 'results/panel_footer.html' %}
+
+		<form id="frmForRunner" method="POST" action="{{ runner.get_delete_url }}" class="form-inline">
+			{% csrf_token %}
+			{% if runner.has_dependent_objects %}
+				{% include 'results/panel_header.html' with title='Заменить текущего бегуна во всех результатах на другого и удалить текущего' %}
+				После запуска бегун {{ runner.get_name_and_id }} будет присоединён к выбранному ниже бегуну, заменён на него
+				везде в таблице dj_result, после чего удалён.
+				<br/>
+				Будьте очень осторожны!
+				<p/>
+				<select class="runners-list" name="select_runner" style="width: 50%" data-runner="{{ runner.id }}"></select>
+				<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css" rel="stylesheet" />
+				<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
+				<script type="text/javascript">
+$(".runners-list").select2({
+	placeholder: "Введите первые буквы фамилии и имени или id бегуна",
+	width: 'element',
+	allowClear: true,
+	minimumInputLength: 3,
+	ajax: {
+		url: "{% url 'editor:runners_list' runner_id=runner.id %}",
+		dataType: 'json',
+		delay: 250,
+		data: function (params) {
+			return {
+				query: params.term
+			};
+		},
+		processResults: function (data) {
+			return {
+				results: data
+			};
+		},
+		cache: true
+	},
+});
+				</script>
+				&nbsp;&nbsp;&nbsp;&nbsp;
+				<input type="submit" name="frmForRunner_submit" value="Удалить бегуна {{ runner.get_name_and_id }}" class="btn btn-danger"/>
+				{% if has_nyrr_id %}
+					<br/>
+					<input type="checkbox" name="allow_merge_nyrr">Можно объединять учётные записи NYRR
+				{% endif %}
+				{% include 'results/panel_footer.html' %}
+			{% else %}
+				<input type="submit" name="frmForRunner_submit" value="Удалить бегуна {{ runner.get_name_and_id }}" class="btn btn-danger"/>
+			{% endif %}
+		</form>
+	{% endif %}
+
+</div></div>
+<script language="javascript">
+var ajax_city_prefix = "id_";
+var ajax_city_fullname = 1;
+{% if runner.city %}
+var ajax_city_default = "{{ runner.city.id }}";
+{% endif %}
+</script>
+{% endblock %}

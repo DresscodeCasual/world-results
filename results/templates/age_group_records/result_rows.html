@@ -1,0 +1,44 @@
+{% load results_extras %}
+{% if title %}
+	<tr><td colspan="100" class="text-center warning">
+		<h4 {% if title_for_admin_only %}class="for-admin"{% endif %}>{{ title }}
+			{% if show_delete_all_button %}
+				&nbsp;&nbsp;&nbsp;<a href="{{ delete_other_saved_results_link }}"><button type="button" class="btn btn-xs btn-danger">Удалить все</button></a>
+			{% endif %}
+		</h4>
+	</td></tr>
+{% endif %}
+{% if show_world_europe_records %}
+	{% if world_record %}
+		{% include 'age_group_records/result_row.html' with record_result=world_record counter_value='мир.<br/>рекорд' row_class='warning' is_global_record=1 %}
+	{% endif %}
+	{% if europe_record %}
+		{% include 'age_group_records/result_row.html' with record_result=europe_record counter_value='евр.<br/>рекорд' row_class='warning' is_global_record=1 %}
+	{% endif %}
+{% endif %}
+<tr class="info">
+	{% if show_runner_places %}
+		<th class="text-center">Место<br/>результата</th>
+		<th class="text-center"><abbr title="Указывается у лучшего результата каждого атлета">Место<br/>среди атлетов</abbr></th>
+	{% elif show_runner_places_column %}
+		<th></th><th></th>
+	{% else %}
+		<th></th>
+	{% endif %}
+	<th></th>
+	<th class="text-center">Возраст<br/>на день забега</th>
+	<th>Результат</th>
+	<th class="text-right">Дата</th>
+	<th>Забег</th>
+	<th>Источник</th>
+	{% if commission_session %}
+		<th class="for-admin text-center">Заседание № {{ commission_session.get_number }}</th>
+	{% endif %}
+	{% if is_admin %}
+		<th class="for-admin">Кто добавил</th>
+		<th></th>
+	{% endif %}
+</tr>
+{% for record_result in record_results %}
+	{% include 'age_group_records/result_row.html' %}
+{% endfor %}

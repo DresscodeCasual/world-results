@@ -1,0 +1,20 @@
+{% extends 'results/base_2cols.html' %}
+{% load static %}
+{% load results_extras %}
+
+{% block leftcol %}
+	{% include 'tools/races_search_form.html' %}
+{% endblock %}
+{% block rightcol %}
+	<div class="row"><div class="col-md-12 text-center">
+		{% include 'banners/calendar.html' %}
+	</div></div>
+	<p></p>
+	{% if is_admin %}
+		<span class="pull-right">
+			<a href="{% url 'editor:refresh_default_calendar' %}">
+				<button type="button" class="btn btn-xs btn-primary">Обновить календарь</button></a>
+		</span>
+	{% endif %}
+	{% include calendar_template %}
+{% endblock %}

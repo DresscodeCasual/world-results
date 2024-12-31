@@ -1,0 +1,23 @@
+{% extends 'results/modal_form_base.html' %}
+{% block header %}Письмо в ПроБЕГ{% endblock %}
+{% block main %}
+	<p>Все поля, кроме текста сообщения, необязательные.</p>
+	<form id="frm_send_letter" enctype="multipart/form-data">
+		{% csrf_token %}
+		{% for hidden in form.hidden_fields %}
+			{{ hidden }}
+		{% endfor %}
+		{% for field in form.visible_fields %}
+			{% include 'results/form_field.html' %}
+		{% endfor %}
+	</form>
+	<p>
+		Нажимая «Отправить письмо», вы соглашаетесь с
+		<a href="http://probeg.org/docs/probeg_agreement.pdf" target="_blank">правилами обработки ваших персональных данных</a>.
+	</p>
+{% endblock %}
+{% block footer %}
+	<span id="response"></span>
+	<button type="button" class="btn btn-default" data-dismiss="modal">Закрыть окно</button>
+	<button type="button" class="btn btn-success" id="send_letter">Отправить письмо</button>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends 'results/base.html' %}
+{% load humanize %}
+{% load results_extras %}
+{% block main %}
+<div class="row"><div class="col-md-8 col-md-offset-4 col-sm-12 col-sm-offset-0 text-center">
+	{% include 'banners/main_page.html' %}
+</div></div>
+
+<div class="row"><div class="col-md-8 col-md-offset-4 col-sm-12 col-sm-offset-0 text-center">
+	<h3>World Results</h3>
+	<h4>Your and others' running results from all over the world</h4>
+	<p>We gathered <strong><a href="{% url 'results:results' %}">{{ n_results|intcomma }}</a></strong> results from <strong><a href="{% url 'results:races' date_region='1' %}">{{ n_events_in_past|intcomma }}</a></strong> events. As of now, most of them are from the US; but we're actively working on adding more events. You already can add your results from any events to your personal page and to our database, see <a href="{% url 'about' %}">this page</a> for details.
+</div></div>
+
+<div class="row">
+	<div class="col-md-4 text-center"><h4>Search for event</h4></div>
+	<div class="col-md-4 text-center"><h4>Search for runner</h4></div>
+	<div class="col-md-4 text-center"><h4>Filter results by many parameters</h4></div>
+</div>
+{% endblock %}

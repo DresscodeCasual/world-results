@@ -1,0 +1,59 @@
+{% extends 'results/base.html' %}
+{% load results_extras %}
+{% block main %}
+<h3 class="text-center">{{ page_title }}</h3>
+<h4 class="text-center">проект сайта «ПроБЕГ» и Анатолия Шатило. По состоянию на {{ today|safe }}</h4>
+<h4 class="text-center">probeg.org/age_group_records</h4>
+<br/><br/>
+<div class="row"><div class="col-md-12">
+	{% if records_by_age_group %}
+		<table class="table table-hover table-striped vcenter">
+			<tr class="info">
+				<th class="text-center">Группа</th>
+				<th></th>
+				<th class="text-center">Возраст<br/>на день забега</th>
+				<th class="text-center">Результат</th>
+				<th>Забег</th>
+			</tr>
+			{% for age_group, record_result in records_by_age_group.items %}
+				<tr {% if gender == 1 %}class="success"{% endif %}>
+					<td class="text-center">{{ age_group.range }}</td>
+					{% if record_result %}
+						<td>{% include 'age_group_records/record_result_runner_name_and_city.html' with only_city_name=1 %}</td>
+						<td class="nobr text-center">
+							{{ record_result.age_on_event_date|default_if_none:'' }}
+							{% if record_result.age_on_event_date %}
+								{{ record_result.age_on_event_date|ending:11 }}
+							{% endif %}
+						</td>
+						<td class="text-center">
+							{% if record_result.result %}
+								<a href="{{ record_result.result.race.get_absolute_url }}">{{ record_result }}</a>
+							{% else %}
+								<span>{{ record_result }}</span>
+							{% endif %}
+						</td>
+						<td>
+							{% if record_result.race %}
+								<a href="{{ record_result.race.get_absolute_url }}">{{ record_result.race.event.name }}</a>
+							{% else %}
+								?
+							{% endif %}
+							<br/>
+							{% if record_result.is_date_known %}
+								{{ record_result.date }}
+							{% elif record_result.date %}
+								{{ record_result.date.year }} г.
+							{% endif %}
+						</td>
+					{% else %}
+						<td colspan="4"></td>
+					{% endif %}
+				</tr>
+			{% endfor %}
+		</table>
+	{% else %}
+		<p>Пока информации, к сожалению, нет.</p>
+	{% endif %}
+</div></div>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends 'results/base.html' %}
+{% load results_extras %}
+{% load starrating %}
+{% block main %}
+<div class="row"><div class="col-md-10 col-md-offset-1 col-sm-12">
+	<h3>{% if race %}
+			<a href="{{ race.event.get_absolute_url }}">{{ race.event|safe }}</a>, {{ race.event.dateFull|safe }},
+			дистанция <a href="{{ race.get_absolute_url }}">{{ race }}</a>:
+		{% elif event %}
+			<a href="{{ event.get_absolute_url }}">{{ event|safe }}</a>, {{ event.dateFull|safe }}:
+		{% elif series %}
+			Серия <a href="{{ series.get_absolute_url }}">{{ series|safe }}</a>:
+		{% elif organizer %}
+			Организатор <a href="{{ organizer.get_absolute_url }}">{{ organizer|safe }}</a>:
+		{% else %}
+			Вообще
+		{% endif %}
+		все оценки
+	</h3>
+	{% if has_marks %}
+		<div class="row"><div class="col-md-6 col-md-offset-6 text-right">
+			<form id="frmSearch" action="" method="GET"></form>
+			{% include 'results/pagination.html' %}
+			<br/><br/>
+		</div></div>
+		<table class="table table-condensed">
+		<tr class="info">
+			<th>№</th>
+			<th>Пользователь</th>
+			<th>Дата</th>
+			{% if not series %}
+				<th>Серия</th>
+			{% endif %}
+			{% if not event %}
+				<th>Забег</th>
+			{% endif %}
+			{% if not race %}
+				<th>Дистанция</th>
+			{% endif %}
+			{% for parameter in parameters %}
+				<th>{{ parameter.name }}</th>
+			{% endfor %}
+			<th>Отзыв</th>
+			<th></th>
+		</tr>
+		{% for group, data in table.items %}
+			<tr>
+				<td>{% if to_show_all_marks %}{{ group.id }}{% else %}{{ forloop.counter }}{% endif %}</td>
+				<td>{% include 'editor/user_name_with_link.html' with person=group.user %}</td>
+				<td>{{ group.created|date_rus }}</td>
+				{% if not series %}
+					<td><a href="{{ group.race.event.series.get_absolute_url }}">{{ group.race.event.series.name|safe }}</a></td>
+				{% endif %}
+				{% if not event %}
+					<td><a href="{{ group.race.event.get_absolute_url }}">{{ group.race.event.date|safe }}</a></td>
+				{% endif %}
+				{% if not race %}
+					<td><a href="{{ group.race.get_absolute_url }}">{{ group.race.distance|safe }}</a></td>
+				{% endif %}
+				{% for mark in data.marks %}
+					<td>{{ mark }}</td>
+				{% endfor %}
+				<td>{{ group.review.content|linebreaksbr }}</td>
+				<td><a href="#" onclick="confirm_link('Вы действительно хотите удалить оценку пользователя {{ group.user.get_full_name }}?',
+							'{{ group.get_delete_url }}');">
+						<button type="button" class="btn btn-xs btn-danger">Удалить</button></a>
+				</td>
+			</tr>
+		{% endfor %}
+		</table>
+		<div class="row"><div class="col-md-6 col-md-offset-6 text-right">
+			{% include 'results/pagination.html' %}
+		</div></div>
+	{% else %}
+		<p>Пока нет ни одной оценки. :(</p>
+	{% endif %}
+</div></div>
+{% endblock %}

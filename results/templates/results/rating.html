@@ -1,0 +1,139 @@
+{% extends 'results/base.html' %}
+{% load static %}
+{% load results_extras %}
+{% block main %}
+<form action="" method="POST" name="frmAgeGroup" id="frmSearch" class="form-inline">
+	{% csrf_token %}
+	{% if page %}
+		<input type="hidden" name="page" id="id_page" value="{{ page.number }}"/>
+	{% endif %}
+	<div class="row"><div class="col-md-12 text-center">
+		<h3>{{ page_title }}</h3>
+		{% for field in ratingForm %}
+			{% include 'results/form_field.html' with field=field %}&nbsp;&nbsp;
+		{% endfor %}
+		<input type="submit" class="btn btn-success" value="Показать"/>
+	</div></div>
+	<div class="row"><div class="col-md-12">
+		{% if show_rating %}
+			<p class="text-center">
+				{% if rating_by_best_result %}
+					<br/>
+					В таблице не представлены забеги, на которых, по нашим данным, фактическая длина дистанции была короче заявленной.
+				{% endif %}
+			</p>
+			{% if page_enum %}
+				<div class="pull-right">
+					{% include 'results/pagination.html' %}
+				</div>
+				<table class="table table-hover">
+				<thead>
+					<tr class="info">
+						<th class="text-right min-width" rowspan="2">Место</th>
+						<th class="text-center" rowspan="2">Дата</th>
+						<th rowspan="2">Название</th>
+						<th rowspan="2">Город</th>
+						{% if rating_by_whole_events %}
+							<th rowspan="2">Дистанции</th>
+						{% elif show_distance_column %}
+							<th class="text-right" rowspan="2">Дистанция</th>
+						{% elif rating_by_best_result %}
+							<th rowspan="2">Победитель</th>
+						{% endif %}
+						{% if rating_by_whole_events or rating_by_n_finishers %}
+							<th class="text-center" colspan="3">Финишировало</th>
+						{% else %}
+							<th rowspan="2">{{ value_name }}</th>
+						{% endif %}
+					</tr>
+					{% if rating_by_whole_events or rating_by_n_finishers %}
+						<tr class="info">
+							<th class="text-left">Мужчин</th><th class="text-right">Женщин</th><th class="text-right">Всего</th>
+						</tr>
+					{% endif %}
+				</thead>
+				<tbody>
+					{% if rating_by_whole_events %}
+						{% for row, event in page_enum %}
+							<tr>
+								<td class="text-right min-width">{{ row }}</td>
+								<td class="text-right min-width">{{ event.date|safe }}</td>
+								<td><a href="{{ event.get_absolute_url }}">{{ event|safe }}</a></td>
+								<td>{% include 'results/event_cities_with_links.html' %}</td>
+								<td>
+									{% for race in event.race_set.all %}
+										<nobr>{{ race.distance_with_heights|safe }}</nobr>{% if not forloop.last %}, {% endif %}
+									{% endfor %}
+								</td>
+								{% include 'tools/progress_bar_ratio.html' with all=event.n_participants_finished men=event.n_participants_finished_male %}
+								<td class="text-right">
+									{{ event.n_participants_finished }}
+								</td>
+							</tr>
+						{% endfor %}
+					{% elif rating_by_n_finishers %}
+						{% for row, race in page_enum %}{% with event=race.event %}
+							<tr>
+								<td class="text-right min-width">{{ row }}</td>
+								<td class="text-right min-width">{{ event.date|safe }}</td>
+								<td><a href="{{ race.get_absolute_url }}">
+									{{ event|safe }}
+									{% if race.precise_name %}({{ race.precise_name }}){% endif %}</a>
+								</td>
+								<td>{% include 'results/event_cities_with_links.html' %}</td>
+								{% if show_distance_column %}
+									<td class="text-right">{{ race.distance }}</td>
+								{% endif %}
+								{% include 'tools/progress_bar_ratio.html' with all=race.n_participants_finished men=race.n_participants_finished_male %}
+								<td class="text-right">
+									{{ race.n_participants_finished }}
+								</td>
+							</tr>
+						{% endwith %}{% endfor %}
+					{% else %}
+						{% for row, result in page_enum %}{% with event=result.race.event %}
+							<tr>
+								<td class="text-right min-width">{{ row }}</td>
+								<td class="text-right min-width">{{ event.date|safe }}</td>
+								<td><a href="{{ result.race.get_absolute_url }}">{{ event|safe }}</a></td>
+								<td>{% include 'results/event_cities_with_links.html' %}</td>
+								<td>{% if result.runner %}
+										<a href="{{ result.get_runner_or_user_url }}">
+											{{ result.strName|title|default:"(неизвестно)" }}</a>
+									{% else %}
+										{{ result.strName|title|default:"(неизвестно)" }}
+									{% endif %}
+								</td>
+								<td class="nobr">{{ result }}</td>
+							</tr>
+						{% endwith %}{% endfor %}
+					{% endif %}
+				</tbody></table>
+				<div class="pull-right">
+					{% include 'results/pagination.html' %}
+				</div>
+			{% else %}
+				<p>К сожалению, ни одного забега не найдено.</p>
+			{% endif %}
+		{% endif %}
+		<br/><br/>
+		<p class="text-center">См. также <a href="/ratingmar/arhiv.html">рейтинги забегов России по версиям сайта «ПроБЕГ» и журнала «Бег и Мы» за 1992-2006 годы</a>.</p>
+	</div></div>
+</form>
+<script type="text/javascript">
+select_distance = $('#id_distance_id');
+select_rating_type = $('#id_rating_type');
+function correct_disabled() {
+	if (select_distance.val() < 0) {
+		if (parseInt(select_rating_type.val()) > 2) {
+			select_rating_type.val(0);
+		}
+		select_rating_type.children("option").filter(function() {return this.value > 2}).prop("disabled", true);
+	} else {
+		select_rating_type.children("option").filter(function() {return this.value > 2}).removeAttr('disabled');
+	}
+}
+select_distance.change(correct_disabled);
+correct_disabled();
+</script>
+{% endblock %}

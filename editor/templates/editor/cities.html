@@ -1,0 +1,85 @@
+{% extends 'results/base.html' %}
+{% block main %}
+
+{% if frmSearchCity.errors %}
+	{% for error in frmSearchCity.errors %}
+		<div class="alert alert-danger" role="alert">{{ error }}</div>
+	{% endfor %}
+{% endif %}
+
+<div class="row"><div class="col-md-12">
+	{% include 'results/panel_header.html' with title='Параметры поиска' %}
+		<form id="frmCity" method="GET" action="{% url 'editor:cities' %}" class="form-inline">
+			{% csrf_token %}
+			{% for field in frmSearchCity %}
+				{% include 'results/form_field.html' with field=field %}
+			{% endfor %}
+			<input type="submit" name="frmSearchCity_submit" value="Показать города" class="btn btn-success"/>
+		</form>
+	{% include 'results/panel_footer.html' %}
+
+	<h3>{{ list_title }}</h3>
+	{% if msgInsteadCities %}
+		<p>{{ msgInsteadCities }}</p>
+	{% else %}
+		{% if cities %}
+			<table id="table_for_sort" class="table table-condensed table-hover">
+			<thead><tr class="info">
+				<th>№</th><th>ID<br/>страны</th><th>Страна</th><th>ID<br/>региона</th><th>Регион</th>
+				<th>ID<br/>города</th><th>Название</th><th>На родном<br/>языке</th><th>Wiki</th>
+				{% if is_admin %}<th></th>{% endif %}
+				{% if detailed %}
+						<th>Серии пробегов</th><th>Пробеги</th><th>Клубы</th><th>Участники КЛБМатча</th><th>Пользователи сайта</th>
+						<th>Результаты</th><th>Участники забегов</th>
+				{% endif %}
+			</tr></thead>
+			<tbody>
+				{% for city in cities %}
+					<tr>
+						<td>{{ forloop.counter }}</td>
+						<td>{{ city.region.country.id }}</td>
+						<td>{{ city.region.country.name }}</td>
+						<td>{{ city.region.id }}</td>
+						<td>{{ city.region.name }}</td>
+						<td>{{ city.id }}</td>
+						<td>{{ city.name|safe }}</td>
+						<td>{{ city.name_orig }}</td>
+						<td>{% if city.url_wiki %}
+							<a href="{{ city.url_wiki }}">wiki</a>
+							{% endif %}
+						</td>
+						{% if is_admin %}
+							<td><a href="{{ city.get_editor_url }}">
+								<button type="button" class="btn btn-xs btn-primary">Редактировать</button></a>
+							</td>
+						{% endif %}
+						{% if detailed %}
+							<td>{{ city.n_series }}</td>
+							<td>{{ city.n_events }}</td>
+							<td>{{ city.n_clubs }}</td>
+							<td>{{ city.n_klb_persons }}</td>
+							<td>{{ city.n_users }}</td>
+							<td>{{ city.n_results }}</td>
+							<td>{{ city.n_runners }}</td>
+						{% endif %}
+					</tr>
+				{% endfor %}
+			</tbody></table>
+		{% else %}
+			<p>Ни одного города не найдено. :( Возможно, вы указали одновременно и страну, и не содержащийся в ней регион?</p>
+		{% endif %}
+	{% endif %}
+
+	{% if region %}
+		<a href="{% url 'editor:city_create' region_id=region.id %}">
+			<button type="button" class="btn btn-primary">
+				{% if region.active %}
+					Создать новый город в регионе {{ region.name_full }}
+				{% else %}
+					Создать новый город в стране {{ region.country.name }}
+				{% endif %}
+			</button>
+		</a>
+	{% endif %}
+</div></div>
+{% endblock %}

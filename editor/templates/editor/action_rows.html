@@ -1,0 +1,30 @@
+{% for row in list %}{% with table_update=row.table_update %}
+	<tr>
+		<td colspan="{{ n_cols }}"></td>
+		<td>{{ table_update.get_action_type_display }}
+			{% if table_update.child_id %}
+				с id <a href="{% url 'editor:search_by_id' id=table_update.child_id %}">{{ table_update.child_id }}</a>
+			{% endif %}
+			{% if table_update.is_for_klb %}
+				<br/>
+				<span class="label label-danger">Будет посчитано в КЛБМатч</span>
+			{% endif %}
+		</td>
+		<td>{% for field_change in table_update.field_update_set.all %}
+				{{ field_change.field_name }}='{{ field_change.new_value }}'
+				<br/>
+			{% endfor %}
+		</td>
+		<td>{{ table_update.added_time|date:'d E Y, H:i' }}</td>
+		<td>{% if table_update.user %}
+				{% include 'editor/user_name_with_link.html' with person=table_update.user %}
+			{% endif %}
+		</td>
+		<td>{% if not table_update.is_verified %}
+				<nobr><input type="checkbox" name="table_update_{{ table_update.id }}" class="chkbox"/>Одобрить</nobr>
+				<br/>
+			{% endif %}
+			{% include 'editor/tools/action_verified_details.html' %}
+		</td>
+	</tr>
+{% endwith %}{% endfor %}

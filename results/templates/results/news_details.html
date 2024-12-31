@@ -1,0 +1,14 @@
+{% extends 'results/base.html' %}
+{% block main %}
+<div class="row">
+	<div class="col-md-8 col-md-offset-2">
+		{% include 'results/news_row.html' %}
+		<div id="vk_comments"></div>
+		<script type="text/javascript" src="//vk.com/js/api/openapi.js?146"></script>
+		<script type="text/javascript">
+			VK.init({apiId: 4587615, onlyWidgets: true});
+			VK.Widgets.Comments("vk_comments", {limit: 10, width: "600", attach: "*", pageUrl: "http://probeg.org/new.php?id={{ news.id }}"});
+		</script>
+	</div>
+</div>
+{% endblock %}

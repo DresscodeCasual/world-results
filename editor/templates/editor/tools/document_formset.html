@@ -1,0 +1,77 @@
+<a name="documents"></a>
+{% include 'results/panel_header.html' with title='Документы' %}
+<form id="frmDocuments" method="POST" action="{{ action_link }}"
+	class="form-inline" enctype="multipart/form-data"
+>
+	{{ frmDocuments.management_form }}{% csrf_token %}
+	<ul class="nav nav-tabs">
+		{% for form in frmDocuments %}
+			<li{% if forloop.last %} class="active"{% endif %}>
+				<a data-toggle="tab" href="#doc{{ forloop.counter }}">
+					{% if form.instance.id %}{{ form.instance }}{% else %}Новый документ{% endif %}
+				</a>
+			</li>
+		{% endfor %}
+	</ul>
+	<div class="tab-content">
+		{% for form in frmDocuments %}
+			<div id="doc{{ forloop.counter }}" class="tab-pane fade{% if forloop.last %} in active{% endif %}">
+				{{ form.id }}
+				{% for error in form.non_field_errors %}
+					<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+				{% endfor %}
+				<div class="row">
+					<div class="col-md-4">
+						<table class="table table-condensed table-borderless">
+							{% if form.instance.id %}
+								{% include 'results/form_field_tr.html' with field=form.DELETE label='Отметьте, чтобы удалить документ целиком' %}
+								<tr>
+									<td class="text-right"><strong>Содержимое документа:</strong></td>
+									<td>{{ form.instance.get_document_type_display }}
+										{{ form.document_type.as_hidden }}
+									</td>
+								</tr>
+							{% else %}
+								{% include 'results/form_field_tr.html' with field=form.document_type %}
+							{% endif %}
+							{% include 'results/form_field_tr.html' with field=form.author %}
+							{% include 'results/form_field_tr.html' with field=form.author_runner %}
+							{% include 'results/form_field_tr.html' with field=form.comment %}
+							{% if form.instance.id %}
+								<tr>
+									<td class="text-right"><strong>Размер файла на сервере в байтах:</strong></td>
+									<td>{{ form.instance.file_size }}</td>
+								</tr>
+								<tr>
+									<td class="text-right"><strong>Добавил документ:</strong></td>
+									<td>{% include 'editor/user_name_with_link.html' with person=form.instance.created_by %}</td>
+								</tr>
+							{% endif %}
+						</table>
+					</div>
+					<div class="col-md-7 col-md-offset-1">
+						<table class="table table-condensed table-borderless">
+							<tr><td colspan=2 class="text-left">Выберите файл со своего диска для загрузки:</td></tr>
+							{% include 'results/form_field_tr.html' with field=form.upload %}
+							<tr><td colspan=2 class="text-left">Или укажите URL, где расположен документ:</td></tr>
+							{% include 'results/form_field_tr.html' with field=form.url_source %}
+							{% include 'results/form_field_tr.html' with field=form.is_on_our_google_drive %}
+							<tr><td colspan=2>
+								Также можно указать и файл, и URL, по которому этот файл доступен;
+								тогда файл загрузится с диска. Если же вы указываете только URL,
+								то чтобы попытаться закачать файл на сервер, поставьте галочку:
+							</td></tr>
+							{% include 'results/form_field_tr.html' with field=form.try_to_load %}
+							{% include 'results/form_field_tr.html' with field=form.hide_local_link %}
+						</table>
+						{% for hidden in form.hidden_fields %}
+							{{ hidden }}
+						{% endfor %}
+					</div>
+				</div>
+			</div>
+		{% endfor %}
+	</div>
+	<input type="submit" name="frmDocuments_submit" value="Сохранить изменения в документах" class="btn btn-success"/>
+</form>
+{% include 'results/panel_footer.html' %}

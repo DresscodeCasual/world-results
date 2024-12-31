@@ -1,0 +1,56 @@
+{% extends 'results/base_series.html' %}
+{% load results_extras %}
+{% load i18n %}
+{% block content %}
+{% if is_admin %}
+	<span class="pull-right">
+		<a href="{{ series.get_update_strikes_url }}">
+			<button type="button" class="btn btn-xs btn-primary">Обновить на всех дистанциях</button></a>
+	</span>
+{% endif %}
+<p>Here you can see up to {{ MAX_STRIKES_FOR_SERIES }} persons for each distance (and also everyone with the same number of finishes as {{ MAX_STRIKES_FOR_SERIES }}th has) who finished most times on it, but not less than {{ MIN_FINISHES_FOR_STRIKE }} and on at least {{ MIN_FINISHES_FOR_STRIKE_PERCENT }}% of all races in the series history.
+</p>
+<p>Most probably this data is incomplete. If you find any errors, please tell us via <a href="mailto:info@probeg.org">info@probeg.org</a> or <a href="#" id="send_to_info_page">right from here</a>.</p>
+{% for distance, strikes_data in distance_strikes.items %}
+	<h2 class="text-center">{{ distance }}
+		{% if strikes_data.dist_data %}
+			({{ strikes_data.dist_data.n_events }} event{{ strikes_data.dist_data.n_events|ending:1 }}, {{ strikes_data.dist_data.first.start_date.year }}–{{ strikes_data.dist_data.last.start_date.year }})
+		{% endif %}
+	</h2>
+	<table id="table_for_sort" class="table table-condensed table-hover vcenter">
+		<thead>
+			<tr class="info">
+				<th class="text-right">№</th>
+				<th>Name</th>
+				<th>City</th>
+				<th class="text-center">No. of Finishes<br/>(first and last ones)</th>
+				<th class="text-center">No. of Finishes in a Row<br/>(first and last ones)</th>
+				<th>Average<br/>City</th>
+				<th>Best<br/>City</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for strike in strikes_data.strikes %}{% with runner=strike.runner %}
+				<tr{% if runner.gender == 1 %} class="success"{% endif %}>
+					<td class="text-right">{{ forloop.counter }}</td>
+					<td data-order="{{ runner.lname }} {{ runner.fname }}">{% include 'tools/runner_or_user_name_with_link.html' %}</td>
+					<td data-order="{{ runner.city.name }}">{{ runner.city.nameWithCountry|safe }}</td>
+					<td class="text-center" data-order="{{ strike.total_participations }}">
+						<a href="{{ runner.get_runner_or_user_url }}/series/{{ series.id }}/">{{ strike.total_participations }}</a>
+						{% if strike.total_participations < strikes_data.dist_data.n_events %}
+							(<a href="{{ strike.first.get_absolute_url }}">{{ strike.first.event.start_date.year }}</a>...<a href="{{ strike.last.get_absolute_url }}">{{ strike.last.event.start_date.year }}</a>)
+						{% endif %}
+					</td>
+					<td class="text-center" data-order="{{ strike.total_participations_in_row }}">{{ strike.total_participations_in_row }}
+						{% if strike.total_participations_in_row < strikes_data.dist_data.n_events %}
+							(<a href="{{ strike.first_in_row.get_absolute_url }}">{{ strike.first_in_row.event.start_date.year }}</a>–<a href="{{ strike.last_in_row.get_absolute_url }}">{{ strike.last_in_row.event.start_date.year }}</a>)
+						{% endif %}
+					</td>
+					<td data-order="{{ strike.average_result }}">{{ strike.get_value_mean }}</td>
+					<td data-order="{{ strike.best_result }}">{{ strike.get_value_best }}</td>
+				</tr>
+			{% endwith %}{% endfor %}
+		</tbody>
+	</table>
+{% endfor %}
+{% endblock %}

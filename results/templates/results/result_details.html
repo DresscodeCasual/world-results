@@ -1,0 +1,113 @@
+{% extends 'results/base.html' %}
+{% load static %}
+{% block main %}
+<div class="row"> <!-- Header -->
+	<div class="col-md-6">
+		<h3>{{ event|safe }}, {{ event.dateFull|safe }}</h3>
+	</div>
+	<div class="col-md-6 text-right">
+		{% include 'results/event_edit_buttons.html' %}
+	</div>
+</div>
+{% include 'results/event_details_row.html' with race_page=1 %}
+<br/>
+<div class="row"> <!-- Race header -->
+	<div class="col-md-2">
+		<h3>{% if races.count > 1 %}Дистанции{% else %}Дистанция{% endif %}</h3>
+	</div>
+	<div class="col-md-10 text-right">
+		{% include 'results/race_edit_buttons.html' %}
+	</div>
+</div>
+<div class="row"><div class="col-md-12"> <!-- Third row: results -->
+	<ul class="nav nav-tabs">
+		{% for event_race in races %}
+			<li>
+				<a href="{{ event_race.get_absolute_url }}">
+					{{ event_race.distance_with_heights }}
+				</a>
+			</li>
+		{% endfor %}
+		{% if is_admin or is_editor %}
+			{% for event_race in races %}
+				{% if event_race.load_status == 1 %}
+					<li>
+						<a href="{{ event_race.get_details_url }}">
+							{{ event_race.distance_with_heights }} подробно
+						</a>
+					</li>
+					{% if event_race.get_unofficial_results.exists %}
+						<li>
+							<a href="{{ event_race.get_unoff_details_url }}">
+								{{ event_race.distance_with_heights }} введены пользователями
+							</a>
+						</li>
+					{% endif %}
+				{% endif %}
+			{% endfor %}
+		{% endif %}
+		<li class="active">
+			<a href="{{ result.get_absolute_url }}">
+				Результат
+			</a>
+		</li>
+	</ul>
+	<div class="tab-content">
+		<div id="div_results" class="tab-pane fade in active">
+			<p/>
+			<div class="row"> <!-- Race header -->
+				<div class="col-md-2">
+					<p>Участник:
+						{% if result.runner %}
+							<a href="{{ result.runner.get_absolute_url }}">
+								{{ result.strName|default:result.runner.name }}</a>
+						{% else %}
+							{{ result.strName|default:"(неизвестно)" }}
+						{% endif %}
+					</p>
+					<p>Дистанция: <a href="{{ race.get_absolute_url }}">{{ race.distance }}</a></p>
+					<p>Результат: {{ result }}</p>
+					{% if is_admin %}
+						<p>
+							<a href="{{ result.get_editor_url }}">
+							<button type="button" class="btn btn-sm btn-primary">Редактировать результат</button></a>
+						</p>
+					{% endif %}
+				</div>
+				<div class="col-md-3">
+					{% if splits_exist %}
+						<h4>Промежуточные результаты</h4>
+						<table class="table table-condensed">
+							{% for split in splits %}
+								<tr>
+									<td>{{ split.distance }}</td>
+									<td>{{ split }}</td>
+								</tr>
+							{% endfor %}
+						</table>
+					{% endif %}
+				</div>
+				<div class="col-md-7" id="plotParent">
+					{% if splits_exist and result.result > 0 %}
+						<h4>Темп на дистанции</h4>
+						<div id="plot"></div>
+						<script src="https://d3js.org/d3.v4.min.js"></script>
+						<script src="{% static 'js/splits.js' %}?11"></script>
+						<link href="{% static 'css/splits.css' %}?1" rel="stylesheet"/>
+						<script language="javascript">
+splits = [[0, 0]];
+{% for split in splits %}
+	splits[{{ forloop.counter }}] = [{{ split.distance.length }}, {{ split.value }}];
+{% endfor %}
+splits[{{ splits.count|add:1 }}] =
+	[{% if race.distance_real %}{{ race.distance_real.length }}{% else %}{{ race.distance.length }}{% endif %}, {{ result.result }}];
+distance_type = {{ race.distance.distance_type }};
+draw_plot(splits, distance_type);
+						</script>
+					{% endif %}
+				</div>
+			</div>
+		</div>
+	</div>
+</div></div>
+{% endblock %}

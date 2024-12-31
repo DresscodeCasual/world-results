@@ -1,0 +1,151 @@
+{% extends 'results/base.html' %}
+{% load static %}
+{% block main %}
+
+{% block media_links %}{% endblock %}
+
+<div class="row"><div class="col-md-12">
+	{% include 'results/panel_header.html' with title='Поиск городов' %}
+		<form id="frmCity" method="GET" action="{% url 'editor:cities' %}" class="form-inline">
+			{% csrf_token %}
+			{% for field in frmSearchCity %}
+				{% include 'results/form_field.html' with field=field %}
+			{% endfor %}
+			<input type="submit" name="frmSearchCity_submit" value="Показать города" class="btn btn-success"/>
+		</form>
+	{% include 'results/panel_footer.html' %}
+
+{% include 'results/panel_header_before_title.html' %}
+	{{ form_title|safe }}
+	{% if is_admin and not create_new %}
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		<a href="{{ city.get_history_url }}">
+			<button type="button" class="btn btn-sm btn-primary">История изменений</button>
+		</a>
+	{% endif %}
+{% include 'results/panel_header_after_title.html' %}
+	{% for error in frmCity.non_field_errors %}
+		<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+	{% endfor %}
+	<form action="
+		{% if create_new %}
+			{% url 'editor:city_create' %}
+			{% else %}
+			{% url 'editor:city_update' city_id=city.id %}
+		{% endif %}
+		" id="frmCity" method="POST"
+	>
+		{% csrf_token %}
+		{{ frmCity.media.css }}
+		{{ frmCity.media.js }}
+		<table class="table table-condensed">
+			{% for field in frmCity %}
+				{% include 'results/form_field_tr.html' with field=field %}
+			{% endfor %}
+		</table>
+		{% if city.geo %}
+			<p><a href="https://www.google.com/maps/@{{ city.geo.1 }},{{ city.geo.0 }},11z">Google Maps</a>
+		{% endif %}
+		<p>Район/округ/повят и тип населённого пункта либо оба указываем, либо оба оставляем пустыми. Слова «район», «округ» не сокращаем.
+			<br/>
+			Тип населённого пункта – обычно сокращение без пробелов: пос., п.г.т., д., с.
+			<a href="https://ru.wikipedia.org/wiki/Населённые_пункты_в_России" target="_blank">и другие</a>.
+		</p>
+		<div class="row">
+			<div class="col-md-3">
+				{% if create_new %}
+					<input type="submit" name="frmCity_submit" value="Создать" class="btn btn-success"/>
+					<br/><br/>
+				{% elif is_admin %}
+					<input type="submit" name="frmCity_submit" value="Сохранить" class="btn btn-success"/>
+					<br/><br/>
+				{% endif %}
+			</div>
+			<div class="col-md-3">
+				{% if is_admin and not create_new %}
+					<a href="{% url 'editor:series_create' city_id=city.id %}">
+						<button type="button" class="btn btn-primary">Создать серию пробегов в городе {{ city.name }}</button>
+					</a>
+				{% endif %}
+			</div>
+			<div class="col-md-3">
+				{% if city.region.active %}
+					<a href="{% url 'editor:cities' region_id=city.region.id %}">
+						<button type="button" class="btn btn-primary">Все города в регионе {{ city.region.name_full }}</button>
+					</a>
+				{% endif %}
+			</div>
+			<div class="col-md-3">
+				{% if city.region %}
+					<a href="{% url 'editor:city_create' region_id=city.region.id %}">
+						<button type="button" class="btn btn-primary">
+							{% if city.region.active %}
+								Создать новый город в регионе {{ city.region.name_full }}
+							{% else %}
+								Создать новый город в стране {{ city.region.country.name }}
+							{% endif %}
+						</button>
+					</a>
+				{% endif %}
+			</div>
+		</div>
+	</form>
+{% include 'results/panel_footer.html' %}
+
+{% if not create_new %}
+	{% include 'results/panel_header.html' with title='Упоминания города в таблицах' %}
+		<table class="table table-condensed">
+			<tr><th>Таблица</th><th>Число упоминаний</th></tr>
+			{% for key, val in counts.items %}
+				<tr>
+					<td>{{ key }}</td>
+					<td><strong>
+						{% if key == 'probeg' or key == 'ProbegYear' %}
+							<a href="{% url 'results:races' city_id=city.id %}">{{ val }}</a>
+						{% else %}
+							{{ val }}
+						{% endif %}
+					</strong></td>
+				</tr>
+			{% endfor %}
+		</table>
+	{% include 'results/panel_footer.html' %}
+
+	{% if is_admin %}
+		<form id="frmForCity" method="POST" action="{% url 'editor:city_delete' city_id=city.id %}" class="form-inline">
+			{% csrf_token %}
+			{% if city.has_dependent_objects %}
+				{% include 'results/panel_header.html' with title='Заменить текущий город во всех таблицах на другой и удалить текущий' %}
+					После запуска город {{ city.nameWithCountry|safe }} (id {{ city.id }}) будет заменён на выбранный ниже город в таблицах
+					probeg и ProbegYear (как город старта и/или финиша), persons, KLB1, dj_user_profile, после чего удалён.
+					<br/>
+					Будьте очень осторожны!
+					<p/>
+					{% for field in frmForCity %}
+						{% include 'results/form_field.html' with field=field %}
+					{% endfor %}
+					<br/>
+					<input type="submit" name="frmForCity_submit" value="Удалить {{ city.nameWithCountry|safe }}" class="btn btn-danger"/>
+				{% include 'results/panel_footer.html' %}
+				<script language="javascript">
+				var ajax_city_prefix = "frmForCity_";
+				var ajax_city_fullname = 1;
+				var ajax_cur_city = "{{ city.id }}";
+				</script>
+			{% else %}
+				{% for field in frmForCity %}
+					{% for error in field.errors %}
+							<h4><span class="label label-danger">{{ field.name }}: {{ error|escape }}</span></h4>
+					{% endfor %}
+				{% endfor %}
+				{% for error in frmForCity.non_field_errors %}
+					<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+				{% endfor %}
+				<input type="submit" name="frmForCity_submit" value="Удалить {{ city.nameWithCountry|safe }}" class="btn btn-danger"/>
+			{% endif %}
+		</form>
+	{% endif %}
+{% endif %} <!-- not create_new -->
+</div></div> <!-- col-md-12 -->
+
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends 'results/base.html' %}
+{% block main %}
+<div class="row"><div class="col-md-8 col-md-offset-1 col-sm-12 col-sm-offset-0">
+	<h2 class="text-center">{{ page_title }}</h2>
+	<br/><br/>
+	{% if calendar_and_results %}
+		<table class="table table-condensed table-hover">
+			<tr class="info">
+				<th class="text-right">№</th>
+				<th class="text-right">Date</th>
+				<th>Event</th>
+				<th class="text-right">Distance</th>
+				<th>Result</th>
+			</tr>
+			{% for row, result in calendar_and_results %}
+				<tr>
+					<td class="text-right">{{ forloop.counter }}</td>
+					<td class="text-right">{{ row.event.date|safe }}</td>
+					<td><a href="{{ row.event.get_absolute_url }}">{{ row.event|safe }}</a></td>
+					<td class="text-right">{% if row.race %}<a href="{{ row.race.get_absolute_url }}">{{ row.race.distance }}</a>{% endif %}</td>
+					<td>{% if result %}{{ result }}{% endif %}</td>
+				</tr>
+			{% endfor %}
+		</table>
+	{% else %}
+		<p>Nothing here yet.</p>
+		<p><a href="{% url 'results:races' date_region='2' %}">Search for next events</a></p>
+	{% endif %}
+</div></div>
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends 'results/base.html' %}
+{% block main %}
+
+<div class="row">
+	<div class="col-md-12">
+		{% include 'results/panel_header.html' with title='Добавить ещё одно имя' %}
+			<form method="POST" action="{% url 'editor:runner_names' %}" class="form-inline">
+				{% csrf_token %}
+				{% for field in form %}
+					{% include 'results/form_field.html' with field=field %}
+				{% endfor %}
+				<input type="submit" name="frmName_submit" value="Добавить имя" class="btn btn-success"/>
+			</form>
+		{% include 'results/panel_footer.html' %}
+
+		<h3>{{ page_title }}</h3>
+
+		<p>Они используются только для определения пола при создании новых бегунов из базы результатов.
+		Сейчас создаём нового бегуна, как только видим два результата, не привязанных ни к какому бегуну,
+		с одинаковыми фамилией, именем, датой рождения и не противоречащими отчествами; не больше 100 бегунов в день.
+		</p>
+	</div>
+	<div class="col-md-4">
+		<h4>Мужские имена</h4>
+		<table class="table table-condensed table-hover">
+			<thead><tr class="info">
+				<th>№</th><th>id</th><th>Имя</th><th class="min-width"></th>
+			</tr></thead>
+			<tbody>
+				{% for runner_name in names_male %}
+					<tr>
+						<td>{{ forloop.counter }}</td>
+						<td>{{ runner_name.id }}</td>
+						<td>{{ runner_name.name }}</td>
+						<td><a href="{% url 'editor:runner_name_delete' runner_name_id=runner_name.id %}">
+							<button type="button" class="btn btn-xs btn-primary">Удалить</button></a>
+						</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+	<div class="col-md-4 col-md-offset-2">
+		<h4>Женские имена</h4>
+		<table class="table table-condensed table-hover">
+			<thead><tr class="info">
+				<th>№</th><th>id</th><th>Имя</th><th class="min-width"></th>
+			</tr></thead>
+			<tbody>
+				{% for runner_name in names_female %}
+					<tr>
+						<td>{{ forloop.counter }}</td>
+						<td>{{ runner_name.id }}</td>
+						<td>{{ runner_name.name }}</td>
+						<td><a href="{% url 'editor:runner_name_delete' runner_name_id=runner_name.id %}">
+							<button type="button" class="btn btn-xs btn-primary">Удалить</button></a>
+						</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+</div>
+{% endblock %}

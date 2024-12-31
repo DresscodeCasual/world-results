@@ -1,0 +1,74 @@
+{% extends 'results/base.html' %}
+{% load results_extras %}
+{% load static %}
+{% block main %}
+
+{% include 'results/panel_header_before_title.html' %}
+		Забег
+		<a class="underlined" href="{{ event.get_absolute_url }}">{{ event.name|safe }}</a>
+		на
+		<a class="underlined" href="{{ race.get_absolute_url }}">{{ race.distance|safe }}</a>
+		в серии
+		<a class="underlined" href="{{ event.series.get_absolute_url }}">{{ event.series|safe }}</a>
+{% include 'results/panel_header_after_title.html' %}
+
+{% for error in frmResults.non_field_errors %}
+	<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+{% endfor %}
+
+<form id="frmResults" method="POST" action="{{ race.get_update_url }}">
+	{{ frmResults.management_form }}{% csrf_token %}
+	Под текстовыми полями в кавычках указаны «сырые» значения из протокола.
+	<br/>
+	Если известен только год рождения участника, то у даты рождения указано число 1 января.
+	<table class="table table-condensed">
+		<tr>
+			<th>Место</th><th>По полу</th><th>По группе</th>
+			<th>Cырое<br/>имя<br/>целиком</th><th>Фамилия</th><th>Имя</th><th>Отчество</th>
+			<th>Результат<br/>в сотых секунды</th><th>Статус</th><th>Грязное<br/>время</th>
+			<th>Стартовый<br/>номер</th><th>Город</th><th>Страна</th><th>Клуб</th><th>Группа</th>
+			<th>Дата<br/>рождения</th><th>День<br/>рождения<br/>известен?</th><th>Возраст</th><th>Пол</th>
+			<th>Runner</th><th>user</th>
+			{% comment %}<th>AK55<br/>MANID</th>{% endcomment %}
+			<th>parkrun</th>
+			<th>Комментарий</th><th>Удалить?</th>
+		</tr>
+		{% for form in frmResults %}{% with result=form.instance with_raw_value=1 no_title=1 %}
+			<tr>
+				<td>{{ form.id }}{% include 'results/form_field.html' with field=form.place raw_value=result.place_raw %}
+					{% for error in form.non_field_errors %}
+						<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+					{% endfor %}
+				</td>
+				<td>{% include 'results/form_field.html' with field=form.place_gender raw_value=result.place_gender_raw %}</td>
+				<td>{% include 'results/form_field.html' with field=form.place_category raw_value=result.place_category_raw %}</td>
+				<td>{{ result.name_raw }}</td>
+				<td>{% include 'results/form_field.html' with field=form.lname raw_value=result.lname_raw %}</td>
+				<td>{% include 'results/form_field.html' with field=form.fname raw_value=result.fname_raw %}</td>
+				<td>{% include 'results/form_field.html' with field=form.midname raw_value=result.midname_raw %}</td>
+				<td>{% include 'results/form_field.html' with field=form.result raw_value=result.time_raw %}</td>
+				<td>{% include 'results/form_field.html' with field=form.status raw_value=result.get_status_raw_display %}</td>
+				<td>{% include 'results/form_field.html' with field=form.gun_result raw_value=result.gun_time_raw %}</td>
+				<td>{% include 'results/form_field.html' with field=form.bib raw_value=result.bib_raw %}</td>
+				<td>{% include 'results/form_field.html' with field=form.city_name raw_value=result.city_raw %}</td>
+				<td>{% include 'results/form_field.html' with field=form.country_name raw_value=result.country_raw %}</td>
+				<td>{% include 'results/form_field.html' with field=form.club_name raw_value=result.club_raw %}</td>
+				<td>{{ result.category_size.name }}</td>
+				{% comment %}<td>{% include 'results/form_field.html' with field=form.category raw_value=result.category_raw %}</td>{% endcomment %}
+				<td>{% include 'results/form_field.html' with field=form.birthday raw_value=result.strBirthday_raw %}</td>
+				<td>{% include 'results/form_field.html' with field=form.birthday_known with_raw_value=0 %}</td>
+				<td>{% include 'results/form_field.html' with field=form.age raw_value=result.age_raw %}</td>
+				<td>{% include 'results/form_field.html' with field=form.gender raw_value=result.gender_raw %}</td>
+				<td>{% include 'results/form_field.html' with field=form.runner with_raw_value=0 %}</td>
+				<td>{% include 'results/form_field.html' with field=form.user with_raw_value=0 %}</td>
+				{% comment %}<td>{% include 'results/form_field.html' with field=form.ak_person raw_value=result.ak_person_raw %}</td>{% endcomment %}
+				<td>{% include 'results/form_field.html' with field=form.parkrun_id with_raw_value=0 %}</td>
+				<td>{% include 'results/form_field.html' with field=form.comment raw_value=result.comment_raw %}</td>
+				<td>{% include 'results/form_field.html' with field=form.DELETE with_raw_value=0 %}</td>
+			</tr>
+		{% endwith %}{% endfor %}
+	</table>
+			<input type="submit" name="frmResults_submit" value="Сохранить" class="btn btn-success"/>
+</form>
+{% include 'results/panel_footer.html' %}
+{% endblock %}

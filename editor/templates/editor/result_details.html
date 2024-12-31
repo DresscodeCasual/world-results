@@ -1,0 +1,297 @@
+{% extends 'results/base.html' %}
+{% load results_extras %}
+{% block media_links %}
+	<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+	<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+{% endblock %}
+{% block main %}
+
+<div class="row"><div class="col-md-8">
+	<form id="frmResult" method="POST" action="
+		{% if create_new %}
+			{% url 'editor:result_create' %}
+		{% else %}
+			{% url 'editor:result_update' result_id=result.id %}
+		{% endif %}" 
+	>
+		{% csrf_token %}
+		{% include 'results/panel_header_before_title.html' %}
+			{% if create_new %}
+				Создание результата
+			{% else %}
+				Результат
+				<a class="underlined" href="{{ result.get_absolute_url }}">{{ result }}</a>
+				на забеге
+				<a class="underlined" href="{{ event.get_absolute_url }}">{{ event|safe }}</a>,
+				дистанция
+				<a class="underlined" href="{{ race.get_absolute_url }}">{{ race.distance }}</a>
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="{{ event.get_history_url }}">
+					<button type="button" class="btn btn-xs btn-primary">История изменений забега</button>
+				</a>
+			{% endif %}
+		{% include 'results/panel_header_after_title.html' %}
+		{% with result=form.instance with_raw_value=1 %}
+		<div class="row">
+			<div class="col-md-7">
+				{% for error in frmResult.non_field_errors %}
+					<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+				{% endfor %}
+				<table class="table table-condensed table-borderless">
+					<tr><td></td><td></td><th>В протоколе:</th></tr>
+					{% include 'results/form_field_tr.html' with field=form.place raw_value=result.place_raw %}
+					{% include 'results/form_field_tr.html' with field=form.place_gender raw_value=result.place_gender_raw %}
+					{% include 'results/form_field_tr.html' with field=form.place_category raw_value=result.place_category_raw %}
+					<tr><td class="text-right"><strong>Сырое имя:</strong></td><td></td><td>«{{ result.name_raw }}»</td></tr>
+					{% include 'results/form_field_tr.html' with field=form.lname raw_value=result.lname_raw %}
+					{% include 'results/form_field_tr.html' with field=form.fname raw_value=result.fname_raw %}
+					{% include 'results/form_field_tr.html' with field=form.midname raw_value=result.midname_raw %}
+					{% include 'results/form_field_tr.html' with field=form.result raw_value=result.time_raw %}
+					{% include 'results/form_field_tr.html' with field=form.gun_result raw_value=result.gun_time_raw %}
+					{% include 'results/form_field_tr.html' with field=form.wind %}
+					{% include 'results/form_field_tr.html' with field=form.status raw_value=result.get_status_raw_display %}
+					{% include 'results/form_field_tr.html' with field=form.bib raw_value=result.bib_raw %}
+					{% include 'results/form_field_tr.html' with field=form.country_name raw_value=result.country_raw %}
+					{% include 'results/form_field_tr.html' with field=form.city_name raw_value=result.city_raw %}
+					{% include 'results/form_field_tr.html' with field=form.club_name raw_value=result.club_raw %}
+					<tr>
+						<td class="text-right"><strong>Категория:</strong></td>
+						<td>«{{ result.category_size.name }}»</td>
+						<td>«{{ result.category_raw }}»</td>
+					</tr>
+					{% comment %}{% include 'results/form_field_tr.html' with field=form.category raw_value=result.category_raw %}{% endcomment %}
+					{% include 'results/form_field_tr.html' with field=form.birthday raw_value=result.strBirthday_raw %}
+					{% include 'results/form_field_tr.html' with field=form.birthday_known with_raw_value=0 %}
+					{% include 'results/form_field_tr.html' with field=form.age raw_value=result.age_raw %}
+					{% include 'results/form_field_tr.html' with field=form.gender raw_value=result.gender_raw %}
+					{% include 'results/form_field_tr.html' with field=form.comment raw_value=result.comment_raw %}
+					{% include 'results/form_field_tr.html' with field=form.do_not_count_in_stat with_raw_value=0 %}
+					{% include 'results/form_field_tr.html' with field=form.bib_given_to_unknown with_raw_value=0 %}
+					{% include 'results/form_field_tr.html' with field=form.is_improbable with_raw_value=0 %}
+				</table>
+				<input type="submit"
+					name="frmResult_submit"
+					value="{% if create_new %}Создать{% else %}Сохранить{% endif %} и остаться здесь"
+					class="btn btn-success"
+				/>
+				&nbsp;&nbsp;&nbsp;&nbsp;
+				<input type="submit"
+					name="frmResult_submit_gotorace"
+					value="{% if create_new %}Создать{% else %}Сохранить{% endif %} и вернуться к забегу"
+					class="btn btn-success"
+				/>
+			</div>
+			<div class="col-md-5">
+				{% if not create_new %}
+					<table class="table table-condensed table-borderless">
+						<tr>
+							<td class="text-right"><strong>Привязан к бегуну:</strong></td>
+							<td>{% if result.runner %}<a href="{{ result.runner.get_absolute_url }}">{{ result.runner.name }}</a>{% else %}Нет{% endif %}</td>
+						</tr>
+						<tr>
+							<td class="text-right"><strong>Привязан к пользователю:</strong></td>
+							<td>{% if result.user %}{% include 'editor/user_name_with_link.html' with person=result.user %}{% else %}Нет{% endif %}</td>
+						</tr>
+						{% if result.runner or result.user %}
+							{% if not result.klb_result %}
+								<tr><td></td>
+									<td><input type="submit" name="btnDisconnect" value="Отвязать результат от человека" class="btn btn-primary"/>
+									</td>
+								</tr>
+							{% endif %}
+						{% else %}
+							{% if possible_runners %}
+								<tr><td colspan="2" class="text-center">Подходящие бегуны</td></tr>
+								{% for runner in possible_runners %}
+									<tr><td><a href="{{ runner.get_absolute_url }}" target="_blank">{{ runner.get_name_for_ajax_select }}</a></td>
+										<td><a href="{% url 'editor:result_connect_to_runner' result_id=result.id runner_id=runner.id %}">
+											<button type="button" class="btn btn-sm btn-primary">Привязать</button>
+										</a></td>
+									</tr>
+								{% endfor %}
+							{% endif %}
+							<tr><td>&nbsp;</td><td></td></tr>
+							<tr><td colspan="2" class="text-center"><strong>Привязка к любому бегуну</strong></td></tr>
+							<tr><td colspan="2">
+								<select id="id_runner" name="runner" style="width: 100%"></select>
+								<script type="text/javascript">
+									$("#id_runner").select2({
+										placeholder: "Первые буквы фамилии и имени или ID бегуна",
+										width: 'element',
+										allowClear: true,
+										minimumInputLength: 5,
+										ajax: {
+											url: "{{ race.get_ajax_runners_list_url }}",
+											dataType: 'json',
+											delay: 250,
+											data: function (params) {
+												return {
+													query: params.term
+												};
+											},
+											processResults: function (data) {
+												return {
+													results: data
+												};
+											},
+											cache: true
+										},
+									});
+								</script>
+							</td></tr>
+							<tr><td class="text-right"><input type="checkbox" name="chkAddName"/></td>
+								<td><label for="chkAddName">И добавить бегуну такое дополнительное имя</label></td>
+							</tr>
+							<tr><td></td>
+								<td><input type="submit" name="btnСonnectToRunner" value="Привязать" class="btn btn-sm btn-primary"/></td>
+							</tr>
+						{% endif %}
+						<tr><td></td><td>&nbsp;</td></tr>
+						{% if result.parkrun_id %}
+							<tr>
+								<td class="text-right"><strong>{{ result.get_parkrun_id_desc }}:</strong></td>
+								<td>{{ result.parkrun_id }}</td>
+							</tr>
+						{% endif %}
+						<tr>
+							<td class="text-right"><strong>Добавил результат на сайт:</strong></td>
+							<td>{% include 'editor/user_name_with_link.html' with person=form.instance.loaded_by %}</td>
+						</tr>
+						<tr>
+							<td class="text-right"><strong>Дата добавления:</strong></td>
+							<td>{{ form.instance.added_time }}</td>
+						</tr>
+						<tr>
+							<td class="text-right"><strong>Дата последней правки:</strong></td>
+							<td>{{ form.instance.last_update }}</td>
+						</tr>
+					</table>
+				{% endif %}
+			</div>
+		</div>
+		{% endwith %}
+		{% include 'results/panel_footer.html' %}
+	</form>
+	{% if not create_new %}
+		<form id="frmForResult" method="POST" action="{{ result.get_delete_url }}" class="form-inline" style="float: right;">
+			{% csrf_token %}
+			<input type="submit" name="frmForResult_submit" value="Удалить результат «{{ result }}»" class="btn btn-danger"/>
+		</form>
+	{% endif %}
+</div><div class="col-md-4">
+	{% if not create_new %}
+		{% if show_klb_section %}
+			{% include 'results/panel_header.html' with title='КЛБМатч' %}
+				{% if result.klb_result %}{% with person=result.klb_result.klb_person klb_result=result.klb_result %}
+					{% if wrong_klb_person %}
+						<p><strong>Результат привязан не к тому бегуну, кому засчитан в КЛБМатч!</strong></p>
+					{% endif %}
+					<table class="table table-condensed table-borderless" width="100%">
+						<tr><td>Учтён в КЛБМатче:</td><td></td></tr>
+						<tr><td>Участник</td><td><a href="{{ person.get_absolute_url }}">{{ person }}</a></td></tr>
+						<tr><td>Основные очки</td><td>{{ klb_result.klb_score|floatformat:3 }}</td></tr>
+						<tr><td>Бонусные</td><td>{{ klb_result.bonus_score|floatformat:3 }}</td></tr>
+						<tr><td>Сумма</td><td>{{ klb_result.total_score|floatformat:3 }}</td></tr>
+					</table>
+					<form id="frmKlbResult" method="POST" action="{{ result.get_klb_delete_url }}" class="form-inline">
+						{% csrf_token %}
+						<input type="submit" name="frmKlbResult_submit" value="Удалить из КЛБМатча" class="btn btn-danger"/>
+						{% if not wrong_klb_person %}
+							<br/><br/>
+							<p><input type="checkbox" name="to_unclaim" checked/> и отвязать результат от бегуна</p>
+						{% endif %}
+					</form>
+				{% endwith %}{% elif result.is_ok_for_klb %}
+					<form id="frmKlbResult" method="POST" action="{{ result.get_klb_add_url }}" class="form-inline">
+						{% csrf_token %}
+						<p><select id="id_participant" name="select_participant_for_klb" style="width: 50%"></select></p>
+						<p>
+							<input type="checkbox" name="only_bonus_score"/> Считать только бонусные очки
+						</p>
+						<p><input type="submit" name="frmSplits_submit" value="Засчитать в КЛБМатч выбранному участнику" class="btn btn-success"/></p>
+					</form>
+					<script type="text/javascript">
+$("#id_participant").select2({
+	placeholder: "Введите первые буквы фамилии",
+	width: 'element',
+	allowClear: true,
+	ajax: {
+		url: "/editor/klb/participants/list/race/{{ race.id }}",
+		dataType: 'json',
+		delay: 250,
+		minimumInputLength: 5,
+		data: function (params) {
+			return {
+				query: params.term
+			};
+		},
+		processResults: function (data) {
+			return {
+				results: data
+			};
+		},
+		cache: true
+	},
+});
+					</script>
+				{% endif %}
+			{% include 'results/panel_footer.html' %}
+		{% elif result.klb_result %}{% with person=result.klb_result.klb_person klb_result=result.klb_result %}
+			{% include 'results/panel_header.html' with title='КЛБМатч'|add:year %}
+				<table class="table table-condensed table-borderless" width="100%">
+					<tr><td>Учтён в КЛБМатче–{{ year|year_for_klbmatch }}:</td><td></td></tr>
+					<tr><td>Участник</td><td><a href="{{ person.get_absolute_url }}">{{ person }}</a></td></tr>
+					<tr><td>Основные очки</td><td>{{ klb_result.klb_score|floatformat:3 }}</td></tr>
+					<tr><td>Бонусные</td><td>{{ klb_result.bonus_score|floatformat:3 }}</td></tr>
+					<tr><td>Сумма</td><td>{{ klb_result.total_score|floatformat:3 }}</td></tr>
+				</table>
+				<form id="frmKlbErrorResult" method="POST" action="{{ result.get_klb_error_url }}" class="form-inline">
+					{% csrf_token %}
+					<input type="submit" name="frmKlbErrorResult_submit" value="Пометить как ошибочно зачтённый" class="btn btn-danger"/>
+					<br/><br/>
+					<p>Это отвяжет КЛБ-результат от бегуна и от результата из dj_result и пометит результат как
+						ошибочно зачтённый. Будьте очень осторожны!</p>
+				</form>
+			{% include 'results/panel_footer.html' %}
+		{% endwith %}{% endif %}
+		{% include 'results/panel_header.html' with title='Промежуточные результаты' %}
+			<form id="frmSplits" method="POST" action="{{ result.get_splits_update_url }}" class="form-inline">
+				{{ frmSplits.management_form }}{% csrf_token %}
+				{% for error in frmSplits.non_form_errors %}
+					<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+				{% endfor %}
+				<table class="table table-condensed">
+					<tr>
+						<th>Дистанция</th>
+						<th>Результат
+							{% if type_minutes %}
+								(в метрах, только цифры)
+							{% else %}
+								(чч:мм:сс или чч:мм:сс,хх)
+							{% endif %}
+						</th><th>Удалить?</th>
+					</tr>
+					{% for form in frmSplits %}{% with no_title=1 %}
+						<tr>
+							<td>
+								{% for hidden in form.hidden_fields %}
+									{{ hidden }}
+								{% endfor %}
+								{% include 'results/form_field.html' with field=form.distance %}</td>
+								{% for error in form.non_field_errors %}
+									<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+								{% endfor %}
+							<td>{% include 'results/form_field.html' with field=form.result_str %}</td>
+							<td>{% if form.instance.id %}
+									{% include 'results/form_field.html' with field=form.DELETE %}
+								{% endif %}
+							</td>
+						</tr>
+					{% endwith %}{% endfor %}
+				</table>
+				<input type="submit" name="frmSplits_submit" value="Обновить промежуточные результаты" class="btn btn-success"/>
+			</form>
+		{% include 'results/panel_footer.html' %}
+	{% endif %}
+</div></div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends 'results/modal_form_base.html' %}
+{% block header %}Добавить ссылку на отчёт о забеге «{{ event }}» ({{ event.date|safe }}) {% endblock %}
+{% block main %}
+	<p>Если Вы написали отчёт о забеге или делали фотографии на нём, или просто нашли отчёт или фотоальбом в интернете, сообщите нам о нём!
+		Мы разместим ссылку на странице забега для всех желающих.
+	</p>
+	<form id="frm_add_review" enctype="multipart/form-data">
+		{% csrf_token %}
+		{% for hidden in form.hidden_fields %}
+			{{ hidden }}
+		{% endfor %}
+		{% for field in form.visible_fields %}
+			{% include 'results/form_field.html' %}
+		{% endfor %}
+	</form>
+{% endblock %}
+{% block footer %}
+	<span id="response"></span>
+	<button type="button" class="btn btn-default" data-dismiss="modal">Закрыть окно</button>
+	<button type="button" class="btn btn-success" id="send_letter">Отправить</button>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% with profile=runner.user.user_profile %}
+<span class="pull-right">
+	{% if profile.is_public and profile.strava_account %}
+			<a href="{{ profile.get_strava_link }}" target="_blank">
+				<img src="/static2/images/icons/strava_60x60.png" width="15" height="15" alt="Ссылка на страницу в Strava" style="margin-top: -3px;"/>&nbsp;
+			</a>
+	{% endif %}
+	{% if profile.is_public and runner.user.is_active %}
+			<a href="{{ profile.get_absolute_url }}"><span class="glyphicon glyphicon-user small-label" aria-hidden="true"></span></a>&nbsp;
+	{% endif %}
+</span>
+{% if not hide_name %}
+	<a href="{{ runner.get_runner_or_user_url }}">{% if with_midname %}{{ runner.lname }} {{ runner.fname }} {{ runner.midname }}{% else %}{{ runner.name }}{% endif %}</a>
+{% endif %}
+{% endwith %}

@@ -1,0 +1,94 @@
+{% extends 'results/base.html' %}
+{% load results_extras %}
+{% block main %}
+
+{% include 'klb/team_header.html' %}
+<div class="row"> <!-- Header -->
+	{% include 'tools/klb_team_table_detailed.html' %}
+	<div class="col-md-7">
+		<h4>Добавление в команду участников предыдущего КЛБМатча</h4>
+		{% if show_contact_fields %}
+			<p><strong>Изменение в КЛБМатче-2018:</strong> для каждого участника необходимо указать либо его адрес электронной почты, либо мобильный телефон.
+				Если участник сам зарегистрирован на сайте (тогда в строке с ним есть значок <span class="glyphicon glyphicon-user small-label" aria-hidden="true"></span>),
+				он может указать эти данные в своём профиле; тогда заполнять их вам не нужно.
+				Но если вы знаете, что указанные в профиле данные некорректны, вы можете сейчас указать правильную контактную информацию.
+			</p>
+			<p>Те участники, для которых вы не заполните корректно ни одно из этих двух полей, добавлены в команду не будут.</p>
+			<p>Телефон нужно указать так, чтобы можно было позвонить на него из любой точки России.
+			Так что российские номера должны состоять из 10 цифр и начинаться на 8 или +7; иностранные должны начинаться на + и код страны.
+			Можно вводить телефоны вместе со скобками, пробелами и тире.</p>
+		{% endif %}
+		<p>Для добавления или удаления фрагмента галочек нажмите на первую галочку фрагмента, а затем с зажатой клавишей Shift — на последнюю.</p>
+		<form id="frmAddOldParticipants" action="" method="POST">
+			{% csrf_token %}
+			<table class="table table-condensed table-hover">
+				<tr><th class="text-center">Добавить?</th><th>Участник</th><th>Дата<br/>рождения</th>
+					{% if n_prev_year_teams > 1 %}
+						<th>Команда<br/>в {{ team.year|add:-1 }} году</th>
+					{% endif %}
+					{% if show_contact_fields %}
+						<th class="text-center">E-mail</th><th class="text-center">Моб. телефон</th>
+					{% endif %}
+					<th class="text-center">Заявлен<br/>в Матч-{{ team.year|year_for_klbmatch }}?</th>
+				</tr>
+				{% for item in prev_year_participants %}{% with participant=item.participant person=item.participant.klb_person %}
+					<tr{% if person.gender == 1 %} class="success"{% endif %}>
+						<td class="text-center">{% if not item.is_cur_year_participant %}
+								<input type="checkbox" name="add_{{ person.id }}" class="chkbox"/>
+							{% endif %}
+						</td>
+						<td>
+							<a href="{{ person.get_absolute_url }}" name="person{{ person.id }}">
+								{{ person.lname }} {{ person.fname }} {{ person.midname }}</a>
+							{% if item.profile %}
+								<span class="glyphicon glyphicon-user small-label" aria-hidden="true"></span>
+							{% endif %}
+						</td>
+						<td>{{ person.birthday|date:'d.m.Y' }}</td>
+						{% if n_prev_year_teams > 1 %}
+							<td><a href="{{ participant.team.get_absolute_url }}">{{ participant.team.name }}</a></td>
+						{% endif %}
+						{% if show_contact_fields %}
+							{% if item.is_cur_year_participant %}
+								<td></td><td></td>
+							{% else %}
+								<td class="text-center">
+									<input type="text" size="20" maxlength="{{ max_email_length }}" name="email_{{ person.id }}" value="{{ item.email }}"/>
+									{% if item.email_incorrect %}
+										<br/><h4><span class="label label-danger">Некорр. адрес</span></h4>
+									{% endif %}
+								</td>
+								<td class="text-center">
+									<input type="text" size="15" maxlength="{{ max_phone_number_length }}" name="phone_number_{{ person.id }}" value="{{ item.phone_number }}"/>
+									{% if item.phone_number_incorrect %}
+										<br/><h4><span class="label label-danger">Некорр. телефон</span></h4>
+									{% endif %}
+								</td>
+							{% endif %}
+						{% endif %}
+						<td>{% if item.is_cur_year_participant %}
+								{% if item.cur_year_team %}
+									за команду <a href="{{ item.cur_year_team.get_absolute_url }}">{{ item.cur_year_team.name }}</a>
+								{% else %}
+									индивидуальный участник
+								{% endif %}
+							{% endif %}
+						</td>
+					</tr>
+				{% endwith %}{% endfor %}
+			</table>
+			<input type="checkbox" name="is_responsible" id="chkIsResponsible"/>
+			Я&nbsp;или&nbsp;руководитель клуба получили согласие всех отмеченных людей на&nbsp;включение в&nbsp;состав команды
+			«{{ team.name }}» в&nbsp;КЛБМатче–{{ team.year|year_for_klbmatch }} и&nbsp;на&nbsp;размещение их&nbsp;персональных данных (ФИО, год рождения, город)
+			на&nbsp;страницах сайта КЛБМатча, а&nbsp;также на&nbsp;хранение администрацией КЛБМатча их&nbsp;электронных адресов и телефонов
+			<br/><br/>
+			<input type="submit" name="frmAddOldParticipants_submit" value="Добавить отмеченных участников в команду {{ team.name }}"
+				class="btn btn-success" id="btnSubmit" disabled
+			/>
+			<span class="pull-right">
+				<a href="{{ team.get_absolute_url }}">Вернуться на страницу команды</a>
+			</span>
+		</form>
+	</div>
+</div>
+{% endblock %}

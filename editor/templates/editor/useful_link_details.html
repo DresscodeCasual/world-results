@@ -1,0 +1,29 @@
+{% extends 'results/base.html' %}
+{% load static %}
+{% block main %}
+<div class="row"><div class="col-md-12">
+{% include 'results/panel_header_before_title.html' %}
+	<a href="{% url 'results:useful_links' %}" class="underlined">Полезные ссылки</a>:
+	Редактирование ссылки «{{ link.name }}»
+	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<a href="{{ link.get_history_url }}">
+		<button type="button" class="btn btn-sm btn-primary">История изменений</button>
+	</a>
+{% include 'results/panel_header_after_title.html' %}
+	{% for error in frmLink.non_field_errors %}
+		<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+	{% endfor %}
+	<form action="" method="POST" class="form-horizontal">
+		{% csrf_token %}
+		{% for field in frmLink %}
+			{% include 'tools/form_field_with_offset.html' %}
+		{% endfor %}
+		<div class="row">
+			<div class="col-md-6 col-md-offset-6">
+				<input type="submit" name="frmLink_submit" value="Сохранить" class="btn btn-success"/>
+			</div>
+		</div>
+	</form>
+{% include 'results/panel_footer.html' %}
+</div></div>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends 'results/base.html' %}
+{% block main %}
+
+<h4>Добавление документов из dj_document в старые поля</h4>
+
+Всего добавлено {{ docs_added }} документов:
+
+<table class="table table-condensed table-hover">
+	<tr>
+		<th>№</th><th>Забег</th><th>Тип</th>
+		<th>Старое локальное</th><th>Старый URL</th><th>Новое значение</th>
+	</tr>
+	{% for record in docs_to_add_old_fields %}
+		<tr>
+			<td>{{ forloop.counter }}</td>
+		{% for item in record %}
+			{% if forloop.counter == 1 %}
+				<td><a href="{% url 'results:event_details' event_id=item.id %}">{{ item.name }}</a></td>
+			{% else %}
+				<td>{{ item|safe }}</td>
+			{% endif %}
+		{% endfor %}
+		</tr>
+	{% endfor %}
+</table>
+
+{% endblock %}

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ru">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>{{ page_title }}</title>
+		<link rel="shortcut icon" type="image/png" href="/static2/images/icons/girl-black-square-200.png">
+	</head>
+<style type="text/css">
+a {
+	text-decoration: none;
+}
+</style>
+	<body>
+		{% if error %}
+			<h2>{{ error|safe|urlize }}</h2>
+		{% else %}
+			<h1>{{ page_title }}</h1>
+			<p>Протокол утверждён {{ session.date|default:'(здесь будет дата)' }}</p>
+			<ol>
+			{% for record_result, prev_record in record_results %}{% with runner=record_result.runner result=record_result.result protocol=record_result.protocol %}
+				<li><strong>{{ record_result.get_short_age_group_name }}, {{ record_result.get_distance_name }}, {{ record_result.get_surface_type_display }}{% if record_result.electronic_matters %},
+						{% if record_result.is_electronic %}электронный{% else %}ручной{% endif %}
+						хронометраж
+					{% endif %}
+					</strong>
+					<br/>
+					<strong>{{ record_result|safe }}</strong> —
+					{{ runner.fname }} {{ runner.midname }} {{ runner.lname }}
+					{% if runner.city %}
+						{% if only_city_name %}
+							({{ runner.city.name }})
+						{% else %}
+							({{ runner.city.nameWithCountry|safe }})
+						{% endif %}
+					{% endif %}
+					{% if record_result.is_wind_speed_relevant %}
+						<br/>
+						{% if result.wind is not None %}
+							Скорость ветра: {% if result.wind > 0 %}+{% endif %}{{ result.wind }} м/с.
+						{% else %}
+							Скорость ветра неизвестна.
+						{% endif %}
+					{% endif %}
+					<br/>
+					{% if runner.birthday_known %}
+						Дата рождения: {{ runner.birthday }}
+					{% else %}
+						Год рождения: {{ runner.birthday.year }}.
+					{% endif %}
+					<br/>
+					Забег:
+					{% if record_result.race %}
+						{{ record_result.race.event.name }}</a>, {{ record_result.event_city|safe }},
+						<a href="{{ record_result.race.get_absolute_url }}" target="_blank">{{ SITE_URL }}{{ record_result.race.get_absolute_url }}</a>
+					{% else %}{% with city_country=record_result.get_event_city_country %}
+						неизвестен{% if city_country %}, {{ city_country|safe }}{% endif %}.
+					{% endwith %}{% endif %}
+					{% if record_result.surface_type == 6 or record_result.surface_type == 7 %}
+						<br/>Место проведения забега: {{ result.race.event.start_place|default:'неизвестно' }}.
+					{% endif %}
+					<br/>
+					Дата забега: {{ record_result.get_date|safe }}, возраст на день забега: {{ record_result.get_age_on_event_date }}.
+					<br/>
+					Страница спортсмена: <a href="{{ runner.get_absolute_url }}" target="_blank">{{ SITE_URL }}{{ runner.get_absolute_url }}</a>
+					<br/>
+					{% if protocol %}
+						{% if protocol.url_source %}
+							Протокол{% if protocol.comment %} {{ protocol.comment }}{% endif %}:
+							<a href="{{ protocol.url_source }}" target="_blank">{{ protocol.url_source }}</a>
+							{% if protocol.upload %}
+								<br/>
+								Сохранённая копия:
+								<a href="{{ protocol.get_upload_url }}" target="_blank">{{ protocol.get_upload_url }}</a>
+							{% endif %}
+						{% else %}
+							Протокол{% if protocol.comment %} {{ protocol.comment }}{% endif %}:
+							<a href="{{ protocol.get_upload_url }}" target="_blank">{{ protocol.get_upload_url }}</a>
+						{% endif %}
+					{% else %}
+						Протокол пока не найден.
+					{% endif %}
+					{% if record_result.comment %}
+						<br/>
+						Комментарий: {{ record_result.comment }}
+					{% endif %}
+					<br/>
+					Другие высокие результаты в группе: <a href="{{ record_result.get_group_url }}" target="_blank">{{ SITE_URL }}{{ record_result.get_group_url }}</a>
+					{% if prev_record %}
+						<br/><strong>Прежний утверждённый рекорд:</strong> {{ prev_record|safe }} —
+						{{ prev_record.runner.name }}, {{ prev_record.get_date|safe }}
+					{% endif %}
+					<br/><br/>
+				</li>
+			{% endwith %}{% endfor %}
+			</ol>
+			<h3>В заседании приняли участие следующие члены комиссии по рекордам России в беге среди ветеранов</h3>
+			<ol>
+				{% for runner in participants %}
+					<li>{{ runner.name }}</li>
+				{% endfor %}
+			</ol>
+		{% endif %}
+	</body>
+</html>

@@ -1,0 +1,26 @@
+{% extends 'results/modal_form_base.html' %}
+{% block header %}Добавить новое событие{% endblock %}
+{% block main %}
+	<p><strong>Пожалуйста, не добавляйте онлайн-старты.</strong> Мы поддерживаем только календарь «офлайновых» соревнований, где все стартуют в один день и из одной точки.</p>
+	<p>Если это событие относится к серии, которая уже есть на сайте, то лучше зайдите на страницу серии
+		и нажмите «Сообщить о ещё одном забеге в серии». Поискать серии и забеги по названию можно на странице
+		<a href="{% url 'results:races' %}" target="_new">Все забеги</a>.
+	</p>
+	<p>Год и номер забега указывать в названии не нужно: не пишите «Мыловский забег — 2023», достаточно просто «Мыловский забег».</p>
+	<p>Обязательные поля отмечены звёздочками.</p>
+	<form id="frm_add_series" enctype="multipart/form-data">
+		{% csrf_token %}
+		{% for field in frmSeries %}
+			{% include 'results/form_field.html' %}
+		{% endfor %}
+	</form>
+	<script language="javascript">
+		var ajax_city_prefix = "id_";
+		var ajax_city_fullname = 1;
+	</script>
+{% endblock %}
+{% block footer %}
+	<span id="response" class="text-left"></span>
+	<button type="button" class="btn btn-default" data-dismiss="modal">Закрыть окно</button>
+	<button type="button" class="btn btn-success" id="add_series">Добавить</button>
+{% endblock %}

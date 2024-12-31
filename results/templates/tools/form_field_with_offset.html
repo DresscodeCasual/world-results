@@ -1,0 +1,43 @@
+{% load results_extras %}
+<div class="form-group">
+	{% if field|is_checkbox %}
+		<div class="col-sm-offset-6 col-sm-6">
+			<div class="checkbox">
+				<label>
+					{{ field }}
+					{{ field.label }}
+				</label>
+			</div>
+		</div>
+	{% elif field|is_radio %}
+		{{ field|label_with_classes:"col-sm-6 control-label" }}
+		<div class="col-sm-6">
+			{% for radio in field %}
+				<div class="radio">
+					{{ radio }}
+				</div>
+			{% endfor %}
+		</div>
+	{% elif field|is_multicheckbox %}
+		{{ field|label_with_classes:"col-sm-6 control-label" }}
+		<div class="col-sm-6">
+			{% for radio in field %}
+				<div class="checkbox">
+					{{ radio }}
+				</div>
+			{% endfor %}
+		</div>
+	{% else %}
+		{{ field|label_with_classes:"col-sm-6 control-label" }}
+		<div class="col-sm-6">
+			{{ field }}
+		</div>
+	{% endif %}
+	{% if field.errors %}
+		<div class="form-group"><div class="col-sm-offset-6 col-sm-6">
+			{% for error in field.errors %}
+				<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+			{% endfor %}
+		</div></div>
+	{% endif %}
+</div>

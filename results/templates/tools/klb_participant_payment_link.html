@@ -1,0 +1,22 @@
+{% load results_extras %}
+{% with team=participant.team %}
+	{% if participant.paid_status == 0 %}
+		{% if team %}
+			<p><strong>Ваше участие в КЛБМатче–{{ year|year_for_klbmatch }} ещё не оплачено.</strong>
+				{% if team.club.members_can_pay_themselves %}
+					Вы можете оплатить своё участие <a href="{% url 'results:klb_application_payment' year=participant.year %}">по этой ссылке</a>; также за Вас может заплатить капитан команды. Сделать это нужно до {{ participant.year|last_day_to_pay }}.
+				{% else %}
+					Капитан команды должен оплатить участие за всю команду до {{ participant.year|last_day_to_pay }}.
+				{% endif %}
+			</p>
+		{% else %}
+			<p><strong>Вы ещё не оплатили участие в КЛБМатче–{{ year|year_for_klbmatch }}. Результаты до дня оплаты в зачёт не идут.</strong></p>
+			<p><a href="{% url 'results:klb_application_payment' year=participant.year %}">Оплатить участие</a></p>
+		{% endif %}
+	{% endif %}
+	{% if not team %}
+		<p><a href="{% url 'results:klb_remove_from_match' year=participant.year %}">
+			<button type="button" class="btn btn-xs btn-danger">Отзаявиться из КЛБМатча–{{ year|year_for_klbmatch }}</button>
+		</a></p>
+	{% endif %}
+{% endwith %}

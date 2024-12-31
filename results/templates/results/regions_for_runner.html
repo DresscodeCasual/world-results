@@ -1,0 +1,29 @@
+{% extends 'results/base.html' %}
+{% block main %}
+<div class="row"><div class="col-md-4 col-md-offset-4 col-sm-12 col-sm-offset-0">
+	<h3 class="text-center"><a href="{{ runner.get_runner_or_user_url }}">{{ runner.name }}</a>: {{ page_desc }}</h3>
+	<table class="table table-condensed table-hover vcenter">
+		<thead>
+			<tr class="info">
+				<th class="text-right">№</th>
+				<th>Регион</th>
+				<th class="text-center">Число успешных финишей</th>
+			</tr>
+		</thead>
+		<tbody>
+			{% for region, count in regions %}
+				<tr>
+					<td class="text-right">{{ forloop.counter }}</td>
+					<td>{{ region.name_full }}</td>
+					<td class="text-center">{{ count }}</td>
+				</tr>
+			{% endfor %}
+			<tr>
+				<td class="text-right"></td>
+				<td>Всего:</td>
+				<td class="text-center">{{ total }}</td>
+			</tr>
+		</tbody>
+	</table>
+</div></div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends 'results/base.html' %}
+{% load results_extras %}
+{% block main %}
+{% include 'club/club_header.html' with show_link_to_club_page=1 %}
+<br/>
+<div class="row">
+	{% include 'club/club_members_column.html' %}
+	<div class="col-md-7">
+		<h4>Добавление нового члена клуба: шаг 2</h4>
+			{% if runners|length > 1 %}
+				<p>В нашей базе есть несколько человек, похожих на нужного. Пожалуйста, выберите нужного;
+					при клике по имени результаты человека откроются в новом окне.
+					<br/>
+					Если сомневаетесь, лучше создайте нового участника забегов.
+				</p>
+			{% else %}
+				<p>В нашей базе есть человек, похожий на нужного. Посмотрите, не он ли Вам нужен;
+					при клике по имени результаты человека откроются в новом окне.
+					<br/>
+					Если сомневаетесь, лучше создайте нового участника забегов.
+				</p>
+			{% endif %}
+		<form id="frmAddNewMembers" action="" method="POST">
+			{% csrf_token %}
+			{% for field in form %}
+				{{ field.as_hidden }}
+			{% endfor %}
+			<input type="radio" name="runner_id" value="-1" checked>
+			Создать нового участника забегов:
+			{{ form.instance.name_with_midname }}, {{ form.instance.birthday|date:'d.m.Y' }}, {{ form.instance.city.nameWithCountry }}
+			{% for runner_dict in runners %}
+				<br/><br/>
+				<input type="radio" name="runner_id" value="{{ runner_dict.runner.id }}"
+					{% if runner_dict.club_member %}disabled{% endif %}
+				>
+				<a href="{{ runner_dict.runner.get_absolute_url }}" target="_blank">{{ runner_dict.runner.name_with_midname }}</a>,
+				{{ runner_dict.info }}
+				{% if runner_dict.club_member %}
+					{% if runner_dict.club_member.is_already_removed %}
+						<br/>
+						Уже был членом клуба «{{ club.name }}» до {{ runner_dict.club_member.date_removed|date:"d.m.Y" }}.
+						Вы можете изменить дату его выхода из клуба <a href="{{ runner_dict.club_member.get_editor_url }}" target="_blank">на этой странице</a>.
+					{% else %}
+						<br/>
+						Уже является членом клуба «{{ club.name }}»
+					{% endif %}
+				{% endif %}
+			{% endfor %}
+			<br/><br/>
+			<input type="submit" name="step2_submit" value="Добавить выбранного человека в клуб {{ club.name }}" class="btn btn-success"/>
+			<span class="pull-right">
+				<a href="{{ club.get_members_list_url }}">Вернуться к списку членов клуба</a>
+			</span>
+		</form>
+	</div>
+</div>
+{% endblock %}

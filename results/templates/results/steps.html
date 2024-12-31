@@ -1,0 +1,26 @@
+{% extends 'results/base.html' %}
+{% block main %}
+
+Добро пожаловать, {{ request.user.get_full_name|default:request.user.username }}.
+<p/>
+Шаг 1:
+{% if step1 %}
+Заполнить личные данные. <button type="button" class="btn btn-success">Сделано</button>
+&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="{% url 'results:my_details' %}"><button type="button" class="btn btn-primary">Изменить личные данные</button></a>
+<p/>
+Шаг 2:
+	{% if step2 %}
+		Найти ваши результаты в базе. <button type="button" class="btn btn-success">Сделано</button>
+	{% else %}
+<a href="{% url 'results:find_results' %}">
+	<button type="button" class="btn btn-primary">Найдите ваши результаты в базе</button>
+</a>
+	{% endif %}
+
+{% else %}
+<a href="{% url 'results:my_details' %}"><button type="button" class="btn btn-primary">Заполните ваши данные</button></a>
+
+{% endif %}
+
+{% endblock %}

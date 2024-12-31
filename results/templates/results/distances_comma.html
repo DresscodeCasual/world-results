@@ -1,0 +1,1 @@
+{% for race in races %}{% if event.is_in_past %}<a href="{{ race.get_absolute_url }}">{{ race.distance_with_start_date|safe }}</a>{% else %}<span>{{ race.distance_with_start_date|safe }}</span>{% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}

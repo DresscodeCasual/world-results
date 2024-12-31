@@ -1,0 +1,210 @@
+{% extends 'results/base.html' %}
+{% load results_extras %}
+{% block main %}
+<div class="row">
+	{% if is_admin %}
+		<div class="col-md-12">
+			{% include 'results/panel_header_before_title.html' %}
+				Search By
+				&nbsp;&nbsp;&nbsp;&nbsp;
+				{% if lname and fname %}
+					<a href="{% url 'editor:runner_create' lname=lname fname=fname %}">
+						<button type="button" class="btn btn-sm btn-primary">Create runner {{ fname }} {{ lname }}</button></a>
+				{% else %}
+					<a href="{% url 'editor:runner_create' %}">
+						<button type="button" class="btn btn-sm btn-primary">Create a runner</button></a>
+				{% endif %}
+			{% include 'results/panel_header_after_title.html' %}
+				<form id="frmSearch" action="{% url 'results:runners' %}" method="GET" class="form-inline">
+					{% csrf_token %}
+					{% if page %}
+						<input type="hidden" name="page" id="id_page" value="{{ page.number }}"/>
+					{% endif %}
+					<input type="hidden" name="ordering" value="{{ ordering }}"/>
+					{% include 'results/form_field.html' with field=form.fname no_title=1 %}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					{% include 'results/form_field.html' with field=form.lname no_title=1 %}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					{% include 'results/form_field.html' with field=form.birthday_from %}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					{% include 'results/form_field.html' with field=form.birthday_to %}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					<br/>
+					{% include 'results/form_field.html' with field=form.is_user %}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					{% include 'results/form_field.html' with field=form.is_in_klb %}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					{% comment %}
+						{% include 'results/form_field.html' with field=form.is_ak_person %}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					{% endcomment %}
+					{% include 'results/form_field.html' with field=form.is_in_parkrun %}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+					<input type="submit" name="btnSearchSubmit" value="Search" class="btn btn-success"/>
+				</form>
+			{% include 'results/panel_footer.html' %}
+		</div>
+	{% else %}
+		<div class="col-md-6">
+			<h4>Search By</h4>
+			<form id="frmSearch" action="{% url 'results:runners' %}" method="GET" class="form-inline">
+				{% csrf_token %}
+				<input type="hidden" name="ordering" value="{{ ordering }}"/>
+				{% include 'results/form_field.html' with field=form.fname no_title=1 %}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				{% include 'results/form_field.html' with field=form.lname no_title=1 %}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				<input type="submit" name="btnSearchSubmit" value="Search" class="btn btn-success"/>
+			</form>
+		</div>
+		<div class="col-md-6">
+			{% include 'misc/adsense_high.html' %}
+		</div>
+	{% endif %}
+</div>
+{% if page %}
+	<p></p>
+	<div class="row">
+		<div class="col-md-6">
+			<h3>{{ list_title|safe }}</h3>
+		</div>
+		<div class="col-md-6 text-right">
+			{% include 'results/pagination.html' %}
+		</div>
+	</div>
+	<div class="row"><div class="col-md-12">
+		<table class="table table-condensed table-hover table-striped">
+		<thead>
+			<tr class="text-center info">
+				<th rowspan="2" class="vcenter">№</th>
+				<th rowspan="2" class="vcenter">Name
+					<button class="btn btn-link arrow{% if ordering == 'name' %}-active{% endif %}" form="frmSearch"
+						type="submit" name="ordering" value="name">▲</button>
+				</th>
+				<th rowspan="2" class="vcenter">City
+					<button class="btn btn-link arrow{% if ordering == 'city' %}-active{% endif %}" form="frmSearch"
+						type="submit" name="ordering" value="city">▲</button>
+				</th>
+				<th rowspan="2" class="vcenter">
+					{% if is_admin %}
+						<span class="for-admin">Birthday</span>
+					{% else %}
+						Year of Birth
+					{% endif %}
+					<button class="btn btn-link arrow{% if ordering == 'birthday' %}-active{% endif %}" form="frmSearch"
+						type="submit" name="ordering" value="birthday">▲</button>
+				</th>
+				<th colspan="4">В {{ cur_stat_year }} году</th>
+				<th colspan="4">Всего</th>
+				{% if is_admin %}
+					<th rowspan="2">Registered?</th>
+					<th rowspan="2">Platforms</th>
+					<th rowspan="2"></th>
+				{% endif %}
+			</tr>
+			<tr class="text-center info">
+				<th class="text-right">Races Completed
+					<button class="btn btn-link arrow{% if ordering == 'finishes_cur_year' %}-active{% endif %}" form="frmSearch"
+						type="submit" name="ordering" value="finishes_cur_year">▼</button>
+				</th>
+				<th class="text-right">Distance Covered
+					<button class="btn btn-link arrow{% if ordering == 'length_cur_year' %}-active{% endif %}" form="frmSearch"
+						type="submit" name="ordering" value="length_cur_year">▼</button>
+				</th>
+				<th>Time Spent
+					<button class="btn btn-link arrow{% if ordering == 'time_cur_year' %}-active{% endif %}" form="frmSearch"
+						type="submit" name="ordering" value="time_cur_year">▼</button>
+				</th>
+				<th><abbr title="Maximal N such that the runner finished at N races, each at least N kilometers long">Eddington<br/>Index</abbr>
+					<button class="btn btn-link arrow{% if ordering == 'eddington_cur_year' %}-active{% endif %}" form="frmSearch"
+						type="submit" name="ordering" value="eddington_cur_year">▼</button>
+				</th>
+				<th class="text-right">Races Completed
+					<button class="btn btn-link arrow{% if ordering == 'finishes_all' %}-active{% endif %}" form="frmSearch"
+						type="submit" name="ordering" value="finishes_all">▼</button>
+				</th>
+				<th class="text-right">Distance Covered
+					<button class="btn btn-link arrow{% if ordering == 'length_all' %}-active{% endif %}" form="frmSearch"
+						type="submit" name="ordering" value="length_all">▼</button>
+				</th>
+				<th>Time Spent
+					<button class="btn btn-link arrow{% if ordering == 'time_all' %}-active{% endif %}" form="frmSearch"
+						type="submit" name="ordering" value="time_all">▼</button>
+				</th>
+				<th><abbr title="Максимальное N такое, что человек финишировал на N стартах, каждый из которых не короче N километров">Eddington<br/>Index</abbr>
+					<button class="btn btn-link arrow{% if ordering == 'eddington' %}-active{% endif %}" form="frmSearch"
+						type="submit" name="ordering" value="eddington">▼</button>
+				</th>
+			</tr>
+		</thead>
+		<tbody>
+		{% for row, runner in page_enum %}{% with user=runner.user %}
+			<tr class="vcenter">
+				<td class="text-center">{{ row }}</td>
+				<td>{% include 'tools/runner_or_user_name_with_link.html' with with_midname=is_admin %}
+				</td>
+				<td class="text-center">
+					{% if runner.city %}
+						{{ runner.city.nameWithCountry|safe }}
+					{% endif %}
+				</td>
+				<td class="text-center">
+					{% if runner.birthday_known and runner.deathday %}
+						{{ runner.birthday|date:"j E Y" }} — {{ runner.deathday|date:"j E Y" }}
+					{% elif is_admin %}
+						{{ runner.strBirthday|safe }}
+					{% else %}
+						{{ runner.birthday.year|default:'' }}
+					{% endif %}
+				</td>
+				<td class="text-right">{{ runner.n_starts_cur_year|default:'' }}</td>
+				<td class="text-right">{{ runner.get_length_curyear|safe }}</td>
+				<td class="text-center">{{ runner.get_time_curyear|safe }}</td>
+				<td class="text-center">
+					{% if runner.eddington_cur_year %}
+						{% if cur_year == cur_stat_year %}
+							<abbr title="To reach the next value, needs {{ runner.eddington_for_next_level_cur_year }} race{{ runner.eddington_for_next_level_cur_year|pluralize }} at least {{ runner.eddington_cur_year|add:1 }} km long">{{ runner.eddington_cur_year }}</abbr>
+						{% else %}
+							{{ runner.eddington_cur_year }}
+						{% endif %}
+					{% endif %}
+				</td>
+				<td class="text-right">{{ runner.n_starts|default:'' }}</td>
+				<td class="text-right">{{ runner.get_total_length|safe }}</td>
+				<td class="text-center">{{ runner.get_total_time|safe }}</td>
+				<td class="text-center">
+					{% if runner.eddington %}
+						<abbr title="To reach the next value, needs {{ runner.eddington_for_next_level }} race{{ runner.eddington_for_next_level|pluralize }} at least {{ runner.eddington|add:1 }} km long">{{ runner.eddington }}</abbr>
+					{% endif %}
+				</td>
+				{% if is_admin %}
+					<td class="text-center">
+						{% if user %}
+							<a href="{{ runner.get_user_url }}">да</a>
+							{% if not user.is_active %}
+								(inactive)
+							{% endif %}
+						{% endif %}
+					</td>
+					<td class="text-center">
+						{% for runner_platform in runner.runner_platform_set.all %}
+							{% if not forloop.first %}<br/>{% endif %}
+							ID at {{ runner_platform.platform.name }}:
+							<a href="{{ runner_platform.get_absolute_url }}">{{ runner_platform.value }}</a>
+						{% endfor %}
+					</td>
+					<td><a href="{{ runner.get_editor_url }}"><button type="button" class="btn btn-xs btn-primary">Edit</button></a></td>
+				{% endif %}
+			</tr>
+		{% endwith %}{% endfor %}
+		</tbody></table>
+		<div class="pull-right">
+			{% include 'results/pagination.html' %}
+		</div>
+	</div></div>
+{% else %}
+	<p>Ни одного бегуна не найдено. :(</p>
+{% endif %}
+<p>
+	{% if lname and fname %}
+		<p><a href="{% url 'results:results' lname=lname fname=fname %}">Все результаты с именем «{{ fname }}*» и фамилией «{{ lname }}*»</a></p>
+		<p><a href="{% url 'results:results_disconnected' lname=lname fname=fname %}">Все результаты с именем «{{ fname }}*» и фамилией «{{ lname }}*», не привязанные к бегунам</a></p>
+	{% elif lname %}
+		<p><a href="{% url 'results:results' lname=lname %}">Все результаты с фамилией «{{ lname }}*»</a></p>
+		<p><a href="{% url 'results:results_disconnected' lname=lname %}">Все результаты с фамилией «{{ lname }}*», не привязанные к бегунам</a></p>
+	{% elif fname %}
+		<p><a href="{% url 'results:results' fname=fname %}">Все результаты с именем «{{ fname }}*»</a></p>
+		<p><a href="{% url 'results:results_disconnected' fname=fname %}">Все результаты с именем «{{ fname }}*», не привязанные к бегунам</a></p>
+	{% endif %}
+</p>
+{% endblock %}

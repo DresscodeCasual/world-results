@@ -1,0 +1,11 @@
+{% if team.place %}
+	<p>Место в <a href="{{ url_start }}{% url 'results:klb_match_summary' year=team.year %}"{% if link_style %} style="{{ link_style }}"{% endif %}>общем зачёте</a>: {{ team.place }} из {{ teams_number }}
+	{% include 'tools/klb_teams_next_prev.html' with team_next=team.get_next_team team_prev=team.get_prev_team %}</p>
+{% endif %}
+{% if team.place_medium_teams %}
+	<p>Место в <a href="{{ url_start }}{% url 'results:klb_match_summary' year=team.year tab='medium' %}"{% if link_style %} style="{{ link_style }}"{% endif %}>зачёте средних команд</a>: {{ team.place_medium_teams }} из {{ medium_teams_number }}
+	{% include 'tools/klb_teams_next_prev.html' with team_next=team.get_next_medium_team team_prev=team.get_prev_medium_team %}</p>
+{% elif team.place_small_teams %}
+	<p>Место в <a href="{{ url_start }}{% url 'results:klb_match_summary' year=team.year tab='small' %}"{% if link_style %} style="{{ link_style }}"{% endif %}>зачёте маленьких команд</a>: {{ team.place_small_teams }} из {{ small_teams_number }}
+	{% include 'tools/klb_teams_next_prev.html' with team_next=team.get_next_small_team team_prev=team.get_prev_small_team %}</p>
+{% endif %}

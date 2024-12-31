@@ -1,0 +1,75 @@
+<div class="row"><div class="col-lg-8 col-lg-offset-1 col-md-10 col-md-offset-1 col-sm-12 col-sm-offset-0">
+	<h3>Лучшие результаты членов клуба <a href="{{ club.get_absolute_url }}">{{ club.name }}</a> за
+		{% if year %}
+			{{ year }} год
+		{% else %}
+			все годы
+		{% endif %}
+		{% if is_admin or is_editor %}
+			<span class="pull-right">
+				<a href="{{ club.get_update_records_url }}">
+					<button type="button" class="btn btn-sm btn-primary">Пересчитать рекорды клуба</button>
+				</a>
+			</span>
+		{% endif %}
+	</h3>
+	<p>Здесь учтены результаты, которые есть у нас на сайте и показаны бегунами, входившими в состав клуба на день забега;
+	на всех стартах, кроме тех, где, по нашим данным, фактическая дистанция была заметно короче официальной.</p>
+	<p class="text-center">
+		<form action="{{ club.get_club_records_url }}" method="POST" name="frmYear" class="form-inline">
+			{% csrf_token %}
+			<input type="submit" class="btn btn-success" value="Показать"/>
+			&nbsp;&nbsp;лучшие результаты клуба за
+			{{ form.year }}
+		</form>
+	</p>
+
+	{% if winners %}
+		<br/>
+		<div class="row"><div class="col-md-12">
+			<table class="table table-hover">
+			<thead>
+				<tr class="info text-center">
+					<th>Дистанция</th>
+					<th colspan="2">Рекорд у мужчин</th>
+					<th colspan="2">Рекорд у женщин</th>
+				</tr>
+			</thead>
+			<tbody>
+			{% for distance, line in winners.items %}
+				<tr>
+					<td class="text-center">{{ distance }}</td>
+					{% include 'club/club_record_row_short.html' with stat=line.male gender=2 %}
+					{% include 'club/club_record_row_short.html' with stat=line.female gender=1 %}
+				</tr>
+			{% endfor %}
+			</tbody></table>
+		</div></div>
+	{% else %}
+		<p>Пока нам неизвестно ни об одном рекорде. Всё впереди!</p>
+	{% endif %}
+
+	{% if records_abs_male %}
+		<br/><br/>
+		<h4>Тройки лучших на дистанциях. Мужчины</h4>
+		{% include 'club/club_records_section.html' with records=records_abs_male gender=2 %}
+	{% endif %}
+
+	{% if records_abs_female %}
+		<br/><br/>
+		<h4>Женщины</h4>
+		{% include 'club/club_records_section.html' with records=records_abs_female gender=1 %}
+	{% endif %}
+
+	{% if records_age_male %}
+		<br/><br/>
+		<h4>Мужчины с учётом возрастного коэффициента</h4>
+		{% include 'club/club_records_section.html' with records=records_age_male age_result=1 gender=2 %}
+	{% endif %}
+
+	{% if records_age_female %}
+		<br/><br/>
+		<h4>Женщины с учётом возрастного коэффициента</h4>
+		{% include 'club/club_records_section.html' with records=records_age_female age_result=1 gender=1 %}
+	{% endif %}
+</div></div>

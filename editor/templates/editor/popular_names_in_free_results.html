@@ -1,0 +1,31 @@
+{% extends 'results/base.html' %}
+{% block main %}
+
+<div class="row">
+	<div class="col-md-8 col-md-offset-1">
+		<h3>{{ page_title }}</h3>
+		<p>
+			Здесь — все пары (имя, фамилия), которые (без учёта регистра) встречаются среди результатов, не привязанных ни к бегуну, ни к пользователю,
+			не меньше {{ min_count }} раз.
+		</p>
+		<table class="table table-condensed table-hover">
+			<thead><tr class="info">
+				<th>№</th><th>Результатов</th><th>Имя</th><th>Фамилия</th><th>Бегунов с такими именем и фамилией</th><th class="min-width"></th>
+			</tr></thead>
+			<tbody>
+				{% for row in names %}
+					<tr>
+						<td>{{ forloop.counter }}</td>
+						<td><a href="{% url 'results:results_disconnected' lname=row.1 fname=row.2 %}" target="_blank">{{ row.0 }}</a>
+						<td>{{ row.2 }}</td>
+						<td>{{ row.1 }}</td>
+						<td><a href="{% url 'results:runners' lname=row.1 fname=row.2 %}" target="_blank">{{ row.3 }}</a>
+						<td><a href="{% url 'editor:runner_create' lname=row.1 fname=row.2 %}" target="_blank">Создать&nbsp;бегуна</a>
+						</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+</div>
+{% endblock %}

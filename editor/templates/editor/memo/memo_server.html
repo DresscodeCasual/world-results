@@ -1,0 +1,94 @@
+{% extends 'results/base.html' %}
+{% block main %}
+
+<h3>{{ page_title }}</h3>
+
+<p>Хостер — <a href="https://ispserver.ru/vps">ispserver</a>, тариф на июль 2020 — VPS-SSD-Стартап, оформлен на Андрея.</p>
+
+<p>Операционная система — CentOS Linux release 7.8.2003 (<code>cat /etc/centos-release</code>)</p>
+
+<br/><br/>
+<h4>Как перезагрузить сервер</h4>
+<p>Нужно зайти на него, например, с помощью Putty и выполнить команду <code>sudo reboot now</code></p>
+
+<br/><br/>
+<h4>Где хранятся файлы</h4>
+
+<ul>
+	<li>Исполняемые PHP-файлы — <code>/var/local/phpchroot/var/www/probeg.org/httpdocs</code>. PHP-скрипты корневой директорией считают <code>/var/local/phpchroot/</code></li>
+	<li>Статические файлы, которые никто не может править через веб-интерфейс — <code>/var/local/www/vhosts/probeg.org/php_static</code>.</li>
+	<li>Статические файлы, которые django может создавать и удалять — <code>/var/local/www/vhosts/probeg.org/dj</code>. Там три подпапки: 
+		<ul>
+			<li><code>new/img</code> — картинки к новостям</li>
+			<li><code>static</code> — статические файлы для страниц django: js, css и т.д.</li>
+			<li><code>dj_media</code> — всё, что пользователи и админы загружают на сайт, кроме картинок к новостям: аватарки, документы, логотипы забегов, клубов и организаторов и т.д.</li>
+			<li><code>dj_media/blocks</code> — папка-исключение, там лежит единственный PHP-файл, который генерирует джанго и к которому имеют доступ PHP-странички (список последних загруженных протоколов).</li>
+		</ul>
+		Надо постепено эти папки сделать однообразней (по крайней мере, слить пункты 1 и 3).
+	</li>
+	<li>Файлы PHP-сайта, которые пока вроде бы не нужны — <code>/var/local/httpdocs_plus</code></li>
+	<li>Файлы Django, отвечающие за все странички на белом фоне с зелёной строчкой меню сверху — <code>/var/local/django/mainsite</code></li>
+</ul>
+
+<p>Резервная копия файлов Django хранится в репозитории на сайте <a href="https://bitbucket.org/AlexeyChernov/probeg">BitBucket</a>.
+	Все остальные файлы, а также база данных, четыре раза в неделю синхронизируются с гугл-диском пользователя probeg.backup@gmail.com (папка <code>backup</code>).
+</p>
+
+<br/><br/>
+<h4>Как вручную добавить новый файл для PHP-части сайта</h4>
+
+<p>Файл с расширением .php — внутрь <code>/var/local/phpchroot/var/www/probeg.org/httpdocs</code>. Со всеми другими расширениями (.html, картинки, документы) — внутрь <code>/var/local/www/vhosts/probeg.org/php_static</code>.</p>
+
+<p>При этом, если вы кладёте файл в уже существующую подпапку (например, чтобы он был доступен по адресу https://probeg.org/klb/new_challenge.php), больше ничего делать не нужно, файл станет доступен всему миру сразу после копирования. А вот если вы кладёте файл в папку верхнего уровня (чтобы он был доступен по адресу вроде https://probeg.org/important_meme.gif), то нужно добавить строчку-исключение для этого пути в конфиг nginx (см. ниже) и перезапустить nginx (тоже см. ниже). Так что лучше в корневую директорию ничего не кладите. :)</p>
+
+<br/><br/>
+<h4>Настройки и логи основных служб</h4>
+
+<ul>
+	<li>Веб-сервер nginx 1.16.1:
+		<ul>
+			<li>Конфиги — <code>/etc/nginx/nginx.conf</code> и <code>/etc/nginx/conf.d/*.conf</code>, в первую очередь <code>probeg.org.conf</code></li>
+			<li>Логи — <code>/var/log/nginx/*</code> и <code>/var/log/messages</code></li>
+			<li>Управление службой: <code>sudo systemctl start/stop/restart/reload/status nginx</code></li>
+		</ul>
+	</li>
+	<li>PHP 5.4.16:
+		<ul>
+			<li>Конфиги — <code>/etc/php.ini</code>, <code>/etc/php-fpm.conf</code> и <code>/etc/php-fpm.d/*.conf</code>, в первую очередь <code>probeg.conf</code></li>
+			<li>Логи — <code>/var/log/php-fpm/*</code> и <code>/var/local/phpchroot/var/log/php-fpm/probeg.error.log</code></li>
+			<li>Управление службой: <code>sudo systemctl start/stop/restart/reload/status php-fpm</code></li>
+		</ul>
+	</li>
+	<li>База данных MySQL 8.0.17 (пакет rh-mysql80.x86_64):
+		<ul>
+			<li>Конфиги — <code>/etc/opt/rh/rh-mysql80</code></li>
+			<li>Логи — <code>/var/log/mysql/slow.log</code> (запросы, выполнявшиеся больше 5 секунд) и <code>/var/opt/rh/rh-mysql80/log/mysql/mysqld-general.log</code> (вообще все запросы; обычно выключено)</li>
+			<li>Управление службой: <code>sudo systemctl start/stop/restart/reload/status rh-mysql80-mysqld</code></li>
+			<li>Пользователи, их права и пароли: <code>/etc/iglocal/mysql_users_and_db</code>. Пользователей два — probegorg с правами на запись и чтение (для Django) и probegorg_ro с правами только на чтение (для PHP).</li>
+			<li><a href="https://probeg.org/_rj_yGH-h2OoDczU0Mn5a/">phpMyAdmin</a></li>
+		</ul>
+	</li>
+	<li>uwsgi 2.0.17.1 — посредник между python и nginx, обычно трогать не нужно:
+		<ul>
+			<li>Конфиги — <code>/etc/uwsgi.ini</code> и <code>/etc/uwsgi.d/*.ini</code></li>
+			<li>Логи — <code>/var/log/uwsgi/*</code></li>
+			<li>Управление службой: <code>sudo systemctl start/stop/restart/reload/status uwsgi</code></li>
+			<li>Также можно перезапускать «вассалов» службы для каждого сайта по отдельности — основного и бета-версии (будет доступна на beta.probeg.org) — изменяя время последней правки файлов: <code>/var/local/django/mainsite/touch_to_reload</code> и <code>/var/local/django/beta/touch_to_reload</code></li>
+		</ul>
+	</li>
+</ul>
+
+<br/><br/>
+<h4>Как обновить сертификат SSL для безопасного соединения</h4>
+
+<p>Мы пользуемся бесплатным сервисом Let's Encrypt для сертификатов, которые позволяют браузеру любого пользователя проверять, что никакой злоумышленник не внедрился в сеть где-то на пути между пользователем и нашим хостером и не выдал в качестве страницы сайта какую-то отсебятину. Проверить, что сертификат в порядке, можно по значку замочка в адресной строке вашего браузера: если замочек зелёный или серый и закрыт, всё в порядке.</p>
+<p>Сейчас сертификаты выписываются раз в 3 месяца. Пока делаем это вручную. Нажав на тот замочек, можно посмотреть, когда кончается действие текущего. Лучше всего продлять его за неделю-две до истечения срока. Если не успеть продлить, большинство браузеров будут показывать вместо сайта предупреждение «Соединение не защищено», это очень плохо.</p>
+<p>Для продления нужно:</p>
+<ol>
+	<li>Обновить сертификаты: <code>sudo certbot renew</code></li>
+	<li>Сохранить изменения в файлах в программе etckeeper: <code>cd /etc && sudo git add -A . && sudo git commit -m 'Update SSL certificates'</code></li>
+	<li>Открыть сайт, нажать на замочек и проверить, что дата окончания действия сертификата обновилась. Это может произойти сразу; возможно, может и занять больше времени (скажем, сутки).</li>
+	<li>Поставить себе напоминание за неделю до следующего истечения сертификата.</li>
+</ol>
+
+{% endblock %}

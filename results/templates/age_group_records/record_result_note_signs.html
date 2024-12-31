@@ -1,0 +1,21 @@
+{% if record_result.is_from_shatilo %}
+	<a href="#shatilo">*</a>
+{% endif %}
+{% if record_result.is_from_hinchuk %}
+	<a href="#hinchuk"><sup>#</sup></a>
+{% endif %}
+{% if record_result.is_from_vfla %}
+	<a href="#vfla"><sup>₽</sup></a>
+{% endif %}
+{% with timing=record_result.get_timing_type %}{% if timing == 1 %}
+	<a href="#hand_timing"><sup>руч</sup></a>
+{% elif timing == 2 %}
+	<a href="#maybe_hand_timing"><sup>руч?</sup></a>
+{% endif %}{% endwith %}
+{% if record_result.is_approved_record_now %}
+	<a href="#approved"><span style="color: green; font-weight: 200; font-size: 200%;">✓</span></a>
+{% elif record_result.session.is_complete %}
+	<a href="#approved"><span style="color: grey; font-weight: 200; font-size: 200%;">✓</span></a>
+{% elif record_result.session %}
+	<a href="#pending">⏳</a>
+{% endif %}

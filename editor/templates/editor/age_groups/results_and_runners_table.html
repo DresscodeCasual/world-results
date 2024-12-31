@@ -1,0 +1,139 @@
+{% load static %}
+{% load results_extras %}
+{% spaceless %}
+<table class="table table-condensed">
+	<thead><tr class="info">
+		<th>Дата</th>
+		<th>Забег</th><th>Город</th><th>Что мы знаем о человеке</th>
+		<th>Результат</th><th>Место<br/><nobr>(среди М/Ж)</nobr></th>
+		<th>Группа<br/><nobr>(место в ней)</nobr></th>
+		<th>Возраст, клуб, город<br/>в протоколе</th>
+		{% if to_show_buttons %}<th></th><th></th>{% endif %}
+		{% if bad_results_table %}
+			<th>Комментарий
+				{% if is_admin %}
+					<br/><span class="for-admin">Курсивом — для админов</span>
+				{% endif %}
+			</th>
+		{% endif %}
+		{% if is_admin and bad_results_table %}
+			<th class="for-admin">Кто добавил</th>
+			<th></th>
+		{% endif %}
+	</tr></thead>
+	<tbody>
+	{% for possible_record_result in results %}{% with result=possible_record_result.result %}
+		<tr{% if result.id in data.bad_results %} class="warning"{% endif %}>
+			<td><a href="{{ result.race.get_absolute_url }}">
+					{{ result.race.event.dateFull|safe }}
+				</a>
+			</td>
+			<td>{% if result.klb_result %}
+					<a href="{{ result.klb_result.klb_person.get_absolute_url }}">
+						<span class="label label-primary pull-right small-label">КЛБМатч</span>
+					</a>
+				{% endif %}
+				{% if result.race %}
+					<a href="{% url 'results:race_details' race_id=result.race.id %}">{{ result.race.event|safe }}</a>
+				{% endif %}
+			</td>
+			<td>{% include 'results/event_cities_with_links.html' with event=result.race.event %}
+				{% comment %}
+					{{ result.race.event.strCityCountry|safe }}
+				{% endcomment %}
+			</td>
+			<td>{% if result.runner %}
+					{% include 'tools/runner_or_user_name_with_link.html' with runner=result.runner hide_name=1 %}
+					<strong><a href="{{ result.runner.get_runner_or_user_url }}">{{ result.strName|default:"(неизвестно)" }}</a></strong>
+					{% if possible_record_result.age_on_event_date %}
+						<br/>Дата рождения: {{ result.runner.strBirthday|safe }}
+						<br/>Возраст на день забега: {{ possible_record_result.age_on_event_date }}
+					{% elif result.runner.birthday %}
+						<br/>Год рождения: {{ result.runner.birthday.year }}
+					{% endif %}
+					{% if result.runner.city %}
+						<br/>{{ result.runner.city.nameWithCountry|safe }}
+					{% endif %}
+				{% else %}
+					<strong>{{ result.strName|default:"(неизвестно)" }}</strong>
+					{% if is_admin and result.lname and result.fname %}
+						<br/><a href="{% url 'results:runners' lname=result.lname|encode_slashes fname=result.fname|encode_slashes %}">Бегуны-тёзки</a>
+					{% endif %}
+				{% endif %}
+			</td>
+			<td>{% include 'tools/tracker_logo.html' %}
+				<a href="{{ result.get_absolute_url }}" target="_blank">{{ result }}</a>
+				{% if result.wind is not None %}
+					<br/>ветер: {% if result.wind > 0 %}+{% endif %}{{ result.wind }}
+				{% endif %}
+				{% if possible_record_result.can_be_prev_record %}
+					<br/>
+					(возможный экс-рекорд)
+				{% endif %}
+				{% if possible_record_result.is_electronic %}
+					<br/>
+					(с электронным хронометражом)
+				{% endif %}
+				{% if not possible_record_result.race_has_correct_surface %}
+					<br/><span class="label label-danger small-label">неподх. тип покрытия</span>
+				{% endif %}
+			</td>
+			{% if result.source %}
+				<td></td>
+				<td></td>
+			{% else %}
+				{% if result.place %}
+					<td>&nbsp;{{ result.get_place|safe }}
+						{% if result.place_gender %}
+							<br/>
+							({{ result.get_gender_place|safe }})
+						{% endif %}
+					</td>
+				{% else %}
+					<td></td>
+				{% endif %}
+				<td>{% include 'tools/result_category_name_and_place.html' %}</td>
+			{% endif %}
+			<td>
+				{% include 'tools/result_birthday_and_age.html' %}
+				{% if result.club_name %}<br/>{{ result.club_name }}{% endif %}
+				{% if result.strCity %}<br/>{{ result.strCity }}{% endif %}
+			</td>
+			{% if to_show_buttons %}
+				<td>{% if result.id in data.bad_results %}
+						<strong>Помечен как плохой</strong>
+						<br/>
+						<input type="checkbox" name="mark_as_good_{{ possible_record_result.id }}"/>Пометить как хороший
+					{% else %}
+						<input type="checkbox" name="mark_as_bad_{{ possible_record_result.id }}"/>Пометить как плохой
+					{% endif %}
+				</td>
+				<td>{% if result.runner and possible_record_result.race_has_correct_surface %}
+						<input type="checkbox" name="add_record_{{ possible_record_result.id }}"/>Добавить в рекорды
+					{% endif %}
+				</td>
+			{% endif %}
+			{% if bad_results_table %}
+				<td>{{ possible_record_result.comment }}
+					{% if is_admin and possible_record_result.comment_private %}
+						<br/><span class="for-admin">{{ possible_record_result.comment_private }}</span>
+					{% endif %}
+				</td>
+			{% endif %}
+			{% if is_admin and bad_results_table %}
+				<td class="for-admin">{% include 'editor/user_name_with_link.html' with person=possible_record_result.created_by %}</td>
+				<td class="text-right">
+					<form action="{{ possible_record_result.get_mark_good_url }}" method="POST">
+						{% csrf_token %}
+						<input type="hidden" name="next_url" value="{{ request.path }}">
+						<input type="submit" value="Вернуть в возможные рекорды" class="btn btn-xs btn-primary"/>
+					</form>
+					<br/>
+					<a href="{{ possible_record_result.get_editor_url }}">
+						<button type="button" class="btn btn-xs btn-primary">Редактировать комментарии</button></a>
+				</td>
+			{% endif %}
+		</tr>
+	{% endwith %}{% endfor %}
+</tbody></table>
+{% endspaceless %}

@@ -1,0 +1,39 @@
+{% extends 'results/base.html' %}
+{% block main %}
+<div class="row"><div class="col-md-8 col-md-offset-1 col-sm-12 col-sm-offset-0">
+	<h2 class="text-center">{{ page_title }}</h2>
+	<br/><br/>
+	{% include 'results/pagination.html' %}
+	{% if page %}
+		{% for row, news in page_enum %}
+			<table class="table table-bordered" cellspacing="0" width="100%">
+				<tr><td>
+					<h4 style="margin-bottom: 0px;">
+						{{ news.date_posted|date:'d.m.Y' }}
+						&nbsp;&nbsp;&nbsp;&nbsp;
+						<a href="{{ news.get_absolute_url }}">{{ news.title|safe|default:'без названия' }}</a>
+					</h4>
+				</td></tr>
+				<tr><td>
+					{% if news.image %}
+						<a href="{{ news.get_image_url }}">
+							<img src="{{ news.get_image_thumb_url }}" border="0" alt="Увеличить" hspace="5" vspace="5"
+								align="{% if 1 %}right{% else %}left{% endif %}"
+							/>
+						</a>
+					{% endif %}
+					{% if news.manual_preview %}
+						<p class="text-large">{{ news.manual_preview }}</p>
+					{% else %}
+						{{ news.preview|safe }}
+					{% endif %}
+				</td></tr>
+			</table>
+		{% endfor %}
+		{% include 'results/pagination.html' %}
+	{% else %}
+		<p>Ни одной записи не найдено. :(</p>
+	{% endif %}
+	<p class="text-large"><a href="/newsite.htm" target="_blank">Новости сайта за 2002-2011 годы</a></p>
+</div></div>
+{% endblock %}

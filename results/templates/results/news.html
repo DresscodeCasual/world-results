@@ -1,0 +1,144 @@
+{% extends 'results/base_2cols.html' %}
+
+{% block leftcol %}
+	{% include 'results/panel_header.html' with title='Параметры поиска' %}
+	{% if form.errors %}
+		{% for error in form.errors %}
+			<div class="alert alert-danger" role="alert">
+				{{ error }}
+			</div>
+		{% endfor %}
+	{% endif %}
+	<form id="frmSearch" method="GET" action="{% url 'results:all_news' %}">
+		{% csrf_token %}
+		{% if page %}
+			<input type="hidden" name="page" id="id_page" value="{{ page.number }}"/>
+		{% endif %}
+		<table class="table table-condensed table-borderless">
+			{% include 'results/form_field_tr.html' with field=form.country td_class='input-100' %}
+			{% include 'results/form_field_tr.html' with field=form.region td_class='input-100' %}
+			{% include 'results/form_field_tr.html' with field=form.city_id td_class='input-100' %}
+			{% include 'results/form_field_tr.html' with field=form.news_text td_class='input-100' %}
+			{% include 'results/form_field_tr.html' with field=form.date_from td_class='input-100' %}
+			{% include 'results/form_field_tr.html' with field=form.date_to td_class='input-100' %}
+			{% if is_admin %}
+				{% include 'results/form_field_tr.html' with field=form.published_by_me td_class='input-100' %}
+			{% endif %}
+		</table>
+		<input type="submit" name="frmSearchNews_submit" value="Показать новости" class="btn btn-success"/>
+	</form>
+	{% include 'results/panel_footer.html' %}
+	<script language="javascript">
+		var ajax_city_prefix = "id_";
+		{% if city %}
+			var ajax_city_default = {{ city.id }};
+		{% endif %}
+	</script>
+{% endblock %}
+
+{% block rightcol %}
+<div class="row">
+	<div class="col-md-12">
+		<h3>{{ list_title }}</h3>
+	</div>
+</div>
+
+<div class="row">
+	<div class="col-md-4">
+		{% if short_link_country %}
+			Короткая ссылка: <a href="{% url 'results:all_news' country_id=country.id %}">{{ SITE_URL }}{% url 'results:all_news' country_id=country.id %}</a>
+		{% elif short_link_region %}
+			Короткая ссылка: <a href="{% url 'results:all_news' region_id=region.id %}">{{ SITE_URL }}{% url 'results:all_news' region_id=region.id %}</a>
+		{% elif short_link_city %}
+			Короткая ссылка: <a href="{% url 'results:all_news' city_id=city.id %}">{{ SITE_URL }}{% url 'results:all_news' city_id=city.id %}</a>
+		{% endif %}
+	</div>
+	<div class="col-md-8 text-right">
+		{% include 'results/pagination.html' %}
+		<p/>
+	</div>
+</div>
+
+<div class="row"><div class="col-md-12">
+	{% if page %}
+		{% for row, news in page_enum %}
+			<table class="table table-bordered" cellspacing="0" width="100%">
+				<tr><td>
+					<h4 style="margin-bottom: 0px;">{{ news.date_posted|date:'d.m.Y' }}
+					{% if news.event %}
+						<small>
+							Забег:
+							<a href="{{ news.event.get_absolute_url }}">{{ news.event.name|safe }}</a>
+							({{ news.event.strCityCountry|safe }})
+						</small>
+					{% endif %}
+					</h4>
+					{% if is_admin %}
+						<span class="for-admin">
+							{% if news.is_for_social %}
+								(только для соцсетей)
+							{% endif %}
+							Автор: {{ news.author|safe }}
+							{% if news.created_by %}
+								Выложил: {% include 'editor/user_name_with_link.html' with person=news.created_by %}
+							{% endif %}
+						</span>
+					{% endif %}
+				</td></tr>
+				<tr><td>
+					{% if news.image %}
+						<a href="{{ news.get_image_url }}">
+							<img src="{{ news.get_image_thumb_url }}" border="0" alt="Увеличить" hspace="5" vspace="5"
+								align="{% if 1 %}right{% else %}left{% endif %}"
+							/>
+						</a>
+					{% endif %}
+					<h4 style="margin-bottom: 0px;">
+						<a href="{{ news.get_absolute_url }}">{{ news.title|safe|default:'без названия' }}</a>
+						{% if is_admin %}
+							&nbsp;&nbsp;&nbsp;&nbsp;
+							<a href="{{ news.get_editor_url }}">
+								<button type="button" class="btn btn-xs btn-primary">Редактировать</button></a>
+							&nbsp;&nbsp;&nbsp;&nbsp;
+							<a href="{{ news.get_history_url }}">
+								<button type="button" class="btn btn-xs btn-primary">История изменений</button></a>
+						{% endif %}
+					</h4>
+					{% if news.manual_preview %}
+						<p class="text-large">{{ news.manual_preview }}</p>
+					{% else %}
+						{{ news.preview|safe }}
+					{% endif %}
+				</td></tr>
+			</table>
+		{% endfor %}
+		<div class="row"><div class="col-md-12 text-right">
+			{% include 'results/pagination.html' %}
+			<p/>
+		</div></div>
+	{% else %}
+		<p>Ни одной новости не найдено. :( Возможно, вы указали одновременно и страну, и не содержащийся в ней регион?</p>
+	{% endif %}
+
+	{% if is_admin %}
+		{% if country %}
+			<a href="{% url 'editor:news_create' country_id=country.id %}">
+				<button type="button" class="btn btn-primary">Создать новость в стране {{ country.name }}</button>
+			</a>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		{% endif %}
+		{% if region and region.active %}
+			<a href="{% url 'editor:news_create' region_id=region.id %}">
+				<button type="button" class="btn btn-primary">Создать новость в регионе {{ region.name }}</button>
+			</a>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		{% endif %}
+		{% if city %}
+			<a href="{% url 'editor:news_create' city_id=city.id %}">
+				<button type="button" class="btn btn-primary">Создать новость в городе {{ city.name }}</button>
+			</a>
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+		{% endif %}
+	{% endif %}
+</div></div>
+{% endblock %}

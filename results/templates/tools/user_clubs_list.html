@@ -1,0 +1,58 @@
+{% spaceless %}
+{% if current_clubs|length == 1 %}{% with member=current_clubs.0.0 can_edit=current_clubs.0.1 %}
+	<p>Is a member of <a href="{{ member.club.get_absolute_url }}"><strong>{{ member.club.name }}</strong></a>.
+		{% if can_edit %}
+			&nbsp;&nbsp;
+			<a href="{{ member.get_editor_url }}"><button type="button" class="btn btn-xs btn-primary">Change dates</button></a>
+		{% endif %}
+	</p>
+{% endwith %}{% elif current_clubs %}
+	<p>Is a member of:</p>
+	<ul>{% for member, can_edit in current_clubs %}
+			<li><a href="{{ member.club.get_absolute_url }}"><strong>{{ member.club.name }}</strong></a>
+				{% if can_edit %}
+					&nbsp;&nbsp;
+					<a href="{{ member.get_editor_url }}"><button type="button" class="btn btn-xs btn-primary">Change dates</button></a>
+				{% endif %}
+			</li>
+		{% endfor %}
+	</ul>
+{% endif %}
+
+{% if clubs_to_add %}
+	<p>
+	{% for club in clubs_to_add %}
+		<a href="{% url 'editor:club_add_runner' club_id=club.id runner_id=runner.id %}">
+				<button type="button" class="btn btn-xs btn-primary">Add to club «{{ club.name }}»</button></a>
+		&nbsp;&nbsp;&nbsp;&nbsp;
+	{% endfor %}
+	</p>
+{% endif %}
+
+{% for member, can_edit in clubs_was_member_before %}
+	<p>Was a member of <a href="{{ member.club.get_absolute_url }}"><strong>{{ member.club.name }}</strong></a>
+		until {{ member.date_removed|date:"d.m.Y" }}.
+		{% if can_edit %}
+			&nbsp;&nbsp;
+			<a href="{{ member.get_editor_url }}"><button type="button" class="btn btn-xs btn-primary">Change dates</button></a>
+		{% endif %}
+	</p>
+{% endfor %}
+
+{% if runner and is_admin %}
+	<br/><br/>
+	<h4 class="for-admin">
+		Alternative names
+		&nbsp;&nbsp;&nbsp;&nbsp;<a href="{{ runner.get_editor_url }}"><button type="button" class="btn btn-xs btn-primary">Edit</button></a>
+	</h4>
+	{% for extra_name in runner.get_extra_names %}
+		<p>{{ extra_name.lname }} {{ extra_name.fname }} {{ extra_name.midname }}
+			{% if is_admin and extra_name.added_by %}
+				<span class="for-admin">
+					(added by {% include 'editor/user_name_with_link.html' with person=extra_name.added_by %} at {{ extra_name.added_time }})
+				</span>
+			{% endif %}
+		</p>
+	{% endfor %}
+{% endif %}
+{% endspaceless %}

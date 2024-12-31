@@ -1,0 +1,135 @@
+{% extends 'results/base_2cols.html' %}
+{% load results_extras %}
+{% load static %}
+{% block leftcol %}
+	{% include 'results/panel_header.html' with title='Параметры поиска' %}
+	<form id="frmSearch" action="{% url 'results:results' %}" method="POST">
+		{% csrf_token %}
+		{% if page %}
+			<input type="hidden" name="page" id="id_page" value="{{ page.number }}"/>
+		{% endif %}
+		<table class="table table-condensed table-borderless">
+			{% for field in form %}
+				{% include 'results/form_field_tr.html' with td_class='input-100' %}
+			{% endfor %}
+		</table>
+		<input type="submit" name="btnSearchSubmit" value="Показать" class="btn btn-success"/>
+	</form>
+	{% include 'results/panel_footer.html' %}
+	<script language="javascript">
+		var ajax_city_prefix = "id_";
+		{% if city %}
+			var ajax_city_default = {{ city.id }};
+		{% endif %}
+	</script>
+	<p></p><p></p>
+	{% include 'misc/adsense_high.html' %}
+{% endblock %}
+
+{% block rightcol %}
+	<h3>{{ list_title|safe }}</h3>
+{% if page %}
+	<div class="row"><div class="col-md-12 text-right">
+		{% include 'results/pagination.html' %}
+		<p/>
+	</div></div>
+	<table class="table table-condensed table-hover">
+	<tr class="info">
+		<th>№</th><th>Дата</th>
+		<th>Забег</th><th>Город</th>
+		<th>Результат</th><th>Место<br/><nobr>(среди М/Ж)</nobr></th>
+		<th>Группа<br/><nobr>(место в ней)</nobr></th>
+		<th>Возраст</th>
+		<th>Имя</th><th>Город</th><th>Клуб</th>
+		{% if is_admin %}
+			<th>Прив</th>
+		{% endif %}
+	</tr>
+	{% for row, result in page_enum %}
+		<tr>
+			<td>{{ row }}</td>
+			<td class="text-center">
+				<a href="{{ result.race.get_absolute_url }}">{{ result.race.event.date|safe }}</a>
+			</td>
+			<td>
+				<a href="{{ result.race.get_absolute_url }}">
+					{{ result.race.event.name|safe }}
+					<br/>
+					{{ result.race.get_precise_name|safe }}
+				</a>
+			</td>
+			<td>
+				{% include 'results/event_cities_with_links.html' with event=result.race.event %}
+			</td>
+			<td>{% if result.id in results_with_splits %}
+					<a href="{{ result.get_absolute_url }}">{{ result }}</a>
+				{% else %}
+					{{ result }}
+				{% endif %}
+			</td>
+			{% if result.place %}
+				<td>&nbsp;{{ result.get_place|safe }}
+					{% if result.place_gender %}
+						<br/>
+						({{ result.get_gender_place|safe }})
+					{% endif %}
+				</td>
+			{% else %}
+				<td></td>
+			{% endif %}
+			<td>{% include 'tools/result_category_name_and_place.html' %}</td>
+			<td>{% include 'tools/result_birthday_and_age.html' %}</td>
+			<td>{% if result.runner %}
+					<a href="{{ result.runner.get_absolute_url }}">
+						{{ result.strName|default:"(неизвестно)" }}</a>
+				{% else %}
+					{{ result.strName|default:"(неизвестно)" }}
+				{% endif %}
+			</td>
+			<td>{{ result.strCity }}</td>
+			<td>{{ result.clubLink }}</td>
+			{% if is_admin and not result.runner %}
+				<td><input type="checkbox" name="claim_{{ result.id }}" class="chkbox" form="frmSearch"/></td>
+			{% endif %}
+		</tr>
+	{% endfor %}
+	</table>
+	<div class="row"><div class="col-md-12 text-right">
+		{% include 'results/pagination.html' %}
+	</div></div>
+	{% if is_admin %}
+		<button type="submit" name="frmSearch_claim" class="btn btn-success" form="frmSearch"/>
+			Привязать отмеченные результаты
+		</button>
+		к бегуну
+		<select class="runners-list" name="select_runner" style="width: 50%" form="frmSearch"></select>
+		<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css" rel="stylesheet" />
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
+		<script type="text/javascript">
+$(".runners-list").select2({
+	placeholder: "Введите первые буквы фамилии и имени",
+	width: 'element',
+	allowClear: true,
+	ajax: {
+		url: "/editor/runners/list/",
+		dataType: 'json',
+		delay: 250,
+		data: function (params) {
+			return {
+				query: params.term
+			};
+		},
+		processResults: function (data) {
+			return {
+				results: data
+			};
+		},
+		cache: true
+	},
+});
+		</script>
+	{% endif %}
+{% else %}
+	<p>Ни одного результата не найдено. :(</p>
+{% endif %}
+{% endblock %}

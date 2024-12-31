@@ -1,0 +1,37 @@
+{% extends 'results/base.html' %}
+{% block main %}
+
+<div class="row"><div class="col-md-12">
+	<h3>{{ page_title }}</h3>
+	<p>На каждую букву выдаются только серии, у которых тип забега не проставлен. Жирные буквы в последнее время никем не проверялись.</p>
+	<p>
+		{% for cur_letter in letters %}
+			{% if not cur_letter.is_checked %}<strong>{% endif %}
+			<a href="{% url 'editor:series_by_letter' letter=cur_letter.letter %}">{{ cur_letter.letter|safe }}</a>
+			({{ cur_letter.n_series }})
+			{% if not cur_letter.is_checked %}</strong>{% endif %}
+			&nbsp;&nbsp;
+		{% endfor %}
+	</p>
+	{% if seria %}
+	<form action="" method="POST">
+		{% csrf_token %}
+		<table class="table">
+			{% for series in seria %}
+				<tr>
+					<td>{{ forloop.counter }}</td>
+					<td><a href="{{ series.get_absolute_url }}">{{ series.name|safe }}</a></td>
+					{% for number, name in surface_types %}
+						<td>
+							<input type="radio" name="series_{{ series.id }}" value="{{ number }}"{% if series.surface_type == number %} checked{% endif %}/>
+								{{ name }}
+						</td>
+					{% endfor %}
+				</tr>
+			{% endfor %}
+		</table>
+		<input type="submit" value="Сохранить" class="btn btn-success">
+	</form>
+	{% endif %}
+</div></div>
+{% endblock %}

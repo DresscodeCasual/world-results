@@ -1,0 +1,1 @@
+{% load results_extras %}{% if team_next or team_prev %}({% if team_next %}отстаёт от команды «{{ team_next.name }}» на {{ team_next.score|subtract:team.score|floatformat:3 }} очков{% if team_prev %}, {% endif %}{% endif %}{% if team_prev %}опережает команду «{{ team_prev.name }}» на {{ team.score|subtract:team_prev.score|floatformat:3 }} очков{% endif %}){% endif %}

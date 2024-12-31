@@ -1,0 +1,76 @@
+{% extends 'results/base.html' %}
+{% load results_extras %}
+{% block main %}
+<div class="row"><div class="col-md-12">
+	<h3 class="text-center">{{ page_title }}</h3>
+</div></div>
+<br/>
+<form action="" method="POST" name="ResultsWithCoefs" class="form-inline">
+<div class="row"><div class="col-md-12">
+		{% csrf_token %}
+		{% for field in formDayDistance %}
+			{% include 'results/form_field.html' with field=field %}&nbsp;&nbsp;
+		{% endfor %}
+</div></div>
+<br/><br/>
+<div class="row"><div class="col-md-12">
+	{{ formsetResult.management_form }}
+	<table class="table table-condensed table-hover">
+		<thead><tr class="info">
+			<th class="text-right min-width">№</th>
+			<th>Человек из базы данных</th>
+			<th>Фамилия Имя,<br/>если нет в базе</th>
+			<th>Дата рождения,<br/>если нет в базе</th>
+			<th>Результат</th>
+			<th>Возраст на день забега</th>
+			<th>Коэффициент</th>
+			<th>Результат с учётом<br/>коэффициента</th>
+		</tr></thead>
+		<tbody>
+		{% for form in formsetResult %}
+			<tr>
+				<td class="min-width">{{ form.id }}{{ forloop.counter }}</td>
+				{% if 0 %}
+					<td><select class="runners-list input-100" style="min-width: 350px;" name="form-{{ forloop.counter0 }}-id" id="id_form-{{ forloop.counter0 }}-id">
+							{% if form.instance %}
+								<option value="{{ form.instance.id }}" selected>{{ form.instance.get_name_for_ajax_select }}</option>
+							{% endif %}
+						</select>
+					</td>
+				{% endif %}
+				{% for field in form.visible_fields %}
+					<td>{% include 'results/form_field.html' with no_title=1 %}</td>
+				{% endfor %}
+			</tr>
+		{% endfor %}
+		</tbody>
+	</table>
+	<input type="submit" class="btn btn-success" name="btnCalcCoefs" value="Рассчитать результаты с учётом возрастных коэффициентов"/>
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css" rel="stylesheet" />
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
+	<script type="text/javascript">
+$(".runners-list").select2({
+	placeholder: "Введите первые буквы фамилии и имени",
+	width: 'element',
+	allowClear: true,
+	ajax: {
+		url: "{% url 'editor:runners_with_birthday_list' %}",
+		dataType: 'json',
+		delay: 250,
+		data: function (params) {
+			return {
+				query: params.term
+			};
+		},
+		processResults: function (data) {
+			return {
+				results: data
+			};
+		},
+		cache: true
+	},
+});
+	</script>
+</div></div>
+</form>
+{% endblock %}

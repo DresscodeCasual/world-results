@@ -1,0 +1,22 @@
+{% extends 'results/modal_form_base.html' %}
+{% block header %}Добавление своего результата на забеге {{ event.name }}, {{ event.date }}{% endblock %}
+{% block main %}
+	<form id="frm_add_result">
+		{% csrf_token %}
+		{% for field in frmResult %}
+			{% include 'results/form_field.html' %}
+		{% endfor %}
+	</form>
+	{% if is_klb_participant %}
+		{% if will_be_counted_for_klb %}
+			Результат на дистанции не меньше {{ min_distance_for_klb }} м будет зачтён Вам в КЛБМатч.
+		{% else %}
+			Результат на этом забеге не будет зачтён Вам в КЛБМатч: {{ reason }}.
+		{% endif %}
+	{% endif %}
+{% endblock %}
+{% block footer %}
+	<span id="response" class="text-left"></span>
+	<button type="button" class="btn btn-default" data-dismiss="modal">Закрыть окно</button>
+	<button type="button" class="btn btn-success" id="add_result">Добавить результат</button>
+{% endblock %}

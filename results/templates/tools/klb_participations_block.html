@@ -1,0 +1,23 @@
+{% load results_extras %}
+{% if klb_person %}
+	{% for year, participant in cur_klb_participations.items %}{% with team=participant.team %}
+		<h4>КЛБМатч–{{ year|year_for_klbmatch }} &nbsp;&nbsp;&nbsp;&nbsp;<a href="{% url 'results:about_match' year=year %}">что это такое?</a></h4>
+		{% if team %}
+			<p>Выступает за команду <a href="{{ team.get_absolute_url }}">{{ team.name }}</a>
+			{% if team.club and team.club.city %}
+				({{ team.club.strCity|safe }})
+			{% endif %}</p>
+		{% else %}
+			<p>Выступает как индивидуальный участник.</p>
+		{% endif %}
+		{% if is_user_homepage %}
+			{% include 'tools/klb_participant_payment_link.html' %}
+		{% endif %}
+		{% include 'tools/klb_person_places.html' with with_link_to_person_page=1 %}
+		{% if not forloop.last %}<br/>{% endif %}
+	{% endwith %}{% empty %}
+		<h4>КЛБМатчи &nbsp;&nbsp;&nbsp;&nbsp;<a href="{% url 'results:about_match' %}">что это такое?</a></h4>
+	{% endfor %}
+	<p><a href="{{ klb_person.get_absolute_url }}">Всего участий в матчах: {{ klb_person.klb_participant_set.count }}</a>,
+		результатов в зачёт матчей: {{ klb_person.klb_result_set.count }}.</p>
+{% endif %}

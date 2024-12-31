@@ -1,0 +1,95 @@
+{% extends 'results/base.html' %}
+{% load static %}
+{% load results_extras %}
+{% block main %}
+<div class="row"><div class="col-md-12">
+	<h3><a href="{% url 'how_to_help' %}">Как помочь сайту</a>: {{ page_title }}</h3>
+</div></div>
+<div class="row"><div class="col-md-12">
+	{% if events_type == 1 %}
+		<p>Мы будем очень вам благодарны, если вы найдете и пришлёте нам на <a href="mailto:info@probeg.org">info@probeg.org</a>
+			или <a href="#" id="send_to_info_page">прямо с этой страницы</a>
+			протокол любого из этих забегов в любом формате (лучше всего — .xls или .xlsx).
+			Мы обработаем его и выложим для всех желающих; если вы не будете против, мы укажем, что протокол нашли именно вы.
+		</p>
+	{% else %}
+		<p>Мы будем очень вам благодарны, если вы переработаете любой из этих протоколов в формат .xls или .xlsx
+			и пришлёте нам на <a href="mailto:info@probeg.org">info@probeg.org</a>
+			или <a href="#" id="send_to_info_page">прямо с этой страницы</a>.
+			Мы обработаем его и выложим для всех желающих; если вы не будете против, мы укажем, что протокол нашли именно вы.
+			<br/>
+			Пожалуйста, не исправляйте ничего в самой таблице с результатами, даже опечатки в именах или любых других полях.
+			Мы стараемся выкладывать результаты в том виде, в каком их изготовили организаторы.
+		</p>
+	{% endif %}
+	<div class="row"><div class="col-md-12">
+		<form action="" method="POST" name="frmAgeGroup" class="form-inline">
+			{% csrf_token %}
+			{% for field in form %}
+				{% include 'results/form_field.html' %}&nbsp;&nbsp;
+			{% endfor %}
+			<input type="submit" class="btn btn-success" value="Показать"/>
+		</form>
+	</div></div>
+	<br/>
+	{% if events %}
+		{% if events_type == 1 %}
+			<table class="table table-condensed table-hover">
+				<tr class="info">
+					<th></th><th class="text-center">Дата</th><th>Название</th><th>Дистанции</th>
+				</tr>
+				{% for event in events %}
+					<tr>
+						<td class="text-right">{{ forloop.counter }}</td>
+						<td class="text-center">
+							<a href="{{ event.get_absolute_url }}">{{ event.date|safe }}</a>
+						</td>
+						<td>
+							<a href="{{ event.get_absolute_url }}">{{ event|safe }}</a>
+						</td>
+						<td>
+							{% include 'results/distances_comma.html' with races=event.race_set.all %}
+						</td>
+					</tr>
+				{% endfor %}
+			</table>
+		{% else %}
+			<table class="table table-condensed table-hover">
+				<tr class="info">
+					<th></th><th>Дата</th><th>Название</th><th>Дистанции</th><th>Имеющиеся у нас протоколы</th>
+				</tr>
+				{% for event in events %}
+					<tr>
+						<td class="text-right">{{ forloop.counter }}</td>
+						<td class="text-center">
+							<a href="{{ event.get_absolute_url }}">{{ event.date|safe }}</a>
+						</td>
+						<td>
+							<a href="{{ event.get_absolute_url }}">{{ event|safe }}</a>
+						</td>
+						<td>
+							{% include 'results/distances_comma.html' with races=event.race_set.all %}
+							{% for race in event.race_set.all %}
+								<a href="{{ race.get_absolute_url }}">{{ race.distance_with_details|safe }}</a>
+								{% if race.load_status == 3 %}
+									(загружена лишь часть результатов)
+								{% endif %}
+								{% if not forloop.last %}
+									<br/>
+								{% endif %}
+							{% endfor %}
+						</td>
+						<td>
+							{% for document in event.document_set.all %}
+								<p>{% include 'results/document_link.html' %}</p>
+							{% endfor %}
+						</td>
+					</tr>
+				{% endfor %}
+			</table>
+		{% endif %}
+	{% else %}
+		<p>Ура! Тут у нас есть всё.</p>
+	{% endif %}
+</div></div>
+{% endblock %}

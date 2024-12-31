@@ -1,0 +1,7 @@
+{% if user.email %}
+	<br/>
+	E-mail пользователя: <a href="mailto:{{ user.email }}">{{ user.email }}</a>
+	{% if not user.user_profile.email_is_verified %}
+		(не подтверждён)
+	{% endif %}
+{% endif %}

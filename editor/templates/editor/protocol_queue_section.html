@@ -1,0 +1,52 @@
+<h4>{{ section_title }}</h4>
+<table class="table table-condensed table-hover">
+	<thead><tr class="info">
+		<th>№</th><th>URL</th><th>Series, Event ID</th><th>Дата</th><th>Забег</th><th>Статус</th><th>Последние попытки загрузки</th><th class="min-width"></th>
+	</tr></thead>
+	<tbody>
+		{% for row in queue %}{% with event=row.event %}
+			<tr
+				{% if row.result == 1 %}class="success"{% elif row.result == 3 %}class="danger"{% elif row.result == 4 %}class="warning"{% endif %}
+			>
+				<td>{{ forloop.counter }}</td>
+				<td>{% if row.url_site %}<a href="{{ row.url_site }}">{{ row.url_site }}</a>{% endif %}</td>
+				<td>{{ row.platform_series_id }}
+					<br/>{{ row.platform_event_id }}
+					{% if row.extra_data %}
+						<br/>extra_data: {{ row.extra_data }}
+					{% endif %}
+					{% if row.extra_data2 %}
+						<br/>extra_data2: {{ row.extra_data2 }}
+					{% endif %}
+				</td>
+				<td>{% if event %}{{ event.dateFull|safe }}{% endif %}</td>
+				<td>{% if event %}<a href="{{ event.get_absolute_url }}">{{ event.name }}</a>{% endif %}</td>
+				<td>{{ row.get_result_display }}</td>
+				<td>
+					{% for attempt in row.download_attempt_set.all|slice:":5" %}
+						{% if not forloop.first %}<br/>{% endif %}
+						{{ attempt.start_time }} — {{ attempt.finish_time|default:'не закончена' }}
+						(попытка {{ attempt.id }})
+						{% if attempt.finish_time %}: {{ attempt.error|default:'успех' }}{% endif %}
+						{% if attempt.status %}
+							<br/>Статус: {{ attempt.status }}
+						{% endif %}
+					{% endfor %}
+				</td>
+				<td>{% if row.result == 1 or row.result == 3 %}
+						<form method="GET" action="{% url 'editor:mark_item_not_failed' row_id=row.id %}">
+							{% csrf_token %}
+							<input type="submit" value="Запустить снова" class="btn btn-xs btn-primary"/>
+							<br/>
+							<label><input type="checkbox" name="delete_event_file">И удалить event.json</label>
+						</form>
+					{% elif row.result == 4 %}
+						<a href="{% url 'editor:mark_item_stopped' row_id=row.id %}">
+						<button type="button" class="btn btn-xs btn-primary">Пометить попытку как завершённую</button></a>
+					{% endif %}
+				</td>
+			</tr>
+		{% endwith %}{% endfor %}
+	</tbody>
+</table>
+<br/><br/>

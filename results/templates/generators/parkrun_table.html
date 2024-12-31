@@ -1,0 +1,129 @@
+{% spaceless %}
+<table id="table_for_sort" class="table table-condensed table-hover table-striped text-small">
+	<thead>
+		<tr class="text-center info">
+			<th colspan="8"></th>
+			<th colspan="3">Мужчины</th>
+			<th colspan="3">Женщины</th>
+		</tr>
+		<tr class="text-center info">
+			<th class="text-right min-width">№</th>
+			<th class="text-left">Название</th>
+			<th class="text-center">Забегов</th>
+			<th class="text-center">Всего пробежало</th>
+			<th class="text-center">Средняя посещаемость</th>
+			<th class="text-right">Число пробежавших хоть раз</th>
+			<th class="text-right">Максимум посещенных забегов одним человеком</th>
+			<th class="text-center">Процент женщин</th>
+			<th class="text-right">Рекорд</th>
+			<th class="text-right">Среднее время</th>
+			<th class="text-right">Медиана</th>
+			<th class="text-right">Рекорд</th>
+			<th class="text-right">Среднее время</th>
+			<th class="text-right">Медиана</th>
+		</tr>
+	</thead>
+	<tbody>
+	{% for data in parkruns_data %}{% with series=data.series %}
+		<tr>
+			<td class="text-right min-width vcenter">{{ forloop.counter }}</td>
+			<td class="vcenter">
+				<a href="{{ series.get_absolute_url }}" class="nobr">{{ data.name }}</a>
+				{% if not series.create_weekly %}
+					(больше не проводится)
+				{% endif %}
+				<br/>
+				{{ series.city.nameWithCountry|safe }}
+				<br/>
+				<a href="{{ series.url_site }}">Сайт</a>
+				{% if series.url_vk %}
+					&nbsp;<a href="{{ series.url_vk }}"><img src="/static2/images/icons/vk_small_square.png" alt="Ссылка на страницу ВКонтакте"
+						width="15"/></a>
+				{% endif %}
+				{% if series.url_facebook %}
+					&nbsp;<a href="{{ series.url_facebook }}"><img src="/static2/images/icons/fb_small_square.png" alt="Ссылка на страницу в Facebook"
+						width="15"/></a>
+				{% endif %}
+			</td>
+			<td class="vcenter text-center" data-sort="-{{ data.n_events }}"><a href="{{ series.url_site }}/results/eventhistory/">{{ data.n_events }}</a></td>
+			<td class="vcenter text-center" data-sort="-{{ data.sum_participants }}">{{ data.sum_participants }}</a></td>
+			<td class="vcenter text-center" data-sort="-{{ data.avg_n_participants_for_sort }}">{{ data.avg_n_participants|floatformat:2 }}</a></td>
+			<td class="vcenter text-center" data-sort="-{{ data.n_different_participants }}">{{ data.n_different_participants }}</a></td>
+			<td data-sort="-{{ data.most_participations }}" class="text-right">
+				{% for row in data.most_frequent_participants %}{% with runner=row.0 profile=row.0.user.user_profile %}
+					<span class="nobr">
+						<a href="{{ runner.get_runner_or_user_url }}">{{ runner.name }}</a>
+						{% if profile.is_public and runner.user.is_active %}
+								&nbsp;<a href="{{ profile.get_absolute_url }}"><span class="glyphicon glyphicon-user small-label" aria-hidden="true"></span></a>&nbsp;
+						{% endif %}
+						— {{ row.1 }}</span>
+					{% if not forloop.last %}<br/>{% endif %}
+				{% endwith %}{% endfor %}
+			</td>
+			<td data-sort="-{{ data.women_percent }}" class="text-center vcenter">{{ data.women_percent }}%</a></td>
+			<td data-sort="{{ data.male_record }}" class="text-center">
+				<span class="nobr">{% include 'tools/runner_or_user_name_with_link.html' with runner=data.male_recordsman user=data.male_recordsman.user %}</span>
+				<br/>{{ data.male_record }}
+			</td>
+			<td class="vcenter text-center">{{ data.male_mean }}</a></td>
+			<td class="vcenter text-center">{{ data.male_median }}</a></td>
+			<td data-sort="{{ data.female_record }}" class="text-center">
+				<span class="nobr">{% include 'tools/runner_or_user_name_with_link.html' with runner=data.female_recordsman user=data.female_recordsman.user %}</span>
+				<br/>{{ data.female_record }}
+			</td>
+			<td class="vcenter text-center">{{ data.female_mean }}</a></td>
+			<td class="vcenter text-center">{{ data.female_median }}</a></td>
+		</tr>
+	{% endwith %}{% endfor %}
+	</tbody>
+</table>
+{% for s in strange %}
+	<p>{{ s }}</p>
+{% endfor %}
+<br/><br/>
+<h3>Другие еженедельные забеги на 5 км</h3>
+<table class="table table-condensed table-hover table-striped text-small">
+	<thead>
+		<tr class="text-center info">
+			<th class="text-right min-width">№</th>
+			<th class="text-left">Название</th>
+			<th class="text-center">Забегов</th>
+		</tr>
+	</thead>
+	<tbody>
+		{% for series in not_parkruns %}
+			<tr>
+				<td class="text-right min-width vcenter">{{ forloop.counter }}</td>
+				<td class="vcenter">
+					<a href="{{ series.get_absolute_url }}" class="nobr">{{ series.name }}</a>
+					{% if series.create_weekly %}
+						<br/>(автоматически добавляются в календарь на месяц вперёд)
+					{% endif %}
+					<br/>
+					{{ series.city.nameWithCountry|safe }}
+					<br/>
+					<a href="{{ series.url_site }}">Сайт</a>
+					{% if series.url_vk %}
+						&nbsp;<a href="{{ series.url_vk }}"><img src="/static2/images/icons/vk_small_square.png" alt="Ссылка на страницу ВКонтакте"
+							width="15"/></a>
+					{% endif %}
+					{% if series.url_facebook %}
+						&nbsp;<a href="{{ series.url_facebook }}"><img src="/static2/images/icons/fb_small_square.png" alt="Ссылка на страницу в Facebook"
+							width="15"/></a>
+					{% endif %}
+					{% if series.url_telegram %}
+						&nbsp;<a href="{{ series.url_telegram }}"><img src="/static2/images/icons/tg_small_square.png" alt="Ссылка на страницу в Telegram"
+							width="15"/></a>
+					{% endif %}
+					{% if series.url_instagram %}
+						&nbsp;<a href="{{ series.url_instagram }}"><img src="/static2/images/icons/in_small_square.png" alt="Ссылка на страницу в Instagram"
+							width="15"/></a>
+					{% endif %}
+				</td>
+				<td class="vcenter text-center" data-sort="-{{ series.event__count }}">{{ series.event__count }}</td>
+			</tr>
+		{% endfor %}
+	</tbody>
+</table>
+<p class="text-right">Статистика посчитана {{ today }}.</p>
+{% endspaceless %}

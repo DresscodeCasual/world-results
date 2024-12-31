@@ -1,0 +1,151 @@
+{% load results_extras %}
+{% spaceless %}
+<h3><a href="{% url 'results:klb_match_summary' year=year %}">КЛБМатч–{{ year|year_for_klbmatch }}</a>: Итоги по регионам, странам, федеральным округам</h3>
+<p class="text-center">{% include 'misc/adsense_bottom.html' %}</p>
+<table class="table table-condensed table-hover table-striped">
+	<thead>
+		<tr class="text-center info">
+			<th colspan="6"></th>
+			<th colspan="8">Мужчины</th>
+			<th colspan="8">Женщины</th>
+		</tr>
+		<tr class="text-center info">
+			<th class="text-right min-width">№</th>
+			<th class="text-left">Регион</th>
+			<th class="text-center">Всего<br/>участников</th>
+			<th class="text-left">Мужчин</th>
+			<th class="text-right">Женщин</th>
+			<th class="text-center">По сравнению<br/>с прошлым годом</th>
+
+			<th class="text-left">Победитель</th>
+			<th class="text-center">Год рожд.</th>
+			<th class="text-center">Стартов</th>
+			<th class="text-right min-width">Очки</th>
+			<th>+</th>
+			<th colspan="3" class="text-left min-width">
+				<abbr title="Бонус каждого участника — сумма лучших {{ n_results_for_bonus_score }} бонусных очков за его старты">Бонусы</abbr>
+			</th>
+
+			<th class="text-left">Победитель</th>
+			<th class="text-center">Год рожд.</th>
+			<th class="text-center">Стартов</th>
+			<th class="text-right min-width">Очки</th>
+			<th>+</th>
+			<th colspan="3" class="text-left min-width">
+				<abbr title="Бонус каждого участника — сумма лучших {{ n_results_for_bonus_score }} бонусных очков за его старты">Бонусы</abbr>
+			</th>
+		</tr>
+	</thead>
+	{% for country, country_data in main_countries.items %}
+		<tr class="warning">
+			<td></td>
+			<td><strong><a href="{% url 'results:klb_age_group_details' year=year country_id=country.id %}">{{ country.name }}</a></strong></td>
+			<td colspan="20"></td>
+		</tr>
+		{% include 'klb/winner_by_region_line.html' with data=country_data.total aggregate_row=1 %}
+		{% for region, region_data in country_data.regions.items %}
+			{% include 'klb/winner_by_region_line.html' with data=region_data %}
+		{% endfor %}
+	{% endfor %}
+	<tr class="warning">
+		<td></td>
+		<td><strong>Остальные страны</strong></td>
+		<td colspan="20"></td>
+	</tr>
+	{% for country, country_data in other_countries.items %}
+		{% include 'klb/winner_by_region_line.html' with data=country_data %}
+	{% endfor %}
+</table>
+
+<p class="text-center">{% include 'misc/adsense_bottom.html' %}</p>
+<h3>Итоги в личном зачёте по федеральным округам</h3>
+<table class="table table-condensed table-hover table-striped">
+	<thead>
+		<tr class="text-center info">
+			<th colspan="6"></th>
+			<th colspan="8">Мужчины</th>
+			<th colspan="8">Женщины</th>
+		</tr>
+		<tr class="text-center info">
+			<th class="text-right min-width">№</th>
+			<th class="text-left">Фед. округ</th>
+			<th class="text-center">Всего<br/>участников</th>
+			<th class="text-left">Мужчин</th>
+			<th class="text-right">Женщин</th>
+			<th class="text-center">По сравнению<br/>с прошлым годом</th>
+
+			<th class="text-center">Победитель</th>
+			<th class="text-center">Год рожд.</th>
+			<th class="text-center">Стартов</th>
+			<th class="text-right min-width">Очки</th>
+			<th>+</th>
+			<th colspan="3" class="text-left min-width">
+				<abbr title="Бонус каждого участника — сумма лучших {{ n_results_for_bonus_score }} бонусных очков за его старты">Бонусы</abbr>
+			</th>
+
+			<th class="text-center">Победитель</th>
+			<th class="text-center">Год рожд.</th>
+			<th class="text-center">Стартов</th>
+			<th class="text-right min-width">Очки</th>
+			<th>+</th>
+			<th colspan="3" class="text-left min-width">
+				<abbr title="Бонус каждого участника — сумма лучших {{ n_results_for_bonus_score }} бонусных очков за его старты">Бонусы</abbr>
+			</th>
+		</tr>
+	</thead>
+	{% for district, data in districts.items %}
+		{% include 'klb/winner_by_region_line.html' %}
+	{% endfor %}
+</table>
+
+<p class="text-center">{% include 'misc/adsense_bottom.html' %}</p>
+<h3>Итоги в командном зачёте по федеральным округам</h3>
+<table class="table table-condensed table-hover table-striped">
+	<thead>
+		<tr class="text-center info">
+			<th class="text-center min-width">№</th>
+			<th class="text-left">Название</th>
+			<th class="text-left">Населённый пункт</th>
+			<th class="text-center min-width">Место<br/>в абс. зачёте</th>
+			<th class="text-center min-width">Место<br/>среди средних команд</th>
+			<th class="text-center min-width">Место<br/>среди малых команд</th>
+			<th colspan="2" class="text-center min-width">Участников<br/>(стартовало)</th>
+			<th class="text-right min-width">Очки</th>
+			<th>+</th>
+			<th colspan="3" class="text-left min-width">Бонусы</th>
+		</tr>
+	</thead>
+	{% for district, teams in clubs_by_districts.items %}
+		{% if teams %}
+			<tr class="info">
+				<td></td>
+				<td colspan="12"><strong>{{ district.name }}</strong></td>
+			</tr>
+			{% for team in teams %}
+				<tr><td class="text-right">{{ forloop.counter }}</td>
+					<td><a href="{{ team.get_absolute_url }}">{{ team.name }}</a></td>
+					<td><a href="{% url 'results:races' city_id=team.club.city_id %}">{{ team.club.strCity|safe }}</a></td>
+					<td class="text-center min-width">{{ team.place }}</td>
+					{% if team.place_medium_teams %}
+						<td class="text-center min-width warning">{{ team.place_medium_teams }}</td>
+					{% else %}
+						<td></td>
+					{% endif %}
+					{% if team.place_small_teams %}
+						<td class="text-center min-width danger">{{ team.place_small_teams }}</td>
+					{% else %}
+						<td></td>
+					{% endif %}
+					<td class="text-right">{{ team.n_members }}</td>
+					<td class="text-right min-width">({{ team.n_members_started }})</td>
+					<td class="text-right min-width">{{ team.get_clean_score|floatformat:3 }}</td>
+					<td>+</td>
+					<td class="text-right min-width">{{ team.bonus_score|floatformat:3 }}</td>
+					<td>=</td>
+					<td class="text-right min-width"><strong>{{ team.score|floatformat:3 }}</strong></td>
+				</tr>
+			{% endfor %}
+		{% endif %}
+	{% endfor %}
+</table>
+{% endspaceless %}

@@ -1,0 +1,156 @@
+{% extends 'results/base.html' %}
+{% load static %}
+{% block main %}
+
+{% include 'results/panel_header.html' with title=page_title %}
+	<div class="row"> <!-- Header -->
+		<div class="col-md-8">
+			<p>Обязательные поля отмечены звёздочкой.</p>
+			<form id="frmProfile" action="{{ url_for_update }}" method="POST" enctype="multipart/form-data">
+				{% csrf_token %}
+				{% for error in frmProfile.non_field_errors %}
+					<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+				{% endfor %}
+				<table class="table table-condensed">
+							{% include 'results/form_field_tr.html' with field=frmProfile.email %}
+							{% include 'results/form_field_tr.html' with field=frmProfile.lname %}
+							{% include 'results/form_field_tr.html' with field=frmProfile.fname %}
+							{% include 'results/form_field_tr.html' with field=frmProfile.midname %}
+							{% include 'results/form_field_tr.html' with field=frmProfile.gender %}
+							{% include 'results/form_field_tr.html' with field=frmProfile.birthday %}
+							{% include 'results/form_field_tr.html' with field=frmProfile.region %}
+							{% include 'results/form_field_tr.html' with field=frmProfile.city_id %}
+							{% include 'results/form_field_tr.html' with field=frmProfile.is_new_city %}
+							{% include 'results/form_field_tr.html' with field=frmProfile.new_city tr_id="div-new-city" visible=frmProfile.is_new_city.value %}
+							{% include 'results/form_field_tr.html' with field=frmProfile.strava_account %}
+							{% include 'results/form_field_tr.html' with field=frmProfile.club_name %}
+							{% include 'results/form_field_tr.html' with field=frmProfile.phone_number %}
+							{% include 'results/form_field_tr.html' with field=frmProfile.hide_parkruns_in_calendar %}
+							{% include 'results/form_field_tr.html' with field=frmProfile.is_public %}
+							{% include 'results/form_field_tr.html' with field=frmProfile.ok_to_send_news %}
+							{% include 'results/form_field_tr.html' with field=frmProfile.ok_to_send_results %}
+							{% include 'results/form_field_tr.html' with field=frmProfile.avatar %}
+							{% if not profile.agrees_with_policy %}
+								<tr>
+									<td class="text-right">
+										<label for="{{ frmProfile.agrees_with_policy.id_for_label }}">{{ frmProfile.agrees_with_policy.label }}:</label>
+										<br/>
+										<a href="http://probeg.org/docs/probeg_agreement.pdf" target="_blank">Полный текст Cогласия</a>
+									</td>
+									<td style="vertical-align: top;">
+										{{ frmProfile.agrees_with_policy }}
+										{% if frmProfile.agrees_with_policy.errors %}
+											{% for error in frmProfile.agrees_with_policy.errors %}
+												<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+											{% endfor %}
+										{% endif %}
+									</td>
+								</tr>
+							{% endif %}
+							{% if not profile.agrees_with_data_dissemination %}
+								<tr>
+									<td class="text-right">
+										<label for="{{ frmProfile.agrees_with_data_dissemination.id_for_label }}">{{ frmProfile.agrees_with_data_dissemination.label }}:</label>
+										<br/>
+										Эту галочку мы добавили в связи с ужесточёнными <a href="https://base.garant.ru/400157172/1cafb24d049dcd1e7707a22d98e9858f/" target="_blank">с 1 марта 2021 г.</a> правилами обработки персональных данных. Она нужна для того, чтобы мы не нарушали закон, отображая ваше имя на страницах результатов забегов, в которых вы участвовали.
+									</td>
+									<td style="vertical-align: top;">
+										{{ frmProfile.agrees_with_data_dissemination }}
+										{% if frmProfile.agrees_with_data_dissemination.errors %}
+											{% for error in frmProfile.agrees_with_data_dissemination.errors %}
+												<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+											{% endfor %}
+										{% endif %}
+									</td>
+								</tr>
+							{% endif %}
+							{% for hidden in frmProfile.hidden_fields %}
+								{{ hidden }}
+							{% endfor %}
+				</table>
+				<input type="submit" name="frmProfile_submit" value="Сохранить" class="btn btn-success"/>
+			</form>
+			<script language="javascript">
+			var ajax_city_prefix = "id_";
+			var ajax_city_fullname = 1;
+			{% if profile.city.id %}
+				var ajax_city_default = "{{ profile.city.id }}";
+			{% endif %}
+			</script>
+		</div>
+		<div class="col-md-4 text-center">
+			{% if profile.avatar_thumb %}
+				<img src="{{ profile.get_avatar_thumb_url }}"/>
+				<br/><br/>
+				<p>Если после обновления аватара вы видите здесь старое изображение, нажмите Ctrl+F5.</p>
+			{% endif %}
+		</div>
+	</div>
+{% include 'results/panel_footer.html' %}
+
+{% if showNames %}
+	{% include 'results/panel_header.html' with title='Другие имена' %}
+		Здесь вы можете указать сразу несколько своих имён: например, имя латиницей для зарубежных забегов,
+		имя с девичьей фамилией и так далее.
+		<br/>
+		Все дополнительные имена пройдут ручную проверку, так что не сразу добавятся в Ваш профиль.
+		Рекомендуем на всякий случай указывать комментарий (он будет доступен только администраторам).
+		<br/>
+
+		<form id="frmName" action="{% url 'results:name_add' %}" method="POST">
+			{% csrf_token %}
+			{% for error in frmName.non_field_errors %}
+				<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+			{% endfor %}
+			<table class="table table-condensed">
+				<tr><th>Фамилия</th><th>Имя</th><th>Отчество</th><th>Комментарий</th><th></th></tr>
+				{% for name in names %}
+					<tr>
+						<td>{{ name.lname }}</td>
+						<td>{{ name.fname }}</td>
+						<td>{{ name.midname }}</td>
+						<td>{{ name.comment }}</td>
+						<td><a href="{% url 'results:name_delete' name_id=name.id %}">Удалить</a></td>
+					</tr>
+				{% endfor %}
+				<tr>
+					{% for field in frmName %}
+					<td>
+						{% include 'results/form_field.html' with no_title=1 %}
+					</td>
+					{% endfor %}
+					<td>
+						<input type="submit" name="frmName_submit" value="Добавить имя" class="btn btn-success"/>
+					</td>
+				</tr>
+			</table>
+		</form>
+		<a href="{% url 'results:find_results' %}">
+			<button type="button" class="btn btn-primary">Искать свои результаты</button>
+		</a>
+	{% include 'results/panel_footer.html' %}
+	{% if profile_just_created %}
+		<script language="javascript">ym(38500270, 'reachGoal', 'JustRegistered');</script>
+	{% endif %}
+{% endif %}
+
+{% if is_admin and profile %}
+	{% include 'results/panel_header.html' with title='Объединение с другим пользователем' %}
+		После запуска все результаты, аватар и прочее пользователя {{ user.get_full_name }} (id {{ user.id }}) будут заменены на пользователя с указанным ID,
+		после чего этот пользователь будет помечен как неактивный.
+		<br/>
+		Будьте очень осторожны!
+		<form id="frmMergeUser" method="POST" action="{{ profile.get_merge_url }}" class="form-inline">
+			{% csrf_token %}
+			<div class="row">
+				<div class="col-md-5"> <!-- Left column -->
+					<input type="number" name="new_user">
+				</div>
+				<div class="col-md-7"> <!-- Right column -->
+					<input type="submit" name="frmMergeUser_submit" value="Сделать пользователя {{ user.get_full_name }} (id {{ user.id }}) неактивным" class="btn btn-danger"/>
+				</div>
+			</div>
+		</form>
+	{% include 'results/panel_footer.html' %}
+{% endif %}
+{% endblock %}

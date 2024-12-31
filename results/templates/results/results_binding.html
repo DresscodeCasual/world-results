@@ -1,0 +1,23 @@
+{% extends 'results/base.html' %}
+{% load humanize %}
+{% load results_extras %}
+{% block main %}
+<div class="row"><div class="col-md-6 col-md-offset-3 col-sm-12 col-xs-12">
+	<h3>{{ page_title }}</h3>
+
+	<p>Одна из целей сайта «ПроБЕГ» – создание максимально полной базы данных бегунов-любителей России и ближнего зарубежья.</p>
+
+	<p>Из {{ n_results|intcomma }} результатов, уже добавленных в базу:</p>
+
+	<ul><li>{{ n_results_from_klb|intcomma }} результат{{ n_results_from_klb|ending:1 }} привязаны к участникам
+			<a href="http://probeg.org/klb/2016/" target="_new">КЛБМатчей</a>;</li>
+		<li>у {{ n_results_from_parkrun|intcomma }} результат{{ n_results_from_parkrun|ending:1 }}
+			указан id участника забегов <a href="http://parkrun.ru">parkrun</a>;</li>
+		<li>{{ n_results_with_user|intcomma }} результат{{ n_results_with_user|ending:1 }}
+			привязали себе пользователи сайта.</li>
+	</ul>
+
+	<p>Если вы зарегистрируетесь на сайте, мы поможем вам найти свои результаты со всех забегов в России; также вы сможете добавить себе
+	и результаты на любых забегах, результаты которых есть в свободном доступе в интернете.</p>
+</div></div>
+{% endblock %}

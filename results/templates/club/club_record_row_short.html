@@ -1,0 +1,12 @@
+{% if stat %}
+	{% with runner=stat.club_member.runner %}
+		<td{% if gender == 1 %} class="success"{% endif %}>
+			<a href="{{ runner.get_runner_or_user_url }}">{{ runner.name }}</a>
+		</td>
+		<td{% if gender == 1 %} class="success"{% endif %}>
+			<a href="{{ runner.get_runner_or_user_url }}#result{{ stat.best_result.id }}" target="_blank">{{ stat.best_result }}</a>
+		</td>
+	{% endwith %}
+{% else %}
+	<td colspan="2"{% if gender == 1 %} class="success"{% endif %}></td>
+{% endif %}

@@ -1,0 +1,157 @@
+{% load results_extras %}
+{% load starrating %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<style>
+	.dataTables_filter {display: none;}
+</style>
+<div class="row"><div class="col-md-12">
+	{% if n_results_total %}
+		<h4>{% if show_full_page_link %}
+					Latest {{ N_RESULTS_ON_USER_PAGE_DEFAULT }} results
+					&nbsp;&nbsp;&nbsp;&nbsp;<a href="{{ person.get_absolute_url_full }}">show all {{ n_results_total }} results</a>
+			{% else %}
+				Все результаты
+			{% endif %}
+		</h4>
+		<form id="frmSearch" action="" method="GET" class="form-inline">
+			{% csrf_token %}
+			{% for field in resultFilterForm %}
+				{% include 'results/form_field.html' with field=field no_title=1 %}&nbsp;&nbsp;
+			{% endfor %}
+			<button type="submit" class="btn btn-success" name="btnFilter">Применить фильтр</button>
+		</form>
+		<table id="table_for_sort" class="table table-condensed">
+			<thead><tr class="info">
+				<th>№</th><th>Date</th>
+				<th>Event</th><th>City</th>
+				<th>Distance</th><th>Result</th><th>Place<br/><nobr>(among M/F)</nobr></th>
+				<th>Group<br/><nobr>(Place in it)</nobr></th>
+				{% if person.private_data_hidden %}
+					{% if is_admin %}
+						<th class="for-admin">Name</th>
+					{% endif %}
+				{% else %}
+					<th>Name</th>
+				{% endif %}
+				{% if is_user_homepage or has_docs %}
+					<th class="no-sort"></th>{% comment %}reports, photos{% endcomment %}
+				{% endif %}
+				{% if is_user_homepage %}
+					<th class="no-sort">Not yours?</th>
+				{% endif %}
+				{% rating_in_results_table_header %}
+				<th>Age, Club, City</th>
+				{% if is_admin %}
+					{% if not runner_page %}
+						<th class="for-admin">runner</th>
+					{% endif %}
+					{% if not user_page %}
+						<th class="for-admin">user</th>
+					{% endif %}
+					<th class="no-sort"></th>
+				{% endif %}
+			</tr></thead>
+			<tbody>
+			{% for result in results %}
+				<tr>
+					<td><a name="result{{ result.id }}">{{ forloop.counter }}</a></td>
+					<td data-order="{{ result.race.event.start_date.isoformat }}">
+						<a href="{{ result.race.get_absolute_url }}">
+							{{ result.race.event.dateFull|safe }}
+						</a>
+					</td>
+					<td>
+						{% if result.klb_result %}
+							<a href="{{ klb_person.get_absolute_url }}">
+								<span class="label label-primary pull-right small-label">КЛБМатч</span>
+							</a>
+						{% elif result.id in klb_pending_result_ids %}
+							<a href="{{ klb_person.get_absolute_url }}">
+								<span class="label label-primary pull-right small-label">КЛБМатч: на модерации</span>
+							</a>
+						{% endif %}
+						<a href="{{ result.race.get_absolute_url }}">{{ result.race.event|safe }}</a>
+					</td>
+					<td>{% include 'results/event_cities_with_links.html' with event=result.race.event %}</td>
+					<td data-order="{{ result.race.distance.length }}" class="nobr">{{ result.race.get_precise_name }}
+						{% if result.race.distance_real %}
+							<br/>
+							(actual: {{ result.race.distance_real }})
+						{% endif %}
+					</td>
+					<td data-order="{{ result.result }}"{% if result.id in best_result_ids %} class="best-result"{% endif %}>
+						{% include 'tools/result_value_cell.html' with person_page=1 %}
+					</td>
+					{% if result.source %}
+						<td data-order="999999"></td>
+						<td data-order="999999"></td>
+						<td data-order="999999"></td>
+					{% else %}
+						{% if result.place %}
+							<td data-order="{{ result.place }}">&nbsp;{{ result.get_place|safe }}
+								{% if result.place_gender %}
+									<br/>
+									({{ result.get_gender_place|safe }})
+								{% endif %}
+							</td>
+						{% else %}
+							<td data-order="999999"></td>
+						{% endif %}
+						<td>{% include 'tools/result_category_name_and_place.html' %}</td>
+						{% if person.private_data_hidden %}
+							{% if is_admin %}
+								<td class="for-admin">{{ result.strName }}</td>
+							{% endif %}
+						{% else %}
+							<td>{{ result.strName }}</td>
+						{% endif %}
+					{% endif %}
+					{% if is_user_homepage or has_docs %}
+						<td class="text-center">
+							{% for doc in result.race.event.docs %}
+								<a href="{{ doc.get_main_url }}">{{ doc.get_report_or_photo_doc_type }}</a>
+								<br/>
+							{% endfor %}
+							{% if is_user_homepage %}
+								<a href="#" class="add_review_page" data-event="{{ result.race.event.id }}">
+								<button type="button" class="btn btn-warning btn-xs">Add a link to a report<br/>or photos</button></a>
+							{% endif %}
+						</td>
+					{% endif %}
+					{% if is_user_homepage %}
+						<td class="text-center">
+							<input type="checkbox" name="unclaim_{{ result.id }}" class="chkbox" form="frmUnclaim"/>
+						</td>
+					{% endif %}
+					{% rating_in_results_table_data result %}
+					<td>
+						{% include 'tools/result_birthday_and_age.html' %}
+						{% if result.club_name %}<br/>{{ result.club_name }}{% endif %}
+						{% if result.strCity %}<br/>{{ result.strCity }}{% endif %}
+						{% if result.comment %}<br/>Comment: {{ result.comment }}{% endif %}
+						{% if result.parkrun_id %}<br/>{{ result.get_parkrun_id_desc }}: {{ result.parkrun_id }}{% endif %}
+					</td>
+					{% if is_admin %}
+						{% if not runner_page %}
+							<td class="for-admin">
+								{% if result.runner_id %}{{ result.runner_id }}{% endif %}
+							</td>
+						{% endif %}
+						{% if not user_page %}
+							<td class="for-admin">{% if result.user_id %}
+									{{ result.user_id }}
+								{% endif %}
+							</td>
+						{% endif %}
+						<td class="text-center">
+							<a href="{{ result.get_editor_url }}">
+								<button type="button" class="btn btn-xs btn-primary">Edit</button></a>
+						</td>
+					{% endif %}
+				</tr>
+			{% endfor %}
+		</tbody></table>
+	{% else %}
+		No results yet.
+	{% endif %}
+</div></div>

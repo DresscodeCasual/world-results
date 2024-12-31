@@ -1,0 +1,10 @@
+{% with runner_links=runner.runner_link_set.all %}{% if runner_links or runner.url_wiki %}
+	<br/><br/>
+	<h4>Articles about runner</h4>
+	{% if runner.url_wiki %}
+		<p><a href="{{ runner.url_wiki }}">Wikipedia</a></p>
+	{% endif %}
+	{% for runner_link in runner_links %}
+		<p><a href="{{ runner_link.link }}">{{ runner_link }}</a></p>
+	{% endfor %}
+{% endif %}{% endwith %}

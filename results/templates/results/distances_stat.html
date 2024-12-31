@@ -1,0 +1,45 @@
+{% load results_extras %}
+{% if distances or is_admin %}
+	<h4>Statistics
+		{% if person.has_many_distances and not show_full_page %}
+			&nbsp;&nbsp;&nbsp;&nbsp;<a href="{{ person.get_absolute_url_full }}">show all distances</a>
+		{% endif %}
+		{% if is_admin %}
+			&nbsp;&nbsp;&nbsp;&nbsp;
+			<a href="{{ person.get_update_stat_url }}">
+				<button type="button" class="btn btn-xs btn-primary">Refresh</button></a>
+		{% endif %}
+	</h4>
+	<table class="table table-condensed table-borderless">
+		<tr><th>Distance</th><th class="text-center">Completed</th><th>Personal Best</th><th>Average</th></tr>
+		{% for stat in distances %}
+			<tr>
+				<td>{{ stat.distance }}</td>
+				<td class="text-center">{{ stat.n_starts }}</td>
+				<td>{% if stat.value_best %}
+						<a href="#result{{ stat.best_result_id }}">{{ stat.get_value_best }}</a>
+						{% if stat.pace_best %}
+							({{ stat.pace_best|pace }})
+						{% endif %}
+					{% endif %}
+				</td>
+				<td>{% if stat.value_mean %}
+						{{ stat.get_value_mean }}
+						{% if stat.pace_mean %}
+							({{ stat.pace_mean|pace }})
+						{% endif %}
+					{% endif %}
+				</td>
+			</tr>
+		{% endfor %}
+		{% if person.n_starts %}
+			<tr><th>Overall:</th><th class="text-center">Completed</th><th>Distance</th><th>Time</th></tr>
+			<tr>
+				<td></td>
+				<td class="text-center">{{ person.n_starts }}</td>
+				<td>{{ person.get_total_length|safe }}</td>
+				<td>{{ person.get_total_time|safe }}</td>
+			</tr>
+		{% endif %}
+	</table>
+{% endif %}

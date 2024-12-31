@@ -1,0 +1,172 @@
+{% load results_extras %}
+{% load starrating %}
+<div class="row"> <!-- Event details row -->
+	<div class="col-md-10"> <!-- Main part -->
+		<div class="row">
+			<div class="col-md-5"> <!-- Left column -->
+				{% if not series_page %}
+					<p>Series:
+						<a href="{{ event.series.get_absolute_url }}">{{ event.series.name|safe }}</a>
+					</p>
+				{% endif %}
+				{% if event.invisible %}
+					<p class="for-admin"><strong>The event is visible to admins only!</strong></p>
+				{% endif %}
+				{% if event.cancelled %}
+					<p><strong>The event on {{ event.dateFull|safe }} is cancelled!</strong></p>
+				{% else %}
+					{% if not series_page or city_needed %}
+						<p>{% include 'results/event_cities_with_links.html' %}</p>
+					{% endif %}
+					<p>{{ event.dateWithTime|safe }}</p>
+					{% if event.surface_type %}
+						<p>Surface: {{ event.get_surface_type_display }}</p>
+					{% elif event.series.surface_type and not series_page %}
+						<p>Surface: {{ event.series.get_surface_type_display }}</p>
+					{% endif %}
+					{% if races %}
+						{% if not race_page %}
+							<p>Distance{{ races.count|pluralize }}: {% include 'results/distances_comma.html' %}</p>
+						{% endif %}
+					{% elif not registration_info_page %}
+						<p><strong>There are no distances specified for the event. It isn't visible in the calendar.</strong></p>
+					{% endif %}
+				{% endif %}
+				{% if not series_page and not event.cancelled and not event.invisible and user.is_authenticated and event.has_races_wo_results and not race_page %}
+					<p><button type="button" class="btn btn-warning btnAddResult" data-event="{{ event.id }}">
+						Add your result
+					</button></p>
+				{% endif %}
+				{% if event.id_on_platform %}
+					<p>ID at {{ event.platform.name }}: <a href="{{ event.get_platform_url }}">{{ event.id_on_platform }}</a></p>
+				{% endif %}
+				{% if show_link_to_add_race_rating %}
+					<p><a href="{{ race.get_set_marks_url }}">
+						<button type="button" class="btn btn-xs btn-warning">Leave a review</button></a>
+					</p>
+				{% endif %}
+			</div> <!-- Left column -->
+			<div class="col-md-{% if event.get_url_logo %}4{% else %}7{% endif %}"> <!-- Middle column -->
+				{% show_overall_rating event True %}
+				{% if race_page %}
+					{% if race.sr_overall.exists %}
+						<p>Marks from participants on {{ race.get_precise_name }}:</p>
+						{% show_overall_rating race True %}
+					{% endif %}
+				{% endif %}
+				{% if not series_page %}
+					{% include 'tools/series_editors_list.html' %}
+				{% endif %}
+				{% if event.start_place %}
+					<p>Start place: {{ event.start_place|safe|urlize }}</p>
+				{% elif event.series.start_place and not series_page %}
+					<p>Start place: {{ event.series.start_place|safe|urlize }}</p>
+				{% endif %}
+				{% if event.email or event.contacts %}
+					<p>Organizers' contacts:
+					{% if event.email %}
+						{% if event.email_correct %}
+							<a href="mailto:{{ event.email }}">{{ event.email }}</a>
+							{% if is_admin %}
+								&nbsp;&nbsp;&nbsp;<a class="send_from_info_page" href="#"
+									data-event="{{ event.id }}"><button type="button" class="btn btn-primary btn-xs">Send an email</button></a>
+							{% endif %}
+						{% else %}
+							{{ event.email }}
+						{% endif %}
+						<br/>
+					{% endif %}
+					{{ event.contacts }}</p>
+				{% endif %}
+				{% if event.comment %}
+					<p>Comments: {{ event.comment|safe }}</p>
+				{% endif %}
+				{% if not series_page and event.is_in_klb_but_added_late and event.start_date.year <= 2021 %}
+					<p>В зачёт КЛБМатча не идёт — добавлен в календарь {{ event.date_added_to_calendar|date:"j E Y" }}, позже, чем за 30 дней до события.</p>
+				{% endif %}
+				{% if not series_page and event.is_in_klb_but_added_late and event.start_date.year >= 2022 %}
+					<p>В зачёт КЛБМатча не идёт — добавлен в календарь {{ event.date_added_to_calendar|date:"j E Y" }}, после старта события, и нам неизвестно, где в интернете была опубликована информация о событии. Если вы знаете, пожалуйста, <a href="#" id="send_to_info_page" data-event="{{ event.id }}">напишите нам</a>.</p>
+				{% endif %}
+				{% if event.source %}
+					<p>Source: {{ event.source|safe|urlize }}</p>
+				{% endif %}
+				{% if is_admin or is_editor %}
+					{% if event.comment_private %}
+						<p class="for-admin">Comments for admins: {{ event.comment_private|safe }}</p>
+					{% endif %}
+					{% if event.source_private %}
+						<p class="for-admin">Source for admins: {{ event.source_private|safe }}</p>
+					{% endif %}
+					{% if event.show_date_added %}
+						<p class="for-admin">Added to calendar {{ event.date_added_to_calendar }}</p>
+					{% endif %}
+				{% endif %}
+				<p>Found a mistake in the event protocol? Please contact event organizers about it, not us. We only publish the results from the official protocols.</p>
+				<p>Is everything correct in the protocol, but incorrect on our site? Please <a href="#" id="send_to_info_page" data-event="{{ event.id }}">click here</a> to leave us a message.</p>
+			</div> <!-- Middle column -->
+			{% if not series_page and event.get_url_logo %}
+				<div class="col-md-3">
+					<a href="#" class="showLogo" data-event="{{ event.id }}">
+						<img src="{{ event.get_url_logo|add_prefix }}" align="right" style="max-height: 200px; max-width: 100%;"/>
+					</a>
+				</div>
+			{% endif %}
+		</div>
+		<br/><br/>
+		<div class="row"> <!-- Second row -->
+			<div class="col-md-5"> <!-- Left column -->
+				{% if event.is_in_future %}
+					{% if series_page %}
+						{% with calendar_count=event.calendar_set.count %}{% if calendar_count %}
+							<a href="{{ event.get_absolute_url }}">
+								{{ calendar_count }}
+								runner{{ calendar_count|pluralize }}
+							</a> are going to participate.
+						{% endif %}{% endwith %}
+					{% elif event_page %}
+						{% if user.is_authenticated %}
+							{% if calendar %}
+								<p><strong>You're going to participate
+									{% if calendar.race and n_races > 1 %}
+										on {{ calendar.race.distance }}
+									{% endif %}
+								</strong>
+								<br/>
+								<a href="{{ event.get_remove_from_calendar_url }}">
+									<button type="button" class="btn btn-warning">I am not going to participate any more</button></a>
+								</p>
+							{% else %}
+								<form action='{{ event.get_add_to_calendar_url }}' method="GET">
+									<input type="submit" value="I am going to participate!" class="btn btn-warning"/>
+									{% if n_races > 1 %}
+										on
+										<select name="race_id">
+											<option value="">don't know yet</option>
+											{% for race in event.race_set.all %}
+												<option value="{{ race.id }}">{{ race.distance }}</option>
+											{% endfor %}
+										</select>
+									{% endif %}
+								</form>
+							{% endif %}
+						{% endif %}
+						<br/>{% include 'results/addtocalendar.html' %}
+						<br/><br/>
+					{% endif %}
+				{% endif %}
+				{% if event_page %}
+					{% include 'tools/planning_to_participate.html' %}
+				{% endif %}
+			</div>
+			<div class="col-md-7"> <!-- Center column -->
+				{% if event.announcement %}
+					<h4>Additional details</h4>
+					<p>{{ event.announcement|safe }}</p>
+				{% endif %}
+			</div>
+		</div> <!-- Second row -->
+	</div><!-- Main part -->
+	<div class="col-md-2 text-right"> <!-- Right column -->
+		{% include 'results/event_links.html' %}
+	</div> <!-- Right column -->
+</div> <!-- First row -->

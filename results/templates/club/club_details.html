@@ -1,0 +1,204 @@
+{% extends 'results/base.html' %}
+{% load static %}
+{% load results_extras %}
+{% block main %}
+
+{% include 'club/club_header.html' %}
+
+<div class="row"> <!-- Header -->
+	<div class="col-md-6">
+		<h4>Контактная информация</h4>
+		{% if club.url_site %}
+			Веб-сайт: {{ club.url_site|urlize }}<br/>
+		{% endif %}
+		{% if club.url_vk or club.url_facebook %}
+			<p>
+			{% if club.url_vk %}
+				<a href="{{ club.url_vk }}"><img src="{% static 'images/vk_small_square.png' %}" alt="Ссылка на страницу ВКонтакте"/></a>
+			{% endif %}
+			{% if club.url_facebook %}
+				<a href="{{ club.url_facebook }}"><img src="{% static 'images/fb_small_square.png' %}" alt="Ссылка на страницу в Facebook"/></a>
+			{% endif %}
+			</p>
+		{% endif %}
+		{% if club.email %}
+			E-mail: {{ club.email|urlize }}<br/>
+		{% endif %}
+		{% if club.address_street %}
+			Почтовый адрес: {{ club.address_street }}<br/>
+		{% endif %}
+		{% if club.phone_club %}
+			Телефон: {{ club.phone_club }}<br/>
+		{% endif %}
+		{% if club.other_contacts %}
+			Другие контакты: {{ club.other_contacts }}<br/>
+		{% endif %}
+		{% if club.birthday %}
+			Дата создания: {{ club.birthday|date:"j E Y" }}<br/>
+		{% endif %}
+		{% if 0 and club.n_members %}
+			Число членов клуба: {{ club.n_members }}<br/>
+		{% endif %}
+		{% if club.training_timetable or club.training_cost %}
+			<br/>
+			<h4>Тренировки клуба</h4>
+			{% if club.training_timetable %}
+				{{ club.training_timetable }}<br/>
+			{% endif %}
+			{% if club.training_cost %}
+				{{ club.training_cost }}<br/>
+			{% endif %}
+		{% endif %}
+		{% if club.head_name %}
+			<br/>
+			<h4>Председатель клуба: {{ club.head_name }}</h4>
+			{% if is_admin or is_editor %}
+				{% if club.head_address %}
+					<span class="for-admin">Адрес: {{ club.head_address }}</span><br/>
+				{% endif %}
+				{% if club.head_email %}
+					<span class="for-admin">E-mail: {{ club.head_email|urlize }}</span><br/>
+				{% endif %}
+				{% if club.head_skype %}
+					<span class="for-admin">Skype: {{ club.head_skype }}</span><br/>
+				{% endif %}
+				{% if club.head_ICQ %}
+					<span class="for-admin">ICQ: {{ club.head_ICQ }}</span><br/>
+				{% endif %}
+				{% if club.phone_mob %}
+					<span class="for-admin">Мобильный телефон: {{ club.phone_mob }}</span><br/>
+				{% endif %}
+				{% if club.phone_rab %}
+					<span class="for-admin">Рабочий телефон: {{ club.phone_rab }}</span><br/>
+				{% endif %}
+				{% if club.phone_dom %}
+					<span class="for-admin">Домашний телефон: {{ club.phone_dom }}</span><br/>
+				{% endif %}
+				{% if club.speaker_name %}
+					<span class="for-admin">Контактное лицо:
+						{{ club.speaker_name }}
+						{{ club.speaker_email|urlize }}
+					</span><br/>
+				{% endif %}
+			{% endif %}
+		{% endif %}
+		{% if is_admin or is_editor %}
+			{% if club.editors.exists %}
+				<br/>
+				<h4 class="for-admin">Пользователи, имеющие права на работу с клубом</h4>
+				{% for person in club.editors.all %}
+					<p class="for-admin">{% include 'editor/user_name_with_link.html' %}</p>
+				{% endfor %}
+			{% endif %}
+		{% endif %}
+		{% if club.tales %}
+			<br/>
+			<h4>История клуба</h4>
+			{{ club.tales|safe }}
+		{% endif %}
+		{% if club.url_logo %}
+			<p class="text-center"><img src="{{ club.url_logo }}"/></p>
+		{% endif %}
+		{% if is_admin %}
+			<br/>
+			<h4 class="for-admin">Другие названия клуба</h4>
+			Результат будет считаться подходящим для КЛБМатча, если в графе «Клуб» указан любой из перечисленных ниже клубов или основное название.
+			<form id="addClubName" method="POST" action="{{ club.get_editor_url }}">
+				{% csrf_token %}
+				<table class="table table-condensed table-borderless" style="width: 50%;">
+					{% for club_name in club_names %}
+						<tr>
+							<td>{{ club_name.name }}</td>
+							<td>
+								<a href="{% url 'editor:club_name_delete' club_id=club.id club_name_id=club_name.id %}">
+									<button type="button" class="btn btn-sm btn-primary">Удалить имя</button>
+								</a>
+							</td>
+						</tr>
+					{% endfor %}
+					<tr>
+						<td><input type="text" name="new_club_name" maxlength="100" /></td>
+						<td>
+							<input type="submit" name="clubName_add" value="Добавить имя" class="btn btn-sm btn-success"/>
+						</td>
+					</tr>
+				</table>
+			</form>
+		{% endif %}
+	</div>
+	<div class="col-md-6">
+		{% if is_admin or is_editor %}
+			<p class="text-right">
+				Состав клуба <a href="{{ club.get_members_list_url }}">на сегодня</a> и <a href="{{ club.get_all_members_list_url }}">за всегда</a>
+				<br/>
+				<a href="{{ club.get_add_new_member_url }}">Добавить нового человека в клуб (не в КЛБМатч!)</a>
+				<br/>
+				(эти ссылки пока видят только руководители клуба)
+			</p>
+		{% elif club.is_member_list_visible %}
+			<p class="text-right">
+				Состав клуба <a href="{{ club.get_members_list_url }}">на сегодня</a> и <a href="{{ club.get_all_members_list_url }}">за всегда</a>
+			</p>
+		{% endif %}
+		{% if is_admin or is_editor or is_active_member %}
+			<p class="text-right"><a href="{{ club.get_planned_starts_url }}">Планируемые старты членов клуба</a></p>
+		{% endif %}
+		{% if teams_by_year %}
+			<h4>Участия в КЛБМатчах</h4>
+			<table class="table table-condensed table-hover">
+				<tr><th>Команда</th>
+					<th class="text-center min-width" colspan="2">Участников<br/>(в&nbsp;т.ч.&nbsp;стартовало)</th>
+					<th class="text-right">Очки</th>
+					<th class="text-right">В том числе<br/>бонусы</th>
+					<th class="text-center">Место</th>
+					<th></th>
+				</tr>
+				{% for year, teams in teams_by_year.items %}
+					<tr><th colspan="7" class="info text-center">{{ year|year_for_klbmatch }} год</th></tr>
+					{% for row in teams %}{% with team=row.team %}
+						<tr>
+							<td><a href="{{ team.get_absolute_url }}">{{ team.name }}</a></td>
+							<td class="text-right min-width">{{ team.n_members }}</td>
+							<td class="text-right min-width">({{ team.n_members_started }})</td>
+							<td class="text-right">{{ team.score|floatformat:3 }}</td>
+							{% if team.score %}
+								<td class="text-right">{{ team.bonus_score|floatformat:3 }}</td>
+								<td class="text-center">
+									{{ team.place|default_if_none:'' }}
+									{% if row.n_teams %}
+										из {{ row.n_teams }}
+									{% endif %}
+									{% if team.place_medium_teams %}
+										<br/>
+										{{ team.place_medium_teams }}
+										{% if row.n_medium_teams %}
+											из {{ row.n_medium_teams }}
+										{% endif %}
+										среди средних команд
+									{% elif team.place_small_teams %}
+										<br/>
+										{{ team.place_small_teams }}
+										{% if row.n_small_teams %}
+											из {{ row.n_small_teams }}
+										{% endif %}
+										среди маленьких команд
+									{% endif %}
+								</td>
+								<td class="text-right">
+									{% with diplom_url=team.get_diplom_url %}{% if diplom_url %}
+										<a href="{{ diplom_url }}" target="_blank">диплом</a>
+									{% endif %}{% endwith %}
+								</td>
+							{% else %}
+								<td></td><td></td><td></td>
+							{% endif %}
+						</tr>
+					{% endwith %}{% endfor %}
+				{% endfor %}
+			</table>
+		{% endif %}
+	</div>
+</div>
+<br/><br/>
+{% include 'club/club_records.html' %}
+{% endblock %}

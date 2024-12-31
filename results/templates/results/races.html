@@ -1,0 +1,164 @@
+{% extends 'results/base_2cols.html' %}
+{% load static %}
+{% load results_extras %}
+{% load starrating %}
+
+{% block leftcol %}
+	{% include 'tools/races_search_form.html' %}
+{% endblock %}
+
+{% block rightcol %}
+	<div class="row"><div class="col-md-12 text-center">
+		{% include 'banners/calendar.html' %}
+	</div></div>
+	<p></p>
+	<h3 class="text-center">{% if city and is_admin %}
+			<span class="pull-right">
+				&nbsp;&nbsp;
+				<a href="{{ city.get_editor_url }}">
+					<button type="button" class="btn btn-xs btn-primary">Ред. город</button></a>
+			</span>
+		{% endif %}
+		{{ list_title|safe }}
+		{% if city_wiki %}
+			<small>&nbsp;&nbsp;&nbsp;&nbsp;<a href="{{ city_wiki }}">{{ city.nameWithCountry|safe }} в Википедии</a></small>
+		{% endif %}
+	</h3>
+	{% if page %}
+		<div class="row"><div class="col-md-12 text-right">
+			{% include 'results/pagination.html' %}
+			<p></p>
+		</div></div>
+		<table class="table table-condensed table-hover table-striped">
+		<tr class="info">
+			<th class="text-right">№</th>
+			<th class="text-right">Дата</th>
+			<th>Название</th>
+			<th>Город</th>
+			<th class="text-right">Дистанции</th>
+			{% if show_n_finished %}<th class="text-center">Финишировало</th>{% endif %}
+			<th class="text-right">Ссылки</th>
+		</tr>
+		{% for row, event in page_enum %}
+			<tr>
+				<td class="text-right">{{ row }}</td>
+				<td class="text-right">
+					<a href="{{ event.get_absolute_url }}">{{ event.date|safe }}</a>
+				</td>
+				<td>{% if is_admin %}
+						<span class="pull-right">
+							&nbsp;<a href="{{ event.series.get_editor_url }}"><button type="button" class="btn btn-xs btn-primary">Серия</button></a>
+						</span>
+						<span class="pull-right">
+							<a href="{{ event.get_editor_url }}"><button type="button" class="btn btn-xs btn-primary">Ред</button></a>
+						</span>
+					{% endif %}
+					<a href="{{ event.get_absolute_url }}">{{ event|safe }}</a>
+					{% if event.cancelled %}
+						<br/><strong>Забег отменён!</strong>
+					{% else %}
+						{% if event.is_in_future and event.calendar_set.count %}{% with calendar_count=event.calendar_set.count %}
+							<br/>Планиру{{ calendar_count|ending:10 }}т участвовать
+							<a href="{{ event.get_absolute_url }}">
+								{{ calendar_count }}
+								человек{{ calendar_count|ending:9 }}
+							</a>
+						{% endwith %}{% endif %}
+						{% if event.registration.is_open_now %}
+							<p><a href="{{ event.get_reg_url }}">
+								<button type="button" class="btn btn-xs btn-success">Зарегистрироваться через наш сайт</button>
+							</a></p>
+						{% endif %}
+						{% if event.invisible %}
+							<br/><strong>Забег виден только администраторам</strong>
+						{% endif %}
+						{% if event.is_in_future %}
+							<span class="pull-right">{% show_overall_rating event.series True %}</span>
+						{% else %}
+							<span class="pull-right">{% show_overall_rating event True %}</span>
+						{% endif %}
+					{% endif %}
+				</td>
+				<td>{% include 'results/event_cities_with_links.html' %}
+					{% comment %}
+						{% if event.city_id_for_link %}
+							<a href="{% url 'results:races' city_id=event.city_id_for_link %}">{{ event.strCityCountry }}</a>
+						{% else %}
+							{{ event.strCityCountry }}
+						{% endif %}
+					{% endcomment %}
+				</td>
+				<td class="text-right">
+					{% for race in event.race_set.all %}
+						{% if race.itra_score %}<span class="label label-info small-label">ITRA {{ race.itra_score }}</span>{% endif %}
+						{% if race.certificate %}
+							<a href="/{{ race.certificate.file_cert.name }}">
+								<span class="label label-info small-label">сертификат WA-AIMS</span>
+							</a>&nbsp;
+						{% endif %}
+						{% if race.load_status %}
+							<a href="{{ race.get_absolute_url }}">{{ race.distance_with_heights }}</a>
+						{% else %}
+							<span>{{ race.distance_with_heights }}</span>
+						{% endif %}
+						{% if not forloop.last %}<br/>{% endif %}
+					{% endfor %}
+				</td>
+				{% if show_n_finished %}
+					<td class="text-center">
+						{% for race in event.race_set.all %}
+							{% if race.n_participants %}
+								{{ race.n_participants_finished }}
+							{% elif race.has_no_results and is_admin %}
+								не ждём
+							{% endif %}
+							<br/>
+						{% endfor %}
+					{% if event.sum_finishers and event.race_set.count > 1  %}
+						(всего: {{ event.sum_finishers }})
+					{% endif %}
+					</td>
+				{% endif %}
+				<td class="text-right">
+					{% if event.url_site %}
+						<a href="{{ event.url_site }}">Сайт</a><br/>
+					{% endif %}
+					{% if event.url_registration %}
+						<a href="{{ event.url_registration }}">Регистрация</a><br/>
+					{% endif %}
+					{% if event.vk %}
+						<a href="{{ event.vk }}"><img src="/static2/images/icons/vk_small_square.png" alt="Ссылка на страницу ВКонтакте"/></a>
+					{% endif %}
+					{% if event.fb %}
+						&nbsp;<a href="{{ event.fb }}"><img src="/static2/images/icons/fb_small_square.png" alt="Ссылка на страницу в Facebook"/></a>
+					{% endif %}
+					{% if event.series.url_instagram %}
+						&nbsp;<a href="{{ event.series.url_instagram }}"><img src="/static2/images/icons/in_small_square.png" alt="Ссылка на страницу в Instagram"/></a>
+					{% endif %}
+					{% if event.vk or event.fb or event.series.url_instagram %}
+						<br/>
+					{% endif %}
+					{% for document in event.document_set.all %}
+						{% include 'results/document_link.html' with short=1 %}
+						<br/>
+					{% endfor %}
+					{% if event.news_set.exists %}
+						<a href="{{ event.get_absolute_url }}">Новости</a><br/>
+					{% endif %}
+					{% if event.photo_set.exists %}
+						<a href="{{ event.get_absolute_url }}">Фотографии</a><br/>
+					{% endif %}
+					{% if event.review_set.exists %}
+						<a href="{{ event.get_absolute_url }}">Отчёты</a><br/>
+					{% endif %}
+				</td>
+			</tr>
+		{% endfor %}
+		</table>
+		<div class="row"><div class="col-md-12 text-right">
+			{% include 'results/pagination.html' %}
+		</div></div>
+	{% else %}
+		<p>Ни одного забега не найдено. :(</p>
+	{% endif %}
+{% endblock %}

@@ -1,0 +1,7 @@
+<td {% if female %}class="success"{% endif %}>
+	{% include 'tools/result_runner_name_with_link.html' %}
+</td>
+<td {% if female %}class="success"{% endif %}>{{ result.strCity }}</td>
+<td class="text-center{% if female %} success{% endif %}">{{ result }}
+	<br/><a href="{{ race.get_absolute_url }}">{{ race.event.date|safe }}</a>
+</td>

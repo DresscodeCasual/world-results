@@ -1,0 +1,38 @@
+{% extends 'results/base_series.html' %}
+{% block content %}
+<div class="row"><div class="col-lg-6 col-lg-offset-3 col-md-8 col-md-offset-2 col-sm-12">
+	<table class="table table-condensed table-hover table-striped vcenter">
+		<tr class="info text-center">
+			<th>Дата</th>
+			<th>Новости</th>
+			<th>Отчёты</th>
+			<th>Фотографии и видео</th>
+		</tr>
+		{% for event, links in events_links %}
+			<tr>
+				<td class="text-center"><p><a href="{{ event.get_absolute_url }}">{{ event.date|safe }}</a></p></td>
+				<td>{% for news in links.news %}
+						<p>{{ news.date_posted|date:'d.m.Y' }} — <a href="{{ news.get_absolute_url }}">{{ news.title|safe }}</a></p>
+					{% endfor %}
+				</td>
+				<td>{% for doc in links.reviews %}
+						<p><a href="{{ doc.get_main_url }}">{{ doc.title }}</a>
+							{% if doc.comment %}
+								({{ doc.comment }})
+							{% endif %}
+						</p>
+					{% endfor %}
+				</td>
+				<td>{% for doc in links.photos %}
+						<p><a href="{{ doc.get_main_url }}">{{ doc.title }}</a>
+							{% if doc.comment %}
+								({{ doc.comment }})
+							{% endif %}
+						</p>
+					{% endfor %}
+				</td>
+			</tr>
+		{% endfor %}
+	</table>
+</div></div>
+{% endblock %}

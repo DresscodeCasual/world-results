@@ -1,0 +1,10 @@
+{% if result.user and result.user.user_profile.is_public %}
+	<a href="{{ result.user.user_profile.get_absolute_url }}"><strong>{{ result.user.get_full_name }}</strong></a>&nbsp;<span class="glyphicon glyphicon-user small-label" aria-hidden="true"></span><span class="sr-only">Зарегистрирован на сайте</span>
+{% elif result.runner %}
+	<a href="{{ result.runner.get_absolute_url }}"><strong>{{ result.runner.name }}</strong></a>
+{% else %}
+	<strong>{{ result.strName }}</strong>
+{% endif %}
+{% if result.club_name %}
+	<br/>{{ result.club_name }}
+{% endif %}

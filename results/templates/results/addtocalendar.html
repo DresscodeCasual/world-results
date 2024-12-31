@@ -1,0 +1,11 @@
+<span class="addtocalendar atc-style-blue">
+	<var class="atc_event">
+		<var class="atc_date_start">{{ event.get_start_time_iso }}</var>
+		<var class="atc_date_end">{{ event.get_finish_time_iso }}</var>
+        <var class="atc_timezone">Europe/Moscow</var>
+		<var class="atc_title">{{ event }}</var>
+        <var class="atc_description">https://probeg.org{{ event.get_absolute_url }}</var>
+		<var class="atc_location">{{ event.strCityCountry }}</var>
+		<var class="atc_organizer_email">{{ event.first_email }}</var>
+	</var>
+</span>

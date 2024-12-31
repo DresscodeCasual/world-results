@@ -1,0 +1,56 @@
+<br/>
+<table class="table table-hover">
+<thead>
+	<tr class="info vcenter">
+		<th class="text-center">Дистанция</th>
+		<th></th>
+		<th></th>
+		<th class="text-center">Возраст<br/>в день забега</th>
+		<th>Результат</th>
+		{% if age_result %}
+			<th class="nobr">С учётом<br/>возр. коэф-та</th>
+		{% endif %}
+		<th class="text-right">Дата</th>
+		<th>Забег</th>
+	</tr>
+</thead>
+<tbody>
+{% for distance, lines in records.items %}
+	{% for stat in lines %}
+		<tr>
+			{% if forloop.first %}
+				<td rowspan="{{ lines|length }}" class="text-center vcenter">{{ distance }}</td>
+			{% endif %}
+			{% with runner=stat.club_member.runner %}
+				<td class="vcenter{% if gender == 1 %} success{% endif %}">{{ forloop.counter }}</td>
+				<td class="vcenter nobr{% if gender == 1 %} success{% endif %}">
+					<a href="{{ runner.get_runner_or_user_url }}">{{ runner.name }}</a>
+				</td>
+				<td class="vcenter text-center{% if gender == 1 %} success{% endif %}">{{ stat.best_result.get_runner_age|default_if_none:'' }}</td>
+				{% if age_result %}
+					<td class="vcenter{% if gender == 1 %} success{% endif %}">
+						<a href="{{ runner.get_runner_or_user_url }}#result{{ stat.best_result_age_coef.id }}" target="_blank">{{ stat.best_result_age_coef }}</a>
+					</td>
+					<td class="vcenter{% if gender == 1 %} success{% endif %}">{{ stat.get_value_best_age_coef }}</td>
+					<td class="vcenter text-right{% if gender == 1 %} success{% endif %}">
+						{{ stat.best_result_age_coef.race.event.date|safe }}
+					</td>
+					<td class="vcenter{% if gender == 1 %} success{% endif %}">
+						<a href="{{ stat.best_result_age_coef.race.event.get_absolute_url }}" target="_blank">{{ stat.best_result_age_coef.race.event|safe }}</a>
+					</td>
+				{% else %}
+					<td class="vcenter{% if gender == 1 %} success{% endif %}">
+						<a href="{{ runner.get_runner_or_user_url }}#result{{ stat.best_result.id }}" target="_blank">{{ stat.best_result }}</a>
+					</td>
+					<td class="vcenter text-right{% if gender == 1 %} success{% endif %}">
+						{{ stat.best_result.race.event.date|safe }}
+					</td>
+					<td class="vcenter{% if gender == 1 %} success{% endif %}">
+						<a href="{{ stat.best_result.race.event.get_absolute_url }}" target="_blank">{{ stat.best_result.race.event|safe }}</a>
+					</td>
+				{% endif %}
+			{% endwith %}
+		</tr>
+	{% endfor %}
+{% endfor %}
+</tbody></table>

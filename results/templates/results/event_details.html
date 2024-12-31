@@ -1,0 +1,106 @@
+{% extends 'results/base.html' %}
+{% block main %}
+{% comment %}
+	<div class="visible-md-block visible-lg-block col-md-12 text-center">
+		{% include 'misc/sportmaster_2017_04.html' %}
+		<br/><br/>
+	</div>
+{% endcomment %}
+
+<div class="row"><div class="col-md-12"> <!-- Header -->
+	{% include 'results/event_edit_buttons.html' %}
+	<h3>{{ event|safe }}, <nobr>{{ event.dateFull|safe }}</nobr></h3>
+</div></div>
+{% include 'results/event_details_row.html' with event_page=1 %}
+<hr/>
+<div class="row">
+	<div class="col-md-8">
+	{% if news_set %}
+		<h3 class="text-center">
+			Новости
+		</h3>
+		{% for news in news_set %}
+			{% include 'results/news_row.html' with district=1 %}
+		{% endfor %}
+	{% else %}
+		<p>Пока у этого забега нет ни одной новости.</p>
+	{% endif %}
+	</div>
+	<div class="col-md-4">
+		{% if event.is_in_past or reviews or photos %}
+			<div class="row">
+				<div class="col-md-6">
+					{% if event.is_in_past %}
+						<h3>Отчёты</h3>
+						{% for document in reviews %}
+							<p>{% include 'results/document_link.html' %}</p>
+						{% empty %}
+							<p>Пока нет ни одного отчёта об этом забеге.</p>
+						{% endfor %}
+						{% if is_authenticated %}
+							<p><a href="#" class="add_review_page" data-event="{{ event.id }}">
+								<button type="button" class="btn btn-warning">Добавить отчёт</button></a>
+							</p>
+						{% endif %}
+					{% elif reviews %}
+						<h3>Отчёты</h3>
+						{% for document in reviews %}
+							<p>{% include 'results/document_link.html' %}</p>
+						{% endfor %}
+					{% endif %}
+				</div>
+				<div class="col-md-6">
+					{% if event.is_in_past %}
+						<h3>Фото и видео</h3>
+						{% for document in photos %}
+							<p>{% include 'results/document_link.html' %}</p>
+						{% empty %}
+							<p>Пока нет ни одной ссылки.</p>
+						{% endfor %}
+						{% if is_authenticated %}
+							<p><a href="#" class="add_review_page" data-event="{{ event.id }}" data-photo="1">
+								<button type="button" class="btn btn-warning">Добавить ссылку</button></a>
+							</p>
+						{% endif %}
+					{% elif photos %}
+						<h3>Фото и видео</h3>
+						{% for document in photos %}
+							<p>{% include 'results/document_link.html' %}</p>
+						{% endfor %}
+					{% endif %}
+				</div>
+			</div>
+			{% if series.has_news_reviews_photos %}
+				<div class="row"><div class="col-md-12">
+					<a href="{% url 'results:series_details' series_id=series.id tab='reviews' %}">Новости, отчёты, фотографии со всех забегов серии</a>
+				</div></div>
+			{% endif %}
+		<br/><br/>
+		{% endif %}
+		<p>Дорогие пользователи! Нет&nbsp;смысла оставлять здесь вопросы организаторам&nbsp;— они вряд&nbsp;ли это прочитают.
+			Есть смысл указывать на&nbsp;ошибки и&nbsp;неточности в&nbsp;инфомации о&nbsp;забегах, а&nbsp;также оставлять свои впечатления для&nbsp;будущих участников.
+		</p>
+		<div id="vk_comments"></div>
+		<script type="text/javascript" src="//vk.com/js/api/openapi.js?146"></script>
+		<script type="text/javascript">
+			VK.init({apiId: 5410674, onlyWidgets: true});
+			VK.Widgets.Comments("vk_comments", {limit: 10, attach: "*", pageUrl: "{{ SITE_URL }}{{ event.get_absolute_url }}"}, "event{{ event.id }}");
+		</script>
+		<br/><br/>
+		<div class="row"><div class="col-md-9 col-md-offset-3 col-md-7 col-md-offset-5">
+			<!--GoProtect Widget Code Starts-->
+			<script type='text/javascript'>
+				wType = "iframe"
+				wWidth = "260px";
+				wHeight = "480px";
+				wPartnerId="probeg";
+				wColor1 = "2C5";
+				wIURL ="https://www.goprotect.ru/widget";
+			</script>
+			<div id="GoProtectWidget"></div>
+			<script type="text/JavaScript" src="https://www.goprotect.ru/widget/js/loader.js"></script>
+			<!--GoProtect Widget Code Ends-->
+		</div></div>
+	</div>
+</div>
+{% endblock %}

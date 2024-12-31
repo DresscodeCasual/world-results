@@ -1,0 +1,15 @@
+{% load static %}
+<script type="text/javascript">
+{% if user_is_female %}
+	sm_target = 'http://ad.adriver.ru/cgi-bin/click.cgi?sid=1&bt=21&ad=620648&pid=2532760&bid=4962657&bn=4962657&rnd=';
+	sm_pic = '{% static 'images/ad/sportmaster_2017_04/Probeg_1000x100_W_v3.gif' %}';
+	sm_rle = 'http://ad.adriver.ru/cgi-bin/rle.cgi?sid=1&bt=21&ad=620648&pid=2532760&bid=4962657&bn=4962657&rnd=';
+{% else %}
+	sm_target = 'http://ad.adriver.ru/cgi-bin/click.cgi?sid=1&bt=21&ad=620648&pid=2532759&bid=4962655&bn=4962655&rnd=';
+	sm_pic = '{% static 'images/ad/sportmaster_2017_04/Probeg_1000x100_M_v3.gif' %}';
+	sm_rle = 'http://ad.adriver.ru/cgi-bin/rle.cgi?sid=1&bt=21&ad=620648&pid=2532759&bid=4962655&bn=4962655&rnd=';
+{% endif %}
+sm_rnd = Math.floor(Math.random() * 1000000 + 1);
+document.write('<a href="' + sm_target + sm_rnd + '" target="_blank"><img src="' + sm_pic + '"/></a>');
+document.write('<img src="' + sm_rle + sm_rnd + '" width="0" height="0" border="0"/>');
+</script>

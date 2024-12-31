@@ -1,0 +1,1 @@
+{% load results_extras %}<strong>{% if new == old %}={% elif new > old %}<span class="text-success">+{% widthratio new|subtract:old old 100 %}%</span>{% else %}<span class="text-danger">−{% widthratio old|subtract:new old 100 %}%</span>{% endif %}</strong>

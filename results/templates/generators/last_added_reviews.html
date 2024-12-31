@@ -1,0 +1,14 @@
+<a name="last_reviews"></a>
+<h4>Последние добавленные отчёты, фото, видео</h4>
+{% for document, doc_type, show_link_to_author in last_reviews %}
+	<p class="protokol"><a href="{{ document.event.get_absolute_url }}">{{ document.event|safe }}</a>,
+		{{ document.event.dateFull|safe }},
+		{{ document.event.strCityCountry|safe }}&nbsp;—
+		<a href="{{ document.get_main_url }}">{{ doc_type }}</a>
+		{% if show_link_to_author %}
+			(<a href="{{ document.created_by.user_profile.get_absolute_url }}">{{ document.author }}</a>)
+		{% elif document.author %}
+			({{ document.author }})
+		{% endif %}
+	</p>
+{% endfor %}

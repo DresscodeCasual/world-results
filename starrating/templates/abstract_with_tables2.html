@@ -1,0 +1,14 @@
+{% load render_table from django_tables2 %}
+<!doctype html>
+<html>
+	<head>
+		<title>{{ title }}</title>
+	</head>
+	<body>
+	<a href="{% url 'starrating:parameters' %}">Parameters</a> |
+	<a href="{% url 'starrating:methods' %}">Methods</a>
+	
+	<h1>{{ h1 }}</h1>
+		{% render_table qs %}
+	</body>
+</html>

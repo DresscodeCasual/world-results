@@ -1,0 +1,153 @@
+{% load results_extras %}
+{% load static %}
+{% if frmClubAndNumber %}
+	<p>
+		<form method="POST" action="{{ race.get_klb_add_results_url }}" class="form-inline">
+			{% csrf_token %}
+			<input type="submit" class="btn btn-primary btn-sm" value="Добавить"/>
+			&nbsp;&nbsp;{% include 'results/form_field.html' with field=frmClubAndNumber.n_persons no_title=1 %}
+			результат(ов) для клуба
+			{% include 'results/form_field.html' with field=frmClubAndNumber.club no_title=1 %}
+		</form>
+	</p>
+{% else %}
+	{% for club in club_set %}
+		<p>
+			<form method="POST" action="{{ race.get_klb_add_results_url }}" class="form-inline">
+				{% csrf_token %}
+				<input type="submit" class="btn btn-primary btn-sm" value="Добавить"/>
+				&nbsp;
+				<input type="number" id="id_n_persons" name="n_persons" max="50" min="1" size="6" value="1"/>
+				результат(ов) для клуба «{{ club.name }}»
+				<input type="hidden" name="club" value="{{ club.id }}"/>
+			</form>
+		</p>
+	{% endfor %}
+{% endif %}
+{% if is_admin %}
+	<p>
+		<form method="POST" action="{{ race.get_add_unoff_result_url }}" class="form-inline">
+			{% csrf_token %}
+			<input type="submit" class="btn btn-primary btn-sm" name="frmAddResult_submit" value="Добавить"/>
+			результат
+			<input type="text" name="result_str" size="11"/>
+			бегуну
+			<select class="runners-list" name="select_runner" style="width: 50%"></select>
+			{% if race_is_ok_for_klb %}
+				<br/>
+				(Результат не будет учтён в КЛБМатче. Для КЛБМатча воспользуйтесь верхней формой.)
+			{% endif %}
+			<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css" rel="stylesheet" />
+			<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
+			<script type="text/javascript">
+$('#id_club').select2();
+$(".runners-list").select2({
+	placeholder: "Введите первые буквы фамилии и имени",
+	width: 'element',
+	allowClear: true,
+	ajax: {
+		url: "{{ race.get_ajax_runners_list_url }}",
+		dataType: 'json',
+		delay: 250,
+		data: function (params) {
+			return {
+				query: params.term
+			};
+		},
+		processResults: function (data) {
+			return {
+				results: data
+			};
+		},
+		cache: true
+	},
+});
+			</script>
+		</form>
+	</p>
+{% endif %}
+{% if unofficial_results.exists or can_add_result %}
+	<h4>Отдельные результаты</h4>
+	{% if can_add_result %}
+		<p>
+			<button type="button" class="btn btn-warning btnAddResult" data-event="{{ event.id }}">
+				Добавить свой результат
+			</button>
+		</p>
+	{% endif %}
+	{% if unofficial_results.exists %}
+		<table class="table table-condensed table-hover">
+		<thead>
+			{% if klb_results_exist %}
+				<tr class="info">
+					<th class="text-center" rowspan="2">Имя</th>
+					<th rowspan="2">Результат</th>
+					<th class="text-center" colspan="3">КЛБМатч</th>
+				</tr>
+				<tr class="info">
+					<th class="text-center">Команда</th>
+					<th class="text-center">Основные очки</th>
+					<th class="text-center">Бонусные очки</th>
+				</tr>
+			{% else %}
+				<tr class="info">
+					<th class="text-center" rowspan="2">Имя</th>
+					<th rowspan="2">Результат</th>
+				</tr>
+			{% endif %}
+		</thead>
+		<tbody>
+			{% for result in unofficial_results %}
+				<tr{% if result.user.user_profile.gender == 1 %} class="success"{% endif %}>
+					<td><a href="{{ result.get_runner_or_user_url }}">
+							{{ result.runner.name }}
+						</a>
+					</td>
+					<td>{% include 'tools/tracker_logo.html' %}
+						{% if result.id in unoff_results_with_splits %}
+							<a href="{{ result.get_absolute_url }}">{{ result }}</a>
+						{% else %}
+							{{ result }}
+						{% endif %}
+					</td>
+					{% if result.klb_result %}{% with klb_result=result.klb_result %}
+						{% with team=klb_result.get_team klb_person=klb_result.klb_person %}	
+							<td class="text-center"><a href="{{ team.get_absolute_url }}">{{ team.name }}</a></td>
+							<td class="text-center{% if klb_result.is_in_best %} best-result{% endif %}">
+								{{ klb_result.klb_score|floatformat:3 }}
+							</td>
+							<td class="text-center{% if klb_result.is_in_best_bonus %} best-result{% endif %}">
+								{{ klb_result.bonus_score|floatformat:3 }}
+							</td>
+						{% endwith %}{% endwith %}
+					{% elif result.id in klb_pending_result_ids %}{% with team=result.runner|get_team:year %}
+						<td class="text-center">{% if team %}<a href="{{ team.get_absolute_url }}">{{ team.name }}</a>{% endif %}</td>
+						<td class="text-center" colspan="2"><span class="label label-primary small-label">на модерации</span></td>
+					{% endwith %}{% elif klb_results_exist %}
+						<td></td>
+						<td></td>
+						<td></td>
+					{% endif %}
+					{% if is_admin %}
+						<td class="text-center">
+							<a href="{{ result.get_editor_url }}">
+								<button type="button" class="btn btn-xs btn-primary">Редактировать</button></a>
+						</td>
+					{% endif %}
+					{% if not result.klb_result %}
+						{% if user == result.user or user == result.loaded_by %}
+							<td class="text-center"><a href="#"
+								onclick="delete_unofficial_result('{{ result.get_delete_unofficial_url }}',
+									'{{ result.race.event }}',
+									'{{ result.race.distance }}',
+									'{{ result }}')"
+							>
+								Удалить результат
+							</a></td>
+						{% endif %}
+					{% endif %}
+				</tr>
+			{% endfor %}
+		</tbody></table>
+	{% endif %}
+{% endif %}

@@ -1,0 +1,54 @@
+{% include 'results/panel_header.html' with title='Параметры поиска' %}
+	<form id="frmSearch" action="{% url 'results:races' %}" method="GET">
+		{% csrf_token %}
+		{% if page %}
+			<input type="hidden" name="page" id="id_page" value="{{ page.number }}"/>
+		{% endif %}
+		<table class="table table-condensed table-borderless" style="margin-bottom: 0px;">
+			<colgroup>
+				<col style="width: 30%;"/>
+				<col style="width: 70%;"/>
+			</colgroup>
+			{% include 'results/form_field_tr.html' with field=form.date_region td_class='input-100' %}
+			{% include 'results/form_field_tr.html' with field=form.country td_class='input-100' %}
+			{% include 'results/form_field_tr.html' with field=form.region td_class='input-100' %}
+			{% include 'results/form_field_tr.html' with field=form.city_id td_class='input-100' %}
+			{% include 'results/form_field_tr.html' with field=form.race_name td_class='input-100' %}
+			{% include 'results/form_field_tr.html' with field=form.date_from td_class='input-100' %}
+			{% include 'results/form_field_tr.html' with field=form.date_to td_class='input-100' %}
+			{% include 'results/form_field_tr.html' with field=form.distance_from td_class='input-100' %}
+			{% include 'results/form_field_tr.html' with field=form.distance_to td_class='input-100' %}
+			{% comment %}
+				{% for field in form %}
+					{% include 'results/form_field_tr.html' with td_class='input-100' %}
+				{% endfor %}
+			{% endcomment %}
+			<tr><td></td>
+				<td>{{ form.hide_parkruns }}&nbsp;&nbsp;{{ form.hide_parkruns.label_tag }}</td>
+			</tr>
+			<tr><td></td>
+				<td>{{ form.only_with_results }}&nbsp;&nbsp;{{ form.only_with_results.label_tag }}</td>
+			</tr>
+			<tr><td></td>
+				<td><input type="submit" name="btnSearchSubmit" value="Показать" class="btn btn-success"/></td>
+			</tr>
+		</table>
+	</form>
+{% include 'results/panel_footer.html' %}
+{% if is_admin %}
+	<br/><br/><br/><br/>
+	<p><a href="{% url 'editor:series_create' %}">
+		<button type="button" class="btn btn-primary">Создать новую серию забегов</button>
+	</a></p>
+{% elif user.is_authenticated and user.user_profile %}
+	<br/><br/><br/><br/>
+	<p><a href="#" class="btnAddSeries" onclick="yaCounter38500270.reachGoal('NewRunEventFromRaces'); return true;">
+		<button type="button" class="btn btn-warning">Сообщить нам о забеге, которого нет в базе</button>
+	</a></p>
+{% endif %}
+<script>
+	var ajax_city_prefix = "id_";
+	{% if city %}
+		var ajax_city_default = {{ city.id }};
+	{% endif %}
+</script>

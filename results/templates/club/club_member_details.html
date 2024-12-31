@@ -1,0 +1,79 @@
+{% extends 'results/base.html' %}
+{% load results_extras %}
+{% block main %}
+<h3>Клуб «<a href="{{ club.get_absolute_url }}">{{ club.name }}</a>»</h3>
+<br/>
+<div class="row"> <!-- Header -->
+	{% if editing_myself %}
+		<div class="col-md-2"></div>
+	{% else %}
+		{% include 'club/club_members_column.html' %}
+	{% endif %}
+	<div class="col-md-7">
+		<h4>{% if editing_myself %}
+				Ваше членство в клубе
+			{% else %}
+				{% if adding_new %}Добавление нового{% else %}Редактирование данных{% endif %}
+				члена клуба: <a href="{{ runner.get_absolute_url }}">{{ runner.name_with_midname }}</a>{% if runner.city %}, {{ runner.city.name_full }}{% endif %}{% if runner.birthday %}, {{ runner.birthday.year }} г. р.{% endif %}
+			{% endif %}
+		</h4>
+		<p>Единственное обязательное поле — дата, с которой человек считается членом клуба.</p>
+		<p>E-mail и мобильный телефон будут видны только руководителям клуба.</p>
+		<p>Для исправления ошибки в имени, городе или дате рождения, пожалуйста, <a href="#" id="send_to_info_page" data-runner="{{ runner.id }}">напишите нам</a>.</p>
+		<form id="frmClubMember" action="" method="POST" class="form-horizontal">
+			{% csrf_token %}
+			{% for error in form.non_field_errors %}
+				<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+			{% endfor %}
+			{% for field in form %}
+				<div class="form-group">
+					{{ field|label_with_classes:"col-sm-4 control-label" }}
+					<div class="col-sm-8">
+						{{ field }}
+						{% if field.errors %}
+							{% for error in field.errors %}
+								<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+							{% endfor %}
+						{% endif %}
+					</div>
+				</div>
+			{% endfor %}
+			{% if adding_new %}
+				<br/><br/>
+				<input type="checkbox" name="is_responsible" id="chkIsResponsible"/>
+				Я&nbsp;или&nbsp;руководитель клуба получили согласие этого человека на&nbsp;включение в&nbsp;состав клуба
+				«{{ club.name }}» и&nbsp;на&nbsp;размещение его&nbsp;персональных данных (ФИО, год рождения, город)
+				на&nbsp;страницах сайта «ПроБЕГ», а&nbsp;также на&nbsp;хранение администрацией сайта его&nbsp;электронного адреса или телефона
+			{% endif %}
+			<br/><br/>
+			<input type="submit" name="frmClubMember_submit" value="{% if adding_new %}Добавить в клуб{% else %}Сохранить{% endif %}"
+				class="btn btn-success" id="btnSubmit"
+				{% if adding_new %}disabled{% endif %}
+			/>
+			<span class="pull-right">
+				<a href="{{ members_list_url }}">Вернуться к списку членов клуба</a>
+			</span>
+		</form>
+		{% if not adding_new %}
+			<span class="pull-right">
+				<a href="#" onclick="confirm_link('{% if editing_myself %}Вы действительно хотите удалить себя из клуба «{{ club.name }}», как будто Вы никогда в нём и не состояли?{% else %}Вы действительно хотите удалить этого человека из клуба, как будто его никогда в нём и не было?{% endif %}',
+						'{{ member.get_delete_url }}');">
+					<button type="button" class="btn btn-xs btn-danger">
+						Удалить все {% if editing_myself %}Ваши следы{% else %}следы человека{% endif %} из клуба «{{ club.name }}»
+					</button></a>
+			</span>
+		{% endif %}
+	</div>
+	{% if editing_myself %}
+		<div class="col-md-3"></div>
+	{% endif %}
+</div>
+
+<script language="javascript">
+var ajax_city_prefix = "id_";
+var ajax_city_fullname = 1;
+{% if runner.city %}
+var ajax_city_default = "{{ runner.city.id }}";
+{% endif %}
+</script>
+{% endblock %}

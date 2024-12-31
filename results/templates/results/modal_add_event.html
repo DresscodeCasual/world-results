@@ -1,0 +1,20 @@
+{% extends 'results/modal_form_base.html' %}
+{% block header %}Добавить событие в серию «{{ series.name|safe }}»{% endblock %}
+{% block main %}
+	<p>Проверьте, что этого события ещё нет на <a href="{{ series.get_absolute_url }}" target="_blank">странице серии</a>.</p>
+	<p>Год и номер забега указывать в названии не нужно: не пишите «Мыловский забег — 2023», достаточно просто «Мыловский забег».</p>
+	<p>Если Вы – организатор этого забега, напишите нам на <a href="mailto:info@probeg.org">info@probeg.org</a>
+	(или через пункт «Отправить письмо» меню «Ещё»), и мы дадим Вам больше возможностей по изменению страницы забега.</a>.</p>
+	<p>Обязательное поле только одно – дата забега.</p>
+	<form id="frm_add_event" enctype="multipart/form-data">
+		{% csrf_token %}
+		{% for field in frmEvent %}
+			{% include 'results/form_field.html' %}
+		{% endfor %}
+	</form>
+{% endblock %}
+{% block footer %}
+	<span id="response" class="text-left"></span>
+	<button type="button" class="btn btn-default" data-dismiss="modal">Закрыть окно</button>
+	<button type="button" class="btn btn-success" id="add_event">Добавить событие</button>
+{% endblock %}

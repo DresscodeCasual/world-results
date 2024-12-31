@@ -1,0 +1,229 @@
+{% extends 'results/base.html' %}
+{% block main %}
+<div class="row"><div class="col-md-12">
+	<h3>{% if is_admin %}
+			<span class="pull-right">
+				<a href="{% url 'editor:better_age_group_results' country_id=country.id is_indoor=0 %}">
+					<button type="button" class="btn btn-xs btn-primary">Потенциальные рекорды вне помещений</button></a>
+				{% if country.id == 'RU' %}
+					&nbsp;&nbsp;
+					<a href="{% url 'editor:better_age_group_results' country_id=country.id is_indoor=1 %}">
+						<button type="button" class="btn btn-xs btn-primary">Потенциальные рекорды в помещении</button></a>
+					{% if cur_active_session %}
+						&nbsp;&nbsp;
+						<a href="{% url 'editor:mark_cur_session_complete' %}">
+							<button type="button" class="btn btn-xs btn-primary">Закрыть заседание комиссии № {{ cur_active_session.get_number }}</button></a>
+					{% endif %}	
+				{% endif %}	
+			</span>
+		{% endif %}	
+		{{ page_title }}
+		<small><a href="{% url 'results:ultra_records' country_id=country.id %}">Рекорды на ультрамарафонских дистанциях</a></small>
+	</h3>
+
+	<br/><br/>
+
+	{% if country.id == 'RU' %}
+		<p>В сентябре 2021 г. группа энтузиастов начала работу над утверждением рекордов в соответствии с принятыми нами правилами:</p>
+
+		<p><strong><a href="/age_group_records/rules-2021-09-27.pdf">Положение о регистрации рекордов и состав нашей группы</a>;&nbsp;&nbsp;&nbsp;<a href="/age_group_records/comments-2021-09-27.pdf">Комментарии к положению</a></strong></p>
+	{% endif %}	
+
+	<p>Наша цель — собрать для общепринятых возрастных групп (с шагом в 5 лет, начиная с 35 лет) на самых популярных беговых дистанциях от 60 метров до марафона:</p>
+
+	<p>1. по три лучших результата за всю историю страны, как на стадионе/шоссе, так и в помещении;</p>
+
+	<p>2. все бывшие рекорды.</p>
+
+	<p>Если в какой-то возрастной группе рекорды идут в два ряда, это значит, что в верхней ячейке — рекордный результат с электронным хронометражем, а под ним — лучший нам известный с ручным хронометражем, если он лучше электронного. Для дистанций от 1500 м мы не смотрим на тип хронометража.</p>
+
+	<p>Если вы знаете о результатах, которые нужно добавить в эту таблицу, или найдёте любые ошибки, пожалуйста, напишите нам на <a href="mailto:records@probeg.org">records@probeg.org</a> или <a href="#" id="send_to_info_page" data-target="records">прямо отсюда</a>.</p>
+
+	<p><strong>Мы будем рады помощи в обработке протоколов.</strong> Если вы готовы помочь, пожалуйста, напишите нам любым из тех же способов.</p>
+</div></div>
+
+<br/><br/>
+{% if commission_sessions %}
+	<div class="row">
+		<div class="col-md-6">
+			<h4>Протоколы комиссии по рекордам России в беге среди спортсменов старше 35 лет</h4>
+			<ul>
+				{% for session in commission_sessions %}
+					<li><a href="/{{ session.report.name }}" target="_blank">Заседание № {{ session.id }} ({{ session.date }})</a></li>
+				{% endfor %}
+			</ul>
+		</div>
+		<div class="col-md-6">
+			<h4>Мы публикуем новости о рекордах среди ветеранов в следующих источниках:</h4>
+			<ol>
+				<li>блог на сайте «ПроБЕГ» <a href="/blog/">https://probeg.org/blog/</a>,</li>
+				<li>ленты сайта «ПроБЕГ» в соцсетях <a href="https://vk.com/probeg_org">https://vk.com/probeg_org</a> и <a href="https://www.facebook.com/probegorg">https://www.facebook.com/probegorg</a>,</li>
+				<li>группа «Russian Masters Athletics Team» <a href="https://vk.com/veterany35">https://vk.com/veterany35</a>,</li>
+				<li>группа «Легкая атлетика. Ветераны» <a href="https://www.facebook.com/groups/1196907990424915">https://www.facebook.com/groups/1196907990424915</a>.</li>
+				{% comment %}
+					<li>группа ветеранов лёгкой атлетики в Телеграме <a href="https://t.me/+UmHA3UmpIqA3M2Uy">https://t.me/+UmHA3UmpIqA3M2Uy</a>.</li>
+				{% endcomment %}
+			</ol>
+		</div>
+	</div>
+{% endif %}
+
+<div class="row"><div class="col-md-12">
+{% for table in tables %}
+	{% for gender, data_gender in table.data.items %}
+		<br/><br/>
+		<h3 class="text-center">{{ data_gender.name }}</h3>
+		<table class="table table-condensed text-small table-hover table-striped">
+			<tr class="info vcenter">
+				<th class="text-center">Возрастная группа</th>
+				{% for distance_name, dist_code, surface_name, surface_code in table.distances_and_surfaces %}
+					<th class="text-center" colspan="2">
+						<a href="{% url 'results:age_group_records_for_distance' country_id=country.id distance_code=dist_code surface_code=surface_code %}">{{ distance_name }}</a>
+						{% if not table.is_indoor %}
+							<br/>
+							({{ surface_name }})
+						{% endif %}
+					</th>
+				{% endfor %}
+				<th class="text-center">Возрастная группа</th>
+			</tr>
+			{% for age_group, data_age_group in data_gender.age_groups.items %}
+				<tr class="vcenter{% if age_group.age_group_type == 1 %} warning{% endif %}">
+					<td class="text-center"
+							{% if age_group.age_group_type != 1 %}style="font-size: 250%;"{% endif %}
+							{% if data_age_group.show_hand_records_row %} rowspan="2"{% endif %}
+					>
+						{% if age_group.age_min %}{{ data_gender.name.0 }}{% endif %}{{ age_group }}
+						{% if 0 and is_admin and not age_group.age_min %}
+							<a href="{% url 'editor:country_records_edit' country_id=country.id gender_code=data_gender.gender_code %}"><button type="button" class="btn btn-xs btn-primary">Ред</button></a>
+						{% endif %}
+					</td>
+					{% for distance, record_results in data_age_group.distances.items %}{% with record_result=record_results.0 %}
+						{% if record_result %}
+							<td>{% include 'age_group_records/record_result_runner_name_and_city.html' %}</td>
+							<td class="nobr">
+								<a href="{{ record_result.get_group_url }}">{{ record_result|safe }}</a>
+								{% include 'age_group_records/record_result_note_signs.html' %}
+							</td>
+						{% else %}
+							<td colspan="2"></td>
+						{% endif %}
+					{% endwith %}{% endfor %}
+					<td class="text-center"
+							{% if age_group.age_group_type != 1 %}style="font-size: 250%;"{% endif %}
+							{% if data_age_group.show_hand_records_row %} rowspan="2"{% endif %}
+					>
+						{% if age_group.age_min %}{{ data_gender.name.0 }}{% endif %}{{ age_group }}
+					</td>
+				</tr>
+				{% if data_age_group.show_hand_records_row %}
+					<tr class="vcenter{% if age_group.age_group_type == 1 %} warning{% endif %}">
+						{% for distance, record_results in data_age_group.distances.items %}{% with record_result=record_results.1 %}
+							{% if record_result %}
+								<td>{% include 'age_group_records/record_result_runner_name_and_city.html' %}</td>
+								<td class="nobr">
+									<a href="{{ record_result.get_group_url }}">{{ record_result|safe }}</a>
+									{% include 'age_group_records/record_result_note_signs.html' %}
+								</td>
+							{% else %}
+								<td colspan="2"></td>
+							{% endif %}
+						{% endwith %}{% endfor %}
+					</tr>
+				{% endif %}
+			{% endfor %}
+		</table>
+	{% endfor %}
+{% endfor %}
+
+{% include 'age_group_records/record_result_footnotes.html' %}
+
+<br/><br/><br/><br/>
+<h3>Как определяется возрастная группа</h3>
+<p>Правила принадлежности к возрастным группам для молодёжи и для ветеранов разные. У ветеранов всё просто: к группе М40, например, относятся все, кому в день забега от 40 до 44 лет включительно.</p>
+<p>У молодёжных групп всё немного сложнее ради того, чтобы возрастная группа у человека не менялась по ходу сезона (с января по декабрь). Например, к группе <20 относятся все, кому будет меньше 20 лет на конец текущего года: если забег проходит 8 августа 2019 года, в этой группе выступают родившиеся 1 января 2000 года или позже.</p>
+
+<br/><br/><br/><br/>
+<h3>Благодарим за помощь в поиске и уточнении рекордов</h3>
+
+<ul>
+	<li>Игоря Агишева (Тольятти);</li>
+	<li>Сергея Белова (Саров);</li>
+	<li>Владимира Максудова (Казань);</li>
+	<li>Сергея Согрина (Москва).</li>
+</ul>
+
+
+<br/><br/><br/>
+<h3>Серии забегов у нас</h3>
+</div></div>
+
+<div class="row">
+	<div class="col-md-6">
+		<p><a href="{% url 'results:series_details' series_id=2855 %}">Чемпионат России по лёгкой атлетике</a></p>
+		<p><a href="{% url 'results:series_details' series_id=5084 %}"><span class="invisible">Чемпионат России </span>по лёгкой атлетике в помещении</a></p>
+		<p><a href="{% url 'results:series_details' series_id=1680 %}"><span class="invisible">Чемпионат России </span>среди ветеранов</a></p>
+		<p><a href="{% url 'results:series_details' series_id=4327 %}"><span class="invisible">Чемпионат России </span>среди ветеранов в помещении</a></p>
+		<br/>
+		<p><a href="{% url 'results:series_details' series_id=6108 %}">Кубок России по лёгкой атлетике</a></p>
+		<p><a href="{% url 'results:series_details' series_id=5299 %}"><span class="invisible">Кубок России </span>среди ветеранов</a></p>
+		<br/>
+		<p><a href="{% url 'results:series_details' series_id=8239 %}">Первенство России по лёгкой атлетике среди ветеранов</a></p>
+		<p><a href="{% url 'results:series_details' series_id=7878 %}"><span class="invisible">Первенство России по лёгкой атлетике </span>среди ветеранов в помещении</a></p>
+		<br/>
+		<p><a href="{% url 'results:series_details' series_id=5028 %}">Чемпионат Москвы по лёгкой атлетике</a></p>
+		<p><a href="{% url 'results:series_details' series_id=6109 %}"><span class="invisible">Чемпионат Москвы </span>по лёгкой атлетике в помещении</a></p>
+		<p><a href="{% url 'results:series_details' series_id=1679 %}"><span class="invisible">Чемпионат Москвы </span>среди ветеранов</a></p>
+		<p><a href="{% url 'results:series_details' series_id=4245 %}"><span class="invisible">Чемпионат Москвы </span>среди ветеранов в помещении</a></p>
+		<br/>
+		<p><a href="{% url 'results:series_details' series_id=6178 %}">Кубок Москвы по лёгкой атлетике – Мемориал В. П. Куца</a></p>
+		<br/>
+		<p><a href="{% url 'results:series_details' series_id=6081 %}">Чемпионат СССР по лёгкой атлетике</a></p>
+		<p><a href="{% url 'results:series_details' series_id=6902 %}"><span class="invisible">Чемпионат СССР </span>по лёгкой атлетике в помещении</a></p>
+		<p><a href="{% url 'results:series_details' series_id=5401 %}"><span class="invisible">Чемпионат СССР </span>по марафонскому бегу</a></p>
+		<p><a href="{% url 'results:series_details' series_id=6309 %}"><span class="invisible">Чемпионат СССР </span>среди ветеранов</a></p>
+		<br/>
+		<p><a href="{% url 'results:series_details' series_id=6315 %}">Открытый чемпионат СНГ по лёгкой атлетике</a></p>
+		<p><a href="{% url 'results:series_details' series_id=6312 %}"><span class="invisible">Открытый чемпионат СНГ </span>среди ветеранов</a></p>
+		<p><a href="{% url 'results:series_details' series_id=6609 %}"><span class="invisible">Открытый чемпионат СНГ </span>среди ветеранов в помещении</a></p>
+		<br/>
+		<p><a href="{% url 'results:series_details' series_id=6905 %}">Чемпионат РСФСР по лёгкой атлетике</a></p>
+		<p><a href="{% url 'results:series_details' series_id=6901 %}"><span class="invisible">Чемпионат РСФСР </span>по марафонскому бегу</a></p>
+	</div>
+	<div class="col-md-6">
+		<p><a href="{% url 'results:series_details' series_id=943 %}">Чемпионат мира по лёгкой атлетике</a></p>
+		<p><a href="{% url 'results:series_details' series_id=6088 %}"><span class="invisible">Чемпионат мира </span>по лёгкой атлетике в помещении</a></p>
+		<p><a href="{% url 'results:series_details' series_id=1497 %}"><span class="invisible">Чемпионат мира </span>среди ветеранов</a></p>
+		<p><a href="{% url 'results:series_details' series_id=5893 %}"><span class="invisible">Чемпионат мира </span>среди ветеранов в помещении</a></p>
+		<br/>
+		<p><a href="{% url 'results:series_details' series_id=734 %}">Чемпионат Европы по лёгкой атлетике</a></p>
+		<p><a href="{% url 'results:series_details' series_id=6093 %}"><span class="invisible">Чемпионат Европы </span>по лёгкой атлетике в помещении</a></p>
+		<p><a href="{% url 'results:series_details' series_id=732 %}"><span class="invisible">Чемпионат Европы </span>среди ветеранов</a></p>
+		<p><a href="{% url 'results:series_details' series_id=6117 %}"><span class="invisible">Чемпионат Европы </span>среди ветеранов в помещении</a></p>
+		<p><a href="{% url 'results:series_details' series_id=2137 %}"><span class="invisible">Чемпионат Европы </span>среди ветеранов вне стадиона</a></p>
+		<br/>
+		<p><a href="{% url 'results:series_details' series_id=577 %}">Всемирные игры ветеранов спорта</a></p>
+		<p><a href="{% url 'results:series_details' series_id=5380 %}">Европейские игры ветеранов спорта</a></p>
+		<p><a href="{% url 'results:series_details' series_id=5674 %}">Азиатские игры ветеранов спорта</a></p>
+		<p><a href="{% url 'results:series_details' series_id=6468 %}">Азиатско-Тихоокеанские игры ветеранов спорта</a></p>
+	</div>
+</div>
+
+<div class="row"><div class="col-md-12">
+	<br/><br/><br/>
+	<h3>Полезные ссылки</h3>
+	<p><a href="http://rusathletics.info/russianrecords">Рекорды и высшие достижения в России, Европе, мире на сайте ВФЛА</a> и в <a href="https://ru.wikipedia.org/wiki/Рекорды_России_в_лёгкой_атлетике">Википедии</a></p>
+	<p><a href="https://world-masters-athletics.com">World Masters Athletics</a> и <a href="https://world-masters-athletics.com/records/">мировые рекорды среди ветеранов на том же сайте</a></p>
+	<p><a href="https://european-masters-athletics.org/records-statistics.html">Рекорды Европы среди ветеранов</a></p>
+	<p><a href="https://en.wikipedia.org/wiki/List_of_world_records_in_masters_athletics">Мировые рекорды в возрастных группах в Википедии</a></p>
+	<p><a href="https://www.worldathletics.org/records/all-time-toplists/sprints/100-metres/outdoor/men/senior">Топ-листы спортсменов из любой страны на основных дистанциях за всю историю</a></p>
+	<p><a href="https://www.arrs.run/VetRec.htm">Топ-листы ветеранов за всю историю на сайте arrs.run</a></p>
+	<p><a href="https://mastersathletics.ru/archive/">Протоколы некоторых российских соревнований среди ветеранов</a></p>
+	<p><a href="http://www.mastersathletics.net">Неофициальный сайт о международных соревнованиях среди ветеранов</a></p>
+	<p><a href="https://drive.google.com/file/d/1IUeSHFWH5SoPwG1GCN1mtKq-GhkyHGaq/view?usp=sharing">Эссе 9-кратного чемпиона России среди ветеранов Анатолия Родигина о хронометрировании спринта</a>, <a href="https://vk.com/wall-81523355_9451">породившая его дискуссия</a> и <a href="https://vk.com/wall-81523355_16502">обсуждение эссе в группе ветеранов</a></p>
+
+	<h3>Другие таблицы рекордов</h3>
+	<p><a href="https://athletics.lv/lv/records">Рекорды Латвии в абсолюте, среди молодёжи и ветеранов</a></p>
+	<p>Топ-10 результатов спортсменов из Свердловской области в XX веке: <a href="https://vk.com/wall-121604654_457">мужчины</a>, <a href="https://ekabu.ru/70676-10-silneyshih-legkoatletov-zhenschin-sverdlovskoy-oblasti-hh-veka.html">женщины</a></p>
+</div></div>
+{% endblock %}

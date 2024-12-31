@@ -1,0 +1,23 @@
+<tr{% if tr_id %} id="{{ tr_id }}"{% if not visible %} class="collapse"{% endif %}{% endif %}>
+	<td class="text-right">
+		{% if field.label %}<label for="{{ field.id_for_label }}">{{ label|default:field.label }}:</label>{% endif %}
+	</td>
+	<td style="vertical-align: bottom;"{% if td_class %} class="{{ td_class }}"{% endif %}>
+		{{ field }}
+		{% if series_value %}
+			{% if series_value_link %}
+				(значение у серии: <a href="{{ series_value }}">{{ series_value|safe }}</a>)
+			{% else %}
+				(значение у серии: {{ series_value|safe }})
+			{% endif %}
+		{% elif event_value %}
+			(значение у забега: {{ event_value|safe }})
+		{% endif %}
+		{% if with_raw_value %}
+			<td>«{{ raw_value|default_if_none:''|safe }}»</td>
+		{% endif %}
+		{% for error in field.errors %}
+				<h4><span class="label label-danger">{{ error|safe }}</span></h4>
+		{% endfor %}
+	</td>
+</tr>

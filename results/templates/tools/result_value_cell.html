@@ -1,0 +1,22 @@
+{% include 'tools/tracker_logo.html' %}
+<strong>
+	{% if result.id in results_with_splits %}
+		<a href="{{ result.get_absolute_url }}">{{ result }}</a>
+	{% else %}
+		{{ result }}
+	{% endif %}
+</strong>
+{% if person_page and result.id in best_result_ids %}
+	<br/>(<abbr title="Personal Best">PB</abbr>)
+{% endif %}
+{% if result.wind is not None %}
+	<br/>wind: {% if result.wind > 0 %}+{% endif %}{{ result.wind }}&nbsp;m/s
+{% endif %}
+{% if person_page and result.do_not_count_in_stat or result.race.exclude_from_stat %}
+	<br/>(doesn't count in stat.)
+{% endif %}
+{% for record_result in result.record_result_set.all %}
+	<br/><a href="{{ record_result.get_group_url }}">
+		<span class="label label-primary">{{ record_result.get_explanation_short }}</span>
+	</a>
+{% endfor %}

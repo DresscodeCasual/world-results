@@ -1,0 +1,12 @@
+.axis path,
+.axis line,
+.overall_pace {
+	fill: none;
+	stroke: black;
+	shape-rendering: crispEdges;
+}
+
+.axis text {
+	font-family: sans-serif;
+	font-size: 11px;
+}

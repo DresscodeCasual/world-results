@@ -1,0 +1,65 @@
+{% extends 'results/base.html' %}
+{% load results_extras %}
+{% load starrating %}
+{% block main %}
+<div class="row"><div class="col-md-12">
+	<h3>{% if is_admin %}
+			<span class="pull-right">
+				<a href="{% url 'editor:organizer_create' %}"><button type="button" class="btn btn-xs btn-primary">Создать организатора</button></a>
+			</span>
+		{% endif %}
+		{{ page_title }}
+	</h3>
+	<p>На этой странице мы собираем данные организаторов забегов — организаций или частных лиц, регулярно устраивающих соревновательные мероприятия,
+	чтобы вам было проще понимать, чего ожидать от нового мероприятия, если организатор уже известен.</p>
+	<table class="table table-condensed table-hover table-striped">
+		<tr class="info text-center vcenter">
+			<th class="text-left">Организатор</th>
+			<th class="text-left">Организуемые серии</th>
+			<th>Число забегов в серии</th>
+			{% if is_admin %}
+				<th class="for-admin">Представитель на ПроБЕГе</th>
+			{% endif %}
+		</tr>
+		{% for organizer in organizers %}
+			{% for series in organizer.series_set.all %}
+				<tr>{% if forloop.first %}
+						<td rowspan="{{ organizer.n_series }}">
+							<a href="{{ organizer.get_absolute_url }}">{{ organizer.name }}</a>
+							<br/>
+							{% show_overall_rating organizer True %}
+						</td>
+					{% endif %}
+					<td><a href="{{ series.get_absolute_url }}">{{ series.name|safe }}</a>
+						{% if series.city %}
+							<br/>{% include 'tools/cities_with_links.html' with city=series.city cityFinish=series.city_finish %}
+						{% endif %}
+					</td>
+					<td class="text-center">{{ series.n_events }}</td>
+					{% if forloop.first and is_admin %}
+						<td rowspan="{{ organizer.n_series }}">
+							{% include 'editor/user_name_with_link.html' with person=organizer.user %}
+						</td>
+					{% endif %}
+				</tr>
+			{% empty %}
+				<tr><td><a href="{{ organizer.get_absolute_url }}">{{ organizer.name }}</a>
+						<br/>
+						{% show_overall_rating organizer True %}
+					</td>
+					<td>Серий пока нет</td>
+					<td></td>
+					{% if forloop.first and is_admin %}
+						<td>
+							{% include 'editor/user_name_with_link.html' with person=organizer.user %}
+						</td>
+					{% endif %}
+				</tr>
+			{% endfor %}
+		{% endfor %}
+	</table>
+	<p>Заметили неточную или неполную информацию? Пожалуйста, напишите нам на <a href="mailto:info@probeg.org">info@probeg.org</a>
+		или <a href="#" id="send_to_info_page">прямо отсюда</a>.
+	</p>
+</div></div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% if race.load_status > 0 %}
+	{% if is_admin %}
+		{% if race.get_klb_status == 1 %}
+			&nbsp;&nbsp;&nbsp;&nbsp;
+			<a href="{{ race.get_klb_editor_url }}">
+				<button type="button" class="btn btn-xs btn-primary">КЛБМатч</button></a>
+		{% endif %}
+		&nbsp;&nbsp;&nbsp;&nbsp;
+		<a href="{{ race.get_results_editor_url }}">
+			<button type="button" class="btn btn-xs btn-primary">Редактировать результаты</button></a>
+		&nbsp;&nbsp;&nbsp;&nbsp;
+	{% endif %}
+	{% if is_admin or is_extended_editor or is_editor and event.can_be_edited %}
+		Обновить:
+		&nbsp;
+		<a href="{{ race.get_update_stat_url }}">
+			<button type="button" class="btn btn-xs btn-primary">статистику участникам</button></a>
+		&nbsp;&nbsp;&nbsp;&nbsp;
+		{% if race.load_status == 1 %}
+			<a href="{% url 'editor:update_race_headers' race_id=race.id %}">
+				<button type="button" class="btn btn-xs btn-primary">инф. о победителях и числе участников</button></a>
+			&nbsp;&nbsp;&nbsp;&nbsp;
+			<a href="{% url 'editor:race_fill_places' race_id=race.id %}">
+				<button type="button" class="btn btn-xs btn-primary">места</button></a>
+			&nbsp;&nbsp;&nbsp;&nbsp;
+		{% endif %}
+		Переставить:
+		&nbsp;
+		<a href="{% url 'editor:race_swap_names' race_id=race.id swap_type=1 %}">
+			<button type="button" class="btn btn-xs btn-primary">имя и фамилию</button></a>
+		&nbsp;
+		<a href="{% url 'editor:race_swap_names' race_id=race.id swap_type=2 %}">
+			<button type="button" class="btn btn-xs btn-primary">имя и отчество</button></a>
+	{% endif %}
+	{% if is_admin %}
+		{% if race.get_official_results.exists %}
+			&nbsp;&nbsp;&nbsp;&nbsp;
+			<a href="#" onclick="confirm_link('Вы действительно хотите удалить все официальные результаты на забеге «{{ event }}», дистанции {{ race }}?',
+					'{{ race.get_delete_off_results_url }}');">
+				<button type="button" class="btn btn-xs btn-danger">Удалить все оф. результаты</button></a>
+		{% endif %}
+	{% endif %}
+{% endif %}
+{% if show_update_weekly_results_button %}
+	&nbsp;&nbsp;&nbsp;&nbsp;
+	<a href="{{ race.get_reload_weekly_race_url }}">
+		<button type="button" class="btn btn-xs btn-primary">Обновить результаты забега</button></a>
+{% endif %}
+{% if show_delete_skipped_parkrun_button %}
+	&nbsp;&nbsp;&nbsp;&nbsp;
+	<a href="{% url 'editor:delete_skipped_parkrun' race_id=race.id %}">
+		<button type="button" class="btn btn-xs btn-primary">Этого старта не было, удалить его</button></a>
+{% endif %}

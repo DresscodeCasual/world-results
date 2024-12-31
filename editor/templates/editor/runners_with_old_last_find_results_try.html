@@ -1,0 +1,30 @@
+{% extends 'results/base.html' %}
+{% block main %}
+
+<div class="row">
+	<div class="col-md-8 col-md-offset-1">
+		<h3>{{ page_title }}</h3>
+		<p>Здесь — первые по алфавиту бегуны, у которых ни администраторы, ни они сами давно не искали похожие результаты.</p>
+		<p>Мы ищем сейчас только результаты, похожие на нужного бегуна (с учётом его/её дополнительных имён) и не привязанные ни к какому другому бегуну.</p>
+		<p>Как только вы нажмёте «Посмотреть похожие результаты», сайт посчитает, что похожие результаты у бегуна кто-то поискал. Так что жмите, только если вы и правда проверите, какие из найденных результатов стоит привязать к бегуну, и привяжете их.</p>
+		<p>Если вы смотрите на бегуна с именем латиницей, с большой вероятностью у него есть и результаты с именем, записанным кириллицей.</p>
+		<table class="table table-condensed table-hover">
+			<thead><tr class="info">
+				<th>№</th><th>Бегун</th><th>Когда искали последний раз</th><th>Похожих результатов</th><th class="min-width"></th>
+			</tr></thead>
+			<tbody>
+				{% for runner, n_possible_results in runners %}
+					<tr>
+						<td>{{ forloop.counter }}</td>
+						<td><a href="{{ runner.get_absolute_url }}" target="_blank">{{ runner.name_with_midname }}</a>
+						<td>{{ runner.last_find_results_try|default_if_none:'никогда' }}</td>
+						<td>{{ n_possible_results }}</td>
+						<td><a href="{{ runner.get_find_results_url }}" target="_blank">Посмотреть похожие результаты</a>
+						</td>
+					</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+	</div>
+</div>
+{% endblock %}

@@ -1,0 +1,104 @@
+{% extends 'results/base.html' %}
+{% load humanize %}
+{% load results_extras %}
+{% block main %}
+
+<h3 class="text-center">Портал для любителей бега «ПроБЕГ»</h3>
+
+<div class="row"><div class="col-xs-12" style="height:50px;"></div></div>
+
+<div class="row">
+	<div class="col-md-4">
+		<h4>Уже участвуете в соревнованиях?</h4>
+		<p>Соберите вместе свои результаты со всех забегов! (<a href="{% url 'about' %}">Как это сделать?</a>)</p>
+		<p>В нашей базе:</p>
+		<p><strong><a href="{% url 'results:races' date_region='1' %}">{{ n_events_in_past|intcomma }}</a></strong>
+		завершивши{{ n_events_in_past|ending:5 }}ся
+		забег{{ n_events_in_past|ending:1 }}</p>
+		<p>и <strong><a href="{% url 'results:results' %}">{{ n_results|intcomma }}</a></strong>
+		обработанны{{ n_results|ending:5 }}
+		результат{{ n_results|ending:1 }},</p>
+		<p>в том числе {{ n_results_with_runner|intcomma }}
+		<a href="{% url 'results_binding' %}">привязаны к бегунам.</a></p>
+	</div>
+	<div class="col-md-4">
+		<h4>Только думаете начать?</h4>
+		<p>Найдите ближайшие к вам забеги и бегите!</p>
+		<p>В нашей базе:</p>
+		<p><strong><a href="{% url 'results:races' date_region='2' %}">{{ n_events_in_future|intcomma }}</a></strong>
+		предстоящи{{ n_events_in_future|ending:5 }}
+		забег{{ n_events_in_future|ending:1 }},</p>
+		<p>из них <strong><a href="{% url 'results:races' %}">{{ n_events_this_month_RU_UA_BY|intcomma }}</a></strong> — в ближайший месяц в России, Украине и Беларуси.</p>
+	</div>
+	<div class="col-md-4">
+		<h4>Вы – организатор забега?</h4>
+		<p>Зарегистрируйтесь, <a href="mailto:info@probeg.org">напишите нам</a> –
+		и сможете сами оперативно обновлять информацию и добавлять новости о своих мероприятиях.</p>
+	</div>
+</div>
+
+<div class="row"><div class="col-xs-12" style="height:50px;"></div></div>
+
+<div class="row">
+	<div class="col-md-4">
+		{% include 'results/panel_header.html' with title="Зайдите на сайт через социальные сети" panel_body_class="text-center" %}
+			{% if 1 %}
+				<a href="{% url 'social:begin' 'vk-oauth2' %}{{ next_page_suffix }}">
+					<img src="/static2/images/buttons/vk-login.png" alt="Авторизация через ВКонтакте"/></a>
+	 			<br/><br/>
+	 			{% if 0 %}
+					<a href="{% url 'social:begin' 'facebook' %}{{ next_page_suffix }}">
+						<img src="/static2/images/buttons/fb-login.png" alt="Авторизация через Facebook"/></a>
+				{% endif %}
+			{% endif %}
+		{% include 'results/panel_footer.html' %}
+	</div>
+	<div class="col-md-4">
+		{% include 'results/panel_header.html' with title="Вход через аккаунт на нашем сайте" %}
+			{% if msgError %}
+				<div class="alert alert-danger" role="alert">
+					<strong>Ошибка:</strong> {{ msgError }}
+				</div>
+			{% endif %}
+			<form id="frmAuth" action="/login/{{ next_page_suffix }}" method="POST">
+					{% csrf_token %}
+					{% for field in loginForm %}
+						{% include 'results/form_field.html' with field=field %}
+					{% endfor %}
+					<input type="submit" name="btnLogin" value="Войти" class="btn btn-lg btn-success"/>
+					<div class="pull-right">
+						<p class="text-right"><a href="{% url 'world_auth:password_reset' %}">Забыли пароль?</a></p>
+						<p class="text-right"><a href="{% url 'login_problems' %}">Что делать, если не получается зайти</a></p>
+					</div>
+			</form>
+		{% include 'results/panel_footer.html' %}
+	</div>
+	<div class="col-md-4">
+		{% include 'results/panel_header.html' with title="Впервые у нас? Зарегистрируйтесь" %}
+			{% if msgErrorRegister %}
+				<div class="alert alert-danger" role="alert">
+					<strong>Ошибка:</strong> {{ msgErrorRegister }}
+				</div>
+			{% endif %}
+			<form id="frmRegister" action="/register/{{ next_page_suffix }}" method="POST">
+				{% csrf_token %}
+				{% for field in registerForm %}
+					{% include 'results/form_field.html' with field=field %}
+				{% endfor %}
+				<input type="submit" value="Зарегистрироваться" class="btn btn-lg btn-success"/>
+			</form>
+		{% include 'results/panel_footer.html' %}
+	</div>
+</div>
+
+<div class="row"><div class="col-md-12">
+	<p class="text-center">
+		Авторизуясь на сайте, вы соглашаетесь с
+		<a href="http://probeg.org/docs/probeg_agreement.pdf" target="_blank">правилами обработки ваших персональных данных</a>.
+	</p>
+	{% if 0 %}
+		<p style='color: white;'>{{ get_params }}</p>
+		<p style='color: white;'>method: {{ request.method }}</p>
+	{% endif %}
+</div></div>
+{% endblock %}

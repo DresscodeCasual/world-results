@@ -1,0 +1,21 @@
+{% load results_extras %}
+<div class="form-group">
+	{% if field|is_checkbox %}
+		<div class="col-sm-offset-{{ leftcol }} col-sm-{{ 12|subtract:leftcol }}">
+			<div class="checkbox">
+				<label>
+					{{ field }}
+					{{ field.label|safe }}
+				</label>
+			</div>
+		</div>
+	{% else %}
+		{{ field|label_with_col_classes:leftcol }}
+		<div class="col-sm-{{ 12|subtract:leftcol }}">
+			{{ field }}
+			{% for error in field.errors %}
+				<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+			{% endfor %}
+		</div>
+	{% endif %}
+</div>

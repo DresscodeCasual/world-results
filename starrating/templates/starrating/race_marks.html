@@ -1,0 +1,147 @@
+{% extends 'results/base.html' %}
+{% load results_extras %}
+{% load static %}
+{% load starrating %}
+{% block media_links %}
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+{% endblock %}
+{% block main %}
+<div class="row"><div class="col-md-6 col-md-offset-3 col-sm-12">
+	<h3>
+		{% if level == 'race' %}
+			<a href="{{ race.event.get_absolute_url }}">{{ race.event|safe }}</a>, {{ race.event.dateFull|safe }},
+			дистанция <a href="{{ race.get_absolute_url }}">{{ race }}</a>:
+		{% elif level == 'event' %}
+			<a href="{{ event.get_absolute_url }}">{{ event|safe }}</a>, {{ event.dateFull|safe }}:
+		{% elif level == 'series' %}
+			Серия <a href="{{ series.get_absolute_url }}">{{ series|safe }}</a>:
+		{% elif level == 'organizer' %}
+			Организатор <a href="{{ organizer.get_absolute_url }}">{{ organizer|safe }}</a>:
+		{% elif level == 'group' %}
+			<a href="{{ group.race.event.get_absolute_url }}">{{ group.race.event|safe }}</a>, {{ group.race.event.dateFull|safe }},
+			дистанция <a href="{{ group.race.get_absolute_url }}">{{ group.race }}</a>:
+		{% endif %}
+		оценки
+		{% if level == 'group' %}
+			пользователя <a href="{{ group.user.user_profile.get_absolute_url }}">{{ group.user.get_full_name }}</a>
+		{% endif %}
+	</h3>
+
+{% comment %}
+<h4>Fields for User_review.objects...only():</h4>
+
+<ul>
+{% for x in debug_only_list %}
+<li>{{ x }}</li>
+{% endfor %}
+</ul> #}
+{% endcomment %}
+
+{% if level == 'group' and not sr_overall %}  {# When there is no rating #}
+	{% if group.is_empty %}
+		<h4>Пользователь не стал ставить оценки.</h4>
+	{% else %}
+		<h4>Оценки ещё не обработаны, попробуйте перезагрузить страницу через несколько минут.</h4>
+	{% endif %}
+{% else %}
+	<h4>Общая оценка</h4>
+	<h4>{% overall_rating sr_overall False %}</h4>
+
+	<br/>
+	<h4>Оценки по категориям</h4>
+	<table class="table table-condensed">
+	<tr class="info">
+		{% if is_admin %}
+			<th class="for-admin">#</th>
+		{% endif %}
+		<th>&nbsp;</th>
+		<th class="text-center">Оценка</th>
+		{% if is_admin %}
+			<th class="for-admin text-center">Сумма/вес</th>
+		{% endif %}
+		<th class="text-center">Число оценок</th>
+	</tr>
+		{% for par in sr_by_param %}
+	<tr>
+		{% if is_admin %}
+			<td class="for-admin">{{ par.id }}.</td>
+		{% endif %}
+		<td>{{ par.name }}</td>
+		<td style="color:orange" class="text-center">
+			{% if par.avg %}
+				{{ par.avg|as_stars }} {{ par.avg|floatformat:1 }}
+			{% endif %}
+		</td>
+		{% if is_admin %}
+			<td class="for-admin text-center">{% if par.weight is not None %}({{ par.sum_val }}/{{ par.weight }}){% endif %}</td>
+		{% endif %}
+		<td class="text-center">{{ par.user_count }}</td>
+	</tr>
+	{% endfor %}
+	</table>
+{% endif %}
+
+{% if level == 'group' %}
+	{% if review %}
+		<p>Отзыв:</p>
+		<div class="well">
+		{{ review.content|linebreaksbr }}
+		</div>
+		<p>Имя пользователя
+		 {% if not review.show_user_name %}не{% endif %}
+		будет показано рядом с отзывом
+		</p>
+		{% if review.response %}
+			<p>Ответ:</p>
+			<div class="well well-sm">
+			{{ review.response|linebreaksbr }}
+			</div>
+		{% endif %}
+	{% else %}
+	<p>Отзыва нет</p>
+	{% endif %}
+{% else %} {# level != 'group' #}
+	
+	{% if page %}
+		<br/>
+		<h4>Отзывы</h4>
+
+		<form id="frmSearch" action="" method="POST">{% csrf_token %}</form>
+		<div class="row"><div class="col-md-12 text-right">
+			{% include 'results/pagination.html' %}
+			<p></p>
+		</div></div>
+		{% for review in page %}
+			<p>
+			{{ review.group.created }}{% if review.show_user_name %}.
+				{% with user=review.group.user %}
+					{% if user.is_active or is_admin %}
+						<a href="{% url 'results:user_details' user.id %}">{{ user.get_full_name }}</a>
+						{% if not user.is_active %}
+							<span class="for-admin">(only admins see user's name)</span>
+						{% endif %}
+					{% else %}
+						(Runner's name is hidden)
+					{% endif %}
+				{% endwith %}
+			{% endif %}
+			{% user_overall_rating review.sum_value review.weight %}
+			{% node_verbose_name review.group.race level_no %}
+			</p>
+			<div class="well well-sm">
+			{{ review.content | linebreaksbr }}
+			</div>
+			{% if review.response %}
+				<div class="well well-sm">
+				{{ review.response | linebreaksbr }}
+				</div>
+			{% endif %}
+			<br/>
+		{% endfor %}
+		<div class="row"><div class="col-md-12 text-right">
+			{% include 'results/pagination.html' %}
+		</div></div>
+	{% endif %}
+</div></div>
+{% endif %}
+{% endblock %}

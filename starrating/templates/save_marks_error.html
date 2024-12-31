@@ -1,0 +1,26 @@
+{% extends 'results/base.html' %}
+{% load results_extras %}
+{% load static %}
+{% load starrating %}
+{% block main %}
+
+<div class="row"><div class="col-md-8 col-md-offset-1 col-sm-12 col-sm-offset-0">
+
+<h3>
+Извините, что-то пошло не так и ваши оценки не записались.
+Пожалуйста, вернитесь на предыдущую страницу и повторите.
+</h3>
+<h3>Обратите внимание на 
+{% if param_names|length == 1 %}
+позицию
+{% else %}
+следующие позиции:
+{% endif %}
+"{{ param_names|join:'", "' }}"
+</h3>
+<p>Иногда помогает изменить оценку на любую другую и сразу вернуть прежнюю,
+которую вы реально хотите поставить</p>
+
+<button onclick="window.history.back()">Вернуться</button>
+
+{% endblock %}

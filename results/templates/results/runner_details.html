@@ -1,0 +1,128 @@
+{% extends 'results/base.html' %}
+{% load results_extras %}
+{% block main %}
+<div class="row"><div class="col-md-10">
+	<div class="row"> <!-- Header -->
+		<div class="col-md-6">
+			<h3>{% if runner.private_data_hidden %}
+					{% if is_admin %}
+						{{ runner.fname }} {{ runner.midname }} {{ runner.lname }} <small class="for-admin">(only admins see the name)</small>
+					{% else %}
+						(Runner's name is hidden)
+					{% endif %}
+				{% else %}
+					{{ runner.fname }} {{ runner.midname }} {{ runner.lname }}
+				{% endif %}
+				{% if is_admin %}
+					<span class="pull-right">
+						{% if show_unclaim_unclaimed_by_user_link %}
+							&nbsp;
+							<a href="{{ runner.get_unclaim_unclaimed_by_user_url }}">
+								<button type="button" class="btn btn-xs btn-primary">Unlink results that aren't conneced to the user</button></a>
+						{% endif %}
+						&nbsp;
+						<a href="{{ runner.get_find_results_url }}">
+							<button type="button" class="btn btn-xs btn-primary">Search for results</button></a>
+						&nbsp;
+						<a href="{{ runner.get_editor_url }}">
+							<button type="button" class="btn btn-xs btn-primary">Edit</button></a>
+						&nbsp;
+						<a href="{{ runner.get_history_url }}">
+							<button type="button" class="btn btn-xs btn-primary">History</button></a>
+						{% if not klb_person and 0 %}
+							&nbsp;
+							<a href="{{ runner.get_person_create_url }}">
+								<button type="button" class="btn btn-xs btn-primary">Create a KLBMatch participant</button></a>
+						{% endif %}
+					</span>
+				{% endif %}
+			</h3>
+			{% if runner.city %}
+				{% if runner.private_data_hidden %}
+					{% if is_admin %}
+						<p class="for-admin"><a href="{{ runner.city.get_races_url }}">{{ runner.city.nameWithCountry|safe }}</a></p>
+					{% endif %}
+				{% else %}
+					<p><a href="{{ runner.city.get_races_url }}">{{ runner.city.nameWithCountry|safe }}</a></p>
+				{% endif %}
+			{% endif %}
+			{% if runner.club_name %}
+				<p>Club: {{ runner.club_name }}</p>
+			{% endif %}
+			{% if runner.birthday_known and runner.deathday %}
+				<p>{{ runner.birthday|date:"j E Y" }} — {{ runner.deathday|date:"j E Y" }}</p>
+			{% else %}
+				{% if runner.birthday_known and is_admin %}
+					<p class="for-admin">Born on {{ runner.birthday|date:"j E Y" }}</p>
+				{% else %}
+					{% if runner.birthday and not runner.private_data_hidden %}
+						<p>Birth year: {{ runner.birthday|date:"Y" }}</p>
+					{% endif %}
+					{% if is_admin and runner.birthday_min and runner.birthday_max %}
+						<p class="for-admin">Possible birthday range: {{ runner.birthday_min|date:"j E Y" }} — {{ runner.birthday_max|date:"j E Y" }}</p>
+					{% endif %}
+				{% endif %}
+				{% if runner.deathday %}
+					<p>Death day: {{ runner.deathday|date:"j E Y" }}</p>
+				{% endif %}
+			{% endif %}
+			{% include 'tools/eddington.html' %}
+			{% if runner.comment %}
+				<p>{{ runner.comment }}</p>
+			{% endif %}
+			{% if is_admin %}
+				<p class="for-admin">
+					{% if runner.lname and runner.fname %}
+						<a href="{% url 'results:runners' lname=runner.lname|encode_slashes fname=runner.fname|encode_slashes %}" class="for-admin">Runners with same last & first names</a>
+					{% endif %}
+					{% include 'tools/user_email_for_admin.html' with user=runner.user %}
+					{% if runner.comment_private %}
+						<br/>
+						Comments for admins: {{ runner.comment_private }}
+					{% endif %}
+				</p>
+			{% endif %}
+
+			{% for runner_platform in platforms %}
+				<p>ID at {{ runner_platform.platform.name }}: <a href="{{ runner_platform.get_absolute_url }}">{{ runner_platform.value }}</a></p>
+			{% endfor %}
+
+			{% include 'tools/runner_or_user_links.html' %}
+
+			{% if is_admin or not runner.private_data_hidden %}
+				<br/><br/>
+				{% include 'tools/klb_participations_block.html' %}
+			{% endif %}
+
+			{% with user=runner.user profile=runner.user.user_profile %}{% if runner.user and profile.is_public or runner.user and is_admin %}
+				<br/><br/>
+				<h4 {% if not profile.is_public %} class="for-admin"{% endif %}>Site user:
+					<a href="{{ runner.get_user_url }}">{{ user.first_name }} {{ profile.midname }} {{ user.last_name }}</a>
+				</h4>
+				{% if is_admin %}
+					<span class="for-admin">
+						Profile is {% if profile.is_public %}public{% else %}private{% endif %}
+						{% if profile.birthday %}
+							<br/>Born: {{ profile.birthday|date:"j E Y" }}
+						{% endif %}
+						{% if profile.city %}
+							<br/>City: {{ profile.city }}
+						{% endif %}
+						{% if profile.comment %}
+							<br/>Comments: {{ profile.comment }}
+						{% endif %}
+					</span>
+				{% endif %}
+			{% endif %}{% endwith %}
+		</div>
+		<div class="col-md-6">
+			{% include 'results/distances_stat.html' with person=runner %}
+			{% include 'tools/user_clubs_list.html' %}
+		</div>
+	</div>
+	<p></p>
+	{% include 'results/results_table.html' with runner_page=1 person=runner %}
+</div><div class="col-md-2 text-right">
+	{% include 'misc/adsense_high.html' %}
+</div></div>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends 'results/base.html' %}
+{% block main %}
+
+{% if text_before_header %}
+<p>
+{{text_before_header|safe}}
+</p>
+{% endif %}
+
+{% if table_title %}
+<h2>{{table_title}}</h2>
+{% endif %}
+
+    <table class="table table-condensed">
+    <tr class="info">
+        {% for item in table_header %}
+        <th class="text-center">{{item}}</th>
+        {% endfor %}
+    </tr>
+    {% for row in table_body %}
+    <tr>
+        {% for item in row %}
+        <td class="text-center">{{item|safe}}</td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+    </table>
+    {% if footer %}
+    <p>
+    {{footer|safe}}
+    </p>
+    {% endif %}
+
+{% endblock %}

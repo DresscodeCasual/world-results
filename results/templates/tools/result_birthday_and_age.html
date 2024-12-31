@@ -1,0 +1,10 @@
+{% load results_extras %}
+{% if result.birthday %}
+	{{ result.strBirthday|safe }}
+	{% if result.age %}
+		<br/>
+	{% endif %}
+{% endif %}
+{% if result.age %}
+	{{ result.age }} {{ result.age|ending:11 }}
+{% endif %}

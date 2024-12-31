@@ -1,0 +1,54 @@
+{% extends 'results/base.html' %}
+{% load results_extras %}
+{% load static %}
+{% block main %}
+
+{% include 'results/panel_header.html' with title=page_title %}
+{% for error in frmSocialPages.non_field_errors %}
+	<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+{% endfor %}
+
+<form id="frmSocialPages" method="POST" action="{% url 'editor:social_pages' %}">
+	{{ frmSocialPages.management_form }}{% csrf_token %}
+	Для всех страниц ВКонтакте токен – один и тот же. Он привязан к человеку; человек должен иметь права редактора
+	в соответствующей группе.
+	<br/>
+	Для каждой страницы в фейсбуке токен свой. Он не привязан к человеку, только к странице.
+	<table class="table table-condensed">
+		<tr>
+			<th>Тип</th><th>id</th><th>Название</th><th>Фед. округ</th><th>Для всех<br/>новостей?</th>
+			<th>Адрес</th><th>Токен</th><th>Секретный токен<br/>для твиттера</th><th>История<br/>изменений</th><th>Удалить?</th>
+		</tr>
+		{% for form in frmSocialPages %}{% with no_title=1 %}
+			<tr>
+				<td>{{ form.id }}
+					{% include 'results/form_field.html' with field=form.page_type %}
+				</td>
+				<td>{% include 'results/form_field.html' with field=form.page_id %}</td>
+				<td>{% include 'results/form_field.html' with field=form.name %}</td>
+				<td>{% include 'results/form_field.html' with field=form.district %}</td>
+				<td>{% include 'results/form_field.html' with field=form.is_for_all_news %}</td>
+				<td>{% include 'results/form_field.html' with field=form.url %}</td>
+				<td>{% include 'results/form_field.html' with field=form.access_token %}</td>
+				<td>{% include 'results/form_field.html' with field=form.token_secret %}</td>
+				<td>{% if form.instance.id %}
+						<a href="{% url 'editor:social_page_history' page_id=form.instance.id %}">
+							<button type="button" class="btn btn-sm btn-primary">История изменений</button></a>
+					{% endif %}
+				</td>
+				<td>{% if form.instance.id %}
+						{% include 'results/form_field.html' with field=form.DELETE %}
+					{% endif %}
+				</td>
+			</tr>
+		{% endwith %}{% endfor %}
+	</table>
+	<input type="submit" name="frmSocialPages_submit" value="Сохранить изменения" class="btn btn-success"/>
+</form>
+{% include 'results/panel_footer.html' %}
+
+<h4>Как получить новые токены для ВКонтакте, если перестанет работать отправка новостей в группы</h4>
+
+<p>Инструкция: <a href="https://habr.com/ru/articles/657569/">https://habr.com/ru/articles/657569/</a>. Нужно приложение «ПроБЕГ», если видите его на странице <a href="https://vk.com/editapp?id=5549184&section=admins">https://vk.com/editapp?id=5549184&section=admins</a>.</p>
+<p>Когда вы получите новый access_token, пропишите его у всех страниц ВКонтакте в таблице выше (не заденьте Facebook и Twitter!) и сохраните результат.</p>
+{% endblock %}

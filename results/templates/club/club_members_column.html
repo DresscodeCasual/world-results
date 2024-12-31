@@ -1,0 +1,18 @@
+<div class="col-md-5">
+	<h4>Состав клуба на сегодня</h4>
+	<table class="table table-condensed table-hover">
+		<tr class="info"><th>№</th><th>Участник</th><th>Дата рожд.</th>
+			<th class="text-center">Стартов в {{ cur_stat_year }}</th>
+			<th class="text-center">Стартов всего</th>
+		</tr>
+		{% for member in members %}{% with runner=member.runner %}
+			<tr{% if runner.gender == 1 %} class="success"{% endif %}>
+				<td>{{ forloop.counter }}</td>
+				<td><a href="{{ runner.get_absolute_url }}">{{ runner.get_lname_fname }}</a></td>
+				<td>{% if runner.birthday %}{{ runner.birthday|date:'d.m.Y' }}{% endif %}</td>
+				<td class="text-center">{{ runner.n_starts_cur_year|default_if_none:'' }}</td>
+				<td class="text-center">{{ runner.n_starts|default_if_none:'' }}</td>
+			</tr>
+		{% endwith %}{% endfor %}
+	</table>
+</div>

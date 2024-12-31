@@ -1,0 +1,75 @@
+{% extends 'results/base.html' %}
+{% block main %}
+<div class="row">
+	<div class="col-md-12 col-md-offset-0 col-lg-10 col-lg-offset-1">
+		<h3>{{ page_title }}</h3>
+		{% for label in links_by_label %}{% with links=label.useful_link_set.all %}{% if links %}
+			<br/><br/>
+			<h4>{{ label }}</h4>
+			{% for link in links %}
+				<p>{% if is_admin %}
+						<a href="{{ link.get_editor_url }}"><button type="button" class="btn btn-xs btn-primary">Ред</button></a>
+						&nbsp;&nbsp;
+					{% endif %}
+					<a href="{{ link.url }}" target="_blank">{{ link.name }}</a>
+				</p>
+			{% endfor %}
+		{% endif %}{% endwith %}{% endfor %}
+
+		{% if links_wo_label %}
+			<br/><br/>
+			<h4>Остальные ссылки</h4>
+			{% for link in links_wo_label %}
+				<p>{% if is_admin %}
+					<a href="{{ link.get_editor_url }}"><button type="button" class="btn btn-xs btn-primary">Ред</button></a>
+					&nbsp;&nbsp;
+				{% endif %}
+				<a href="{{ link.url }}" target="_blank">{{ link.name }}</a></p>
+			{% endfor %}
+		{% endif %}
+	</div>
+	{% if is_admin %}
+		<div class="col-xl-6 col-md-12">
+			<br/><br/>
+			{% include 'results/panel_header.html' with title='Добавить ссылку' style="primary" %}
+				<form method="POST" action="{% url 'editor:add_useful_link' %}" class="form-horizontal">
+					{% csrf_token %}
+					{% for field in frmNewLink %}
+						{% include 'tools/form_field_with_offset.html' %}
+					{% endfor %}
+					<div class="row"><div class="col-md-6 col-md-offset-6">
+						<input type="submit" value="Добавить" class="btn btn-primary"/>
+					</div></div>
+				</form>
+			{% include 'results/panel_footer.html' %}
+
+			{% include 'results/panel_header.html' with title='Создать метку' style="primary" %}
+				<form method="POST" action="{% url 'editor:add_useful_link_label' %}" class="form-horizontal">
+					{% csrf_token %}
+					{% for field in frmNewLabel %}
+						{% include 'tools/form_field_with_offset.html' %}
+					{% endfor %}
+					<div class="row"><div class="col-md-6 col-md-offset-6">
+						<input type="submit" value="Создать" class="btn btn-primary"/>
+					</div></div>
+				</form>
+			{% include 'results/panel_footer.html' %}
+		</div>
+	{% else %}
+		<div class="col-md-12 col-md-offset-0 col-lg-10 col-lg-offset-1">
+			<br/><br/>
+			<h3>Думаете, какой-то ссылки здесь не хватает? Предложите вашу!</h3>
+			<form method="POST" action="{% url 'results:suggest_useful_link' %}" class="form-horizontal">
+				{% csrf_token %}
+				{% for field in frmSuggestLink %}
+					{% include 'tools/form_field_with_offset.html' %}
+				{% endfor %}
+				<div class="row"><div class="col-md-6 col-md-offset-6">
+					<input type="submit" value="Отправить" class="btn btn-primary"/>
+				</div></div>
+			</form>
+		</div>
+	{% endif %}
+</div>
+
+{% endblock %}

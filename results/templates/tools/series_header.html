@@ -1,0 +1,87 @@
+{% extends 'results/base.html' %}
+{% load static %}
+{% block main %}
+<div class="row"><div class="col-md-12"> <!-- Header -->
+	<h3><span class="pull-right">
+			{% if is_admin or is_editor %}
+				<a href="{{ series.get_editor_url }}"><button type="button" class="btn btn-xs btn-primary">Редактировать серию</button></a>
+				&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="{{ series.get_create_event_url }}"><button type="button" class="btn btn-xs btn-primary">Создать новый забег в серии</button></a>
+			{% endif %}
+			{% if is_admin %}
+				&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="{{ series.get_clone_url }}"><button type="button" class="btn btn-xs btn-primary">Клонировать серию</button></a>
+			{% endif %}
+			{% if is_admin or is_editor %}
+				&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="{{ series.get_history_url }}"><button type="button" class="btn btn-xs btn-primary">История изменений</button></a>
+			{% endif %}
+		</span>
+	</h3>
+</div></div>
+
+<div class="row"> <!-- First row -->
+	<div class="col-md-5"> <!-- Left column -->
+		{% if series.city %}
+			<h4>{% include 'tools/cities_with_links.html' with city=series.city cityFinish=series.city_finish %}</h4>
+		{% endif %}
+	</div>
+	<div class="col-md-4"> <!-- Middle column -->
+		{% include 'tools/series_editors_list.html' %}
+		{% if user.is_authenticated and user.user_profile %}
+			<p><button type="button" class="btn btn-warning btnAddEvent" data-series="{{ series.id }}">
+				Сообщить о ещё одном забеге в серии
+			</button></p>
+		{% endif %}
+	</div>
+	<div class="col-md-3 text-right"> <!-- Right column -->
+		{% if series.url_logo %}
+			<p><img src="{{ series.url_logo|add_prefix }}" width="150"/></p>
+		{% endif %}
+		{% if series.url_site %}
+			<p><a href="{{ series.url_site }}">Официальный сайт</a></p>
+		{% endif %}
+		<p><a href="{{ series.get_old_url }}">Старая карточка серии</a></p>
+		<p>
+		{% if series.url_vk %}
+			<a href="{{ series.url_vk }}"><img src="/static2/images/icons/vk_small_square.png" border="0"/></a>
+		{% endif %}
+		{% if series.url_facebook %}
+			&nbsp;<a href="{{ series.url_facebook }}"><img src="/static2/images/icons/fb_small_square.png" border="0"/></a>
+		{% endif %}
+		{% if series.url_instagram %}
+			&nbsp;<a href="{{ series.url_instagram }}"><img src="/static2/images/icons/in_small_square.png" border="0"/></a>
+		{% endif %}
+		</p>
+	</div>
+</div>
+
+<ul class="nav nav-tabs">
+	<li{% if active_tab == 'default' %} class="active"{% endif %}>
+		<a href="{% url 'results:series_details' series_id=series.id tab='default' %}"><strong>Все забеги серии</strong></a>
+	</li>
+	{% if events_in_past.exists %}
+		<li{% if active_tab == "events_by_distance" %} class="active"{% endif %}>
+			<a href="{% url 'results:series_details' series_id=series.id tab='events_by_distance' %}"><strong>Результаты по дистанциям</strong></a>
+		</li>
+		<li{% if active_tab == "events_by_year" %} class="active"{% endif %}>
+			<a href="{% url 'results:series_details' series_id=series.id tab='events_by_year' %}"><strong>Результаты по забегам</strong></a>
+		</li>
+	{% endif %}
+	{% if reviews %}
+		<li{% if active_tab == "reviews" %} class="active"{% endif %}>
+			<a href="{% url 'results:series_details' series_id=series.id tab='reviews' %}"><strong>Отчёты, фото, видео</strong></a>
+		</li>
+	{% endif %}
+	{% if events %}
+		<li{% if active_tab == "all_events" %} class="active"{% endif %}>
+			<a href="{% url 'results:series_details' series_id=series.id tab='all_events' %}"><strong>Все забеги серии</strong></a>
+		</li>
+	{% endif %}
+</ul>
+<div class="tab-content">
+	<div id="tab_main" class="tab-pane in active">
+		{% block content %}{% endblock %}
+	</div>
+</div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'results/base.html' %}
+{% block main %}
+
+<h3>{{ page_title|safe }}</h3>
+
+<a href="{{ obj_link }}">Вернуться к объекту</a>
+
+<table class="table table-condensed table-hover">
+	<tr class="info">
+		<th>Время</th><th>Пользователь</th><th>Действие</th><th>Новые значения</th><th>Одобрено?</th>
+	</tr>
+	{% for table_update in changes %}
+		<tr>
+			<td><a href="{{ table_update.get_absolute_url }}">{{ table_update.added_time|date:'d E Y H:i' }}</a></td>
+			<td>{% include 'editor/user_name_with_link.html' with person=table_update.user %}</td>
+			<td>{{ table_update.get_action_type_display }}
+				{% if table_update.child_id %}
+					с id
+					{% if is_admin %}
+						<a href="{% url 'editor:search_by_id' id=table_update.child_id %}">{{ table_update.child_id }}</a>
+					{% else %}
+						{{ table_update.child_id }}
+					{% endif %}
+				{% endif %}
+				{% if table_update.is_for_klb %}
+					<br/>
+					<span class="label label-warning">Была отправлена заявка на обсчёт в КЛБМатч</span>
+				{% endif %}
+			</td>
+			<td>
+				{% for field_change in table_update.field_update_set.all %}
+					{{ field_change.field_name }}='{{ field_change.new_value }}'
+					<br/>
+				{% endfor %}
+			</td>
+			<td>{% include 'editor/tools/action_verified_details.html' with write_if_not_verified=1 %}</td>
+		</tr>
+	{% endfor %}
+</table>
+{% endblock %}

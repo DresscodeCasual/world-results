@@ -1,0 +1,193 @@
+{% extends 'results/base.html' %}
+{% load results_extras %}
+{% load static %}
+{% block main %}
+
+{% include 'results/panel_header_before_title.html' %}
+	{% if create_new %}
+		Создание новой серии
+	{% else %}
+		Серия <a class="underlined" href="{{ series.get_absolute_url }}">{{ series.name|safe }}</a>
+		&nbsp;&nbsp;&nbsp;&nbsp;
+		<a class="dash-underlined" href="#documents">{{ n_documents }} документ{{ n_documents|ending:1 }}</a>,
+		<a class="dash-underlined" href="#events">{{ n_events }} забег{{ n_events|ending:1 }}</a>
+		&nbsp;&nbsp;&nbsp;&nbsp;
+		<a href="{{ series.get_history_url }}">
+			<button type="button" class="btn btn-sm btn-primary">История изменений</button></a>
+		&nbsp;&nbsp;&nbsp;&nbsp;
+		<a class="underlined" href="{{ series.get_old_url }}">
+			Карточка на probeg.org
+		</a>
+	{% endif %}
+{% include 'results/panel_header_after_title.html' %}
+
+	{% for error in frmSeries.non_field_errors %}
+		<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+	{% endfor %}
+
+<form id="frmSeries" method="POST" action="
+	{% if create_new %}
+		{% if cloned_series_id %}
+			{% url 'editor:series_create' series_id=cloned_series_id %}
+		{% else %}
+			{% url 'editor:series_create' %}
+		{% endif %}
+	{% else %}
+		{{ series.get_update_url }}
+	{% endif %}" 
+>
+	{% csrf_token %}
+	{{ frmSeries.media.css }}
+	{{ frmSeries.media.js }}
+	<table class="table table-condensed table-borderless">
+		{% for field in frmSeries %}
+			{% include 'results/form_field_tr.html' %}
+		{% endfor %}
+		{% if series.id %}
+			<tr>
+				<td class="text-right"><strong>Кто добавил серию на сайт:</strong></td>
+				<td>{% include 'editor/user_name_with_link.html' with person=series.created_by %}</td>
+			</tr>
+			<tr>
+				<td class="text-right"><strong>Дата последнего обновления:</strong></td>
+				<td>{{ series.last_update }}</td>
+			</tr>
+		{% endif %}
+	</table>
+	Если старт пробега обычно находится в одном и том же городе (необязательно всегда-всегда), указываем конкретный город старта.
+	<br/>
+	В таком случае, если обычно финиш забега проходит в другом городе, его тоже указываем.
+	<br/>
+	Если в разные годы пробег проходит в разных городах одной страны, указываем только страну.
+	<br/>
+	Иначе не указываем ни город, ни страну.
+	<div class="row">
+		<div class="col-md-5">
+			<input type="submit"
+				name="frmSeries_submit"
+				value="{% if create_new %}Создать{% else %}Сохранить{% endif %}"
+				class="btn btn-success"
+			/>
+		</div>
+		<div class="col-md-4">
+			{% if series.getCountry %}
+				<a href="{% url 'results:races' country_id=series.getCountry.id %}">
+					<button type="button" class="btn btn-warning">Все пробеги в стране {{ series.getCountry.name }}</button>
+				</a>
+				<br/><br/>
+			{% endif %}
+			{% if series.city %}
+				<a href="{% url 'results:races' city_id=series.city.id %}">
+					<button type="button" class="btn btn-warning">Все пробеги в городе {{ series.city.name }}</button>
+				</a>
+			{% endif %}
+		</div>
+		<div class="col-md-3">
+			{% if series.city.region.active %}
+				<a href="{% url 'results:races' region_id=series.city.region.id %}">
+					<button type="button" class="btn btn-warning">Все пробеги в регионе {{ series.city.region.name }}</button>
+				</a>
+				<br/><br/>
+			{% endif %}
+		</div>
+	</div>
+</form>
+{% include 'results/panel_footer.html' %}
+
+{% if not create_new %}
+	{% include 'editor/tools/document_formset.html' with action_link=series.get_documents_update_url %}
+
+	<a name="platforms"></a>
+	{% include 'results/panel_header.html' with title='ID серии на платформах' %}
+		<form id="frmPlatform" action="{{ series.get_add_platform_url }}" method="POST">
+			{% csrf_token %}
+			{% for error in frmPlatform.non_field_errors %}
+				<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+			{% endfor %}
+			<table class="table table-condensed">
+				<tr class="info"><th>Платформа</th><th>Значение</th><th>Когда добавлена</th><th></th></tr>
+				{% for series_platform in series_platforms %}
+					<tr>
+						<td>{{ series_platform.platform.name }}</td>
+						<td><a href="{{ series_platform.get_absolute_url }}">{{ series_platform.value }}</a></td>
+						<td>{{ series_platform.added_time }}</td>
+						<td><a href="{% url 'editor:series_platform_delete' series_id=series.id series_platform_id=series_platform.id %}">Удалить</a></td>
+					</tr>
+				{% endfor %}
+				<tr>{% for field in frmPlatform %}
+					<td>{% include 'results/form_field.html' with no_title=1 %}</td>
+					{% endfor %}
+					<td></td><td></td>
+					<td>
+						<input type="submit" name="frmPlatform_submit" value="Добавить платформу" class="btn btn-success"/>
+					</td>
+				</tr>
+			</table>
+		</form>
+	{% include 'results/panel_footer.html' %}
+
+	<a name="events"></a>
+	{% include 'results/panel_header.html' with title='Забеги в серии' %}
+		{% if events %}
+			<table class="table table-condensed table-borderless">
+				<tr>
+					<th class="text-center">id</th><th>Название</th>
+					<th class="text-center">Дата</th><th class="text-center">Число дистанций</th><th></th><th></th>
+				</tr>
+				{% for event in events %}
+					<tr>
+						<td class="text-center">{{ event.id }}</td>
+						<td><a href="{{ event.get_absolute_url }}">{{ event }}</a></td>
+						<td class="text-center">{{ event.dateFull|safe }}</td>
+						<td class="text-center">{{ event.n_races }}</td>
+						<td><a href="{{ event.get_editor_url }}">
+								<button type="button" class="btn btn-sm btn-primary">Редактировать</button>
+							</a>
+						</td>
+						<td><a href="{{ event.get_clone_url }}">
+								<button type="button" class="btn btn-sm btn-primary">Клонировать с дистанциями</button>
+							</a>
+						</td>
+					</tr>
+				{% endfor %}
+			</table>
+		{% else %}
+			Пока в серии нет ни одного забега.
+		{% endif %}
+		<a href="{{ series.get_create_event_url }}">
+			<button type="button" class="btn btn-primary">Создать забег в серии «{{ series|safe }}»</button>
+		</a>
+	{% include 'results/panel_footer.html' %}
+
+	{% if is_admin %}
+		{% if series.has_dependent_objects %}
+			{% include 'results/panel_header.html' with title='Заменить текущую серию на другую и удалить текущую' %}
+			После запуска серия пробегов «{{ series.name }}» (id {{ series.id }}) будет заменена на выбранную ниже серию в таблицах
+			ProbegYear и ProbegDist, во всех ссылках на документы и правах редакторов, после чего удалена.
+			<br/>
+			Будьте очень осторожны!
+			<form id="frmForSeries" method="POST" action="{{ series.get_delete_url }}" class="form-inline">
+			<div class="row">
+				<div class="col-md-5"> <!-- Left column -->
+					{% csrf_token %}
+					{% for field in frmForSeries %}
+						{% include 'results/form_field.html' with field=field %}
+					{% endfor %}
+				</div>
+				<div class="col-md-7"> <!-- Right column -->
+					<input type="submit" name="frmForSeries_submit" value="Удалить серию «{{ series|safe }}»" class="btn btn-danger"/>
+				</div>
+			</div>
+			</form>
+			{% include 'results/panel_footer.html' %}
+		{% else %}
+			<form id="frmForSeries" method="POST" action="{{ series.get_delete_url }}" class="form-inline">
+				{% csrf_token %}
+				<input type="submit" name="frmForSeries_submit" value="Удалить серию «{{ series|safe }}»" class="btn btn-danger"/>
+			</form>
+			<br/>
+		{% endif %}
+	{% endif %}
+{% endif %}
+
+{% endblock %}

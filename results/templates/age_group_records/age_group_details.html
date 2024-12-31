@@ -1,0 +1,96 @@
+{% extends 'results/base.html' %}
+{% block main %}
+<div class="row"><div class="col-md-12">
+	{% if is_admin %}
+		<span class="pull-right">
+			&nbsp;&nbsp;<a href="{{ generate_records_link }}"><button type="button" class="btn btn-xs btn-primary">Заново поискать возможные рекорды в группе</button></a>
+		</span>
+		<span class="pull-right">
+			&nbsp;&nbsp;<a href="{{ update_records_link }}"><button type="button" class="btn btn-xs btn-primary">Обновить эти записи о рекордах</button></a>
+		</span>
+		<span class="pull-right">
+			<a href="{{ add_record_link }}"><button type="button" class="btn btn-xs btn-primary">Добавить рекорд</button></a>
+		</span>
+	{% endif %}
+	<h3 class="text-center">
+		<a href="{% url main_records_link_name country_id=country.id %}">{{ page_title_first }}</a>{{ page_title_second }}
+	</h3>
+	{% if page_subtitle %}
+		<h4 class="text-center">{{ page_subtitle }}</h4>
+	{% endif %}
+</div></div>
+<br/>
+<div class="row"><div class="col-md-12">
+	<form action="" method="POST" name="frmAgeGroupRecord" class="form-inline">
+		{% csrf_token %}
+		{% for field in form %}
+			{% include 'results/form_field.html' %}&nbsp;&nbsp;
+		{% endfor %}
+		<button type="submit" class="btn btn-success" name="btnFilter">Перейти</button>
+	</form>
+</div></div>
+<br/><br/>
+<div class="row"><div class="col-md-12">
+	{% if n_appropriate_results %}
+		<p>Подходящих результатов в базе данных: {{ n_appropriate_results.number }}.</p>
+	{% endif %}
+	{% if results_best_overall %}
+		<table class="table table-hover vcenter">
+			{% include 'age_group_records/result_rows.html' with record_results=results_best_overall to_display_counter=1 show_world_europe_records=1 %}
+			{% if electronic_records %}
+				<tr><td colspan="100" class="text-center"><h4>&nbsp;</h4></td></tr>
+				{% include 'age_group_records/result_rows.html' with record_results=electronic_records to_display_counter=1 title='Лучшие результаты с электронным хронометражом' %}
+			{% endif %}
+			{% if old_records %}
+				<tr><td colspan="100" class="text-center"><h4>&nbsp;</h4></td></tr>
+				{% include 'age_group_records/result_rows.html' with record_results=old_records title='Бывшие рекорды' show_runner_places=False %}
+			{% endif %}
+			{% if is_admin and other_results %}
+				<tr><td colspan="100" class="text-center"><h4>&nbsp;</h4></td></tr>
+				{% include 'age_group_records/result_rows.html' with record_results=other_results title='Другие сохранённые результаты' title_for_admin_only=1 show_delete_all_button=1 %}
+			{% endif %}
+		</table>
+		{% include 'age_group_records/record_result_footnotes.html' %}
+	{% else %}
+		<h4 class="text-center">Лучшие результаты за всю историю</h4>
+		<p>Пока нам неизвестно ни одного.</p>
+	{% endif %}
+	{% if is_admin %}
+		<h4 class="text-center for-admin">Кандидаты в рекорды</h4>
+		{% if candidate_results %}
+			<form action="{% url 'editor:add_possible_age_group_records' %}" method="POST">
+				{% csrf_token %}
+				{% include 'editor/age_groups/results_and_runners_table.html' with results=candidate_results to_show_buttons=1 %}
+				<input type="hidden" name="next_url" value="{{ request.path }}">
+				<input type="submit" value="Добавить отмеченные результаты в рекорды" class="btn btn-primary"/>
+			</form>
+		{% else %}
+			<p class="text-center">Все уже обработаны, ура!</p>
+		{% endif %}
+		<br/><br/>
+	{% endif %}
+	{% if results_not_for_records %}
+		<h4 class="text-center">Высокие результаты, которые мы посчитали правильным не включать в рекорды</h4>
+		{% include 'editor/age_groups/results_and_runners_table.html' with results=results_not_for_records bad_results_table=1 %}
+	{% endif %}
+	{% if comments %}
+		<h4 class="text-center">Комментарии</h4>
+		{% for comment in comments %}
+			<p>{{ forloop.counter }}. {{ comment.content }}
+				{% if is_admin %}
+					<a href="{{ comment.get_editor_url }}"><button type="button" class="btn btn-xs btn-primary">Редактировать</button></a>
+				{% endif %}
+			</p>
+		{% endfor %}
+	{% endif %}
+	{% if is_admin %}
+		<form action="{{ add_comment_link }}" class="form-inline" method="POST">
+			{% csrf_token %}
+			<input type="text" class="form-control" name="content" size="200" maxlength="1000" placeholder="Текст комментария">
+			&nbsp;&nbsp;&nbsp;
+			<input type="submit" name="btnAddComment" value="Добавить комментарий" class="btn btn-primary"/>
+		</form>
+		<br/>
+	{% endif %}
+</div></div>
+{% endblock %}

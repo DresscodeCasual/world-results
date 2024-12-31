@@ -1,0 +1,10 @@
+{% if is_admin and series.series_editor_set.exists %}
+	<p class="for-admin">
+		<strong>Имеют доступ к серии:</strong>
+		<br/>
+		{% for series_editor in series.series_editor_set.all %}
+			{% if not forloop.first %}<br/>{% endif %}
+			{% include 'editor/user_name_with_link.html' with person=series_editor.user %}
+		{% endfor %}
+	</p>
+{% endif %}

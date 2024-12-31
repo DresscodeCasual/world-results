@@ -1,0 +1,180 @@
+{% extends 'results/base.html' %}
+{% load static %}
+{% block main %}
+
+{% if frmSearchSeries.errors %}
+	{% for error in frmSearchSeries.errors %}
+		<div class="alert alert-danger" role="alert">
+			{{ error }}
+		</div>
+	{% endfor %}
+{% endif %}
+
+<div class="row"><div class="col-md-12">
+	{% include 'results/panel_header.html' with title='Параметры поиска' %}
+		<form id="frmSeries" method="GET" action="{% url 'editor:seria' %}" class="form-inline">
+			{% csrf_token %}
+			{% include 'results/form_field.html' with field=frmSearchSeries.country %}
+			{% include 'results/form_field.html' with field=frmSearchSeries.region %}
+			{% include 'results/form_field.html' with field=frmSearchSeries.city_id %}
+			{% include 'results/form_field.html' with field=frmSearchSeries.series_name %}
+			<br/>
+			{% include 'results/form_field.html' with field=frmSearchSeries.with_events %}
+			{% include 'results/form_field.html' with field=frmSearchSeries.date_from %}
+			{% include 'results/form_field.html' with field=frmSearchSeries.date_to %}
+			<input type="submit" name="frmSearchSeries_submit" value="Показать серии" class="btn btn-success"/>
+		</form>
+	{% include 'results/panel_footer.html' %}
+	<script language="javascript">
+		var ajax_city_prefix = "id_";
+		{% if city %}
+			var ajax_city_default = {{ city.id }};
+		{% endif %}
+	</script>
+</div></div>
+
+<div class="row">
+	<div class="col-md-6">
+		<h3>{{ list_title }}</h3>
+		{% if n_events %}
+			<p>Общее число забегов: {{ n_events }}</p>
+		{% endif %}
+	</div>
+	<div class="col-md-6 text-right">
+		{% if short_link_country %}
+			Короткая ссылка: <a href="{% url 'editor:seria' country_id=country.id %}">
+				{{ SITE_URL }}{% url 'editor:seria' country_id=country.id %}</a>
+		{% elif short_link_region %}
+			Короткая ссылка: <a href="{% url 'editor:seria' region_id=region.id %}">
+				{{ SITE_URL }}{% url 'editor:seria' region_id=region.id %}</a>
+		{% elif short_link_city %}
+			Короткая ссылка: <a href="{% url 'editor:seria' city_id=city.id %}">
+				{{ SITE_URL }}{% url 'editor:seria' city_id=city.id %}</a>
+		{% elif short_link_name %}
+			Короткая ссылка: <a href="{% url 'editor:seria' series_name=series_name %}">
+				{{ SITE_URL }}{% url 'editor:seria' series_name=series_name %}</a>
+		{% endif %}
+	</div>
+</div>
+
+<div class="row"><div class="col-md-12">
+	{% if msgInsteadSeria %}
+		<p>{{ msgInsteadSeria }}</p>
+	{% else %}
+		{% if seria %}
+		<table{% if not with_events %} id="table_for_sort"{% endif %} class="table table-condensed table-hover table-bordered" cellspacing="0" width="100%">
+		<thead><tr class="info">
+			<th>№</th><th>ID серии</th><th>Название</th><th>Город</th>
+		{% if with_events %}
+				<th>ID пробега</th><th>Название</th><th>Город</th><th>Дата</th>
+		{% endif %}
+		</tr></thead>
+		<tbody>
+		{% for series in seria %}
+			<tr>
+				<td>{{ forloop.counter }}</td>
+				<td><a href="{{ series.get_absolute_url }}">{{ series.id }}</a></td>
+				<td><a href="{{ series.get_absolute_url }}">{{ series.name|safe }}</a>
+					{% if series.name_orig %}
+						<br/>{{ series.name_orig }}
+					{% endif %}
+					<br/>
+					<a href="{{ series.get_editor_url }}"><button type="button" class="btn btn-xs btn-primary">Ред</button></a>
+					{% if series.url_site %}
+						&nbsp;<a href="{{ series.url_site }}">Сайт</a>
+					{% endif %}
+					{% if series.url_vk %}
+						&nbsp;<a href="{{ series.url_vk }}"><img src="/static2/images/icons/vk_small_square.png" alt="Ссылка на страницу ВКонтакте"
+							width="15"/></a>
+					{% endif %}
+					{% if series.url_facebook %}
+						&nbsp;<a href="{{ series.url_facebook }}"><img src="/static2/images/icons/fb_small_square.png" alt="Ссылка на страницу в Facebook"
+							width="15"/></a>
+					{% endif %}
+				</td>
+				<td>{{ series.strCityCountry|safe }}</td>
+				{% if with_events %}
+					<td></td><td></td><td></td><td></td></tr>
+					{% for event in series.event_set.all %}
+					<tr>
+						<td></td><td></td><td></td><td></td>
+						<td><a href="{{ event.get_absolute_url }}">{{ event.id }}</a></td>
+						<td><a href="{{ event.get_absolute_url }}">{{ event.name|safe }}
+							<br/>
+							<a href="{{ event.get_editor_url }}"><button type="button" class="btn btn-xs btn-primary">Ред</button></a>
+							&nbsp;<a href="{{ event.get_clone_url }}"><button type="button" class="btn btn-xs btn-primary">Клонировать</button></a>
+							{% if event.url_site %}
+								&nbsp;<a href="{{ event.url_site }}">Сайт</a>
+							{% endif %}
+							{% if event.url_vk %}
+								&nbsp;<a href="{{ event.url_vk }}"><img src="/static2/images/icons/vk_small_square.png" alt="Ссылка на страницу ВКонтакте"
+									width="15"/></a>
+							{% endif %}
+							{% if event.url_facebook %}
+								&nbsp;<a href="{{ event.url_facebook }}"><img src="/static2/images/icons/fb_small_square.png" alt="Ссылка на страницу в Facebook"
+									width="15"/></a>
+							{% endif %}
+							</a>
+							{% if event.invisible %}
+								<br/><strong>Забег виден только администраторам!</strong>
+							{% endif %}
+							{% if event.cancelled %}
+								<br/><strong>Забег отменён!</strong>
+							{% endif %}
+						</td>
+						<td>{% if event.city %}{{ event.strCityCountry|safe }}{% endif %}</td>
+						<td>{{ event.date|safe }}</td>
+					</tr>
+					{% endfor %}
+				{% else %}
+					</tr>
+				{% endif %}
+		{% endfor %}
+		</tbody>
+		</table>
+		{% else %}
+			<p>Ни одной серии не найдено. :( Возможно, вы указали одновременно и страну, и не содержащийся в ней регион?</p>
+		{% endif %}
+	{% endif %}
+</div></div>
+
+<div class="row">
+	<div class="col-md-6">
+	{% if country %}
+		<a href="{% url 'editor:series_create' country_id=country.id %}">
+			<button type="button" class="btn btn-primary">Создать новую серию в стране {{ country.name }}</button>
+		</a>
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	{% endif %}
+	{% if region and region.active %}
+		<a href="{% url 'editor:series_create' region_id=region.id %}">
+			<button type="button" class="btn btn-primary">Создать новую серию в регионе {{ region.name }}</button>
+		</a>
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	{% endif %}
+	{% if city %}
+		<a href="{% url 'editor:series_create' city_id=city.id %}">
+			<button type="button" class="btn btn-primary">Создать новую серию в городе {{ city.name }}</button>
+		</a>
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	{% endif %}
+	</div>
+	<div class="col-md-6 text-right">
+		<p><a href="{% url 'editor:events_wo_protocol' year=cur_year %}">Завершившиеся пробеги {{ cur_year }} года без протоколов</a></p>
+		<p><a href="{% url 'editor:events_wo_protocol_for_klb' year=cur_year %}">Завершившиеся пробеги {{ cur_year }} года для КЛБМатча в России без протоколов</a></p>
+		<p>Серии
+			<a href="{% url 'editor:events_not_in_next_year' year=cur_year|add:-1 %}">с пробегами в {{ cur_year|add:-2 }} и без пробегов в {{ cur_year|add:-1 }}</a>,
+			<a href="{% url 'editor:events_not_in_next_year' year=cur_year %}">с пробегами в {{ cur_year|add:-1 }} и без пробегов в {{ cur_year }}</a>
+		</p>
+		<p><a href="{% url 'editor:events_wo_statistics' year=cur_year %}">Забеги в {{ cur_year }} году с протоколом, но без статистики по финишировавшим</a></p>
+		<p>Забеги по сериям в {{ NADYA_CALENDAR_YEAR_START }}-{{ NADYA_CALENDAR_YEAR_END }} годах:
+			<a href="{% url 'editor:events_in_seria_by_year' %}">Россия</a>,
+			<a href="{% url 'editor:all_events_by_year' regions=1 %}">Украина и Беларусь</a>,
+			<a href="{% url 'editor:all_events_by_year' regions=2 %}">Остальной мир</a>
+		</p>
+		<p><a href="{% url 'editor:events_with_xls_protocol' %}">Все забеги с необработанными протоколами XLS/XLSX/ZIP</a></p>
+		<p><a href="{% url 'editor:series_wo_new_event' %}">Серии, в которых год назад примерно в это время был забег, а новых забегов нет</a></p>
+		<p><a href="{% url 'editor:loaded_protocols_by_month' %}">Обработанные протоколы по месяцам</a></p>
+	</div>
+</div>
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends 'results/base.html' %}
+{% load results_extras %}
+{% block main %}
+
+{% if frmSearchUser.errors %}
+	{% for error in frmSearchUser.errors %}
+		<div class="alert alert-danger" role="alert">
+			{{ error }}
+		</div>
+	{% endfor %}
+{% endif %}
+
+<div class="row"><div class="col-md-12">
+	{% include 'results/panel_header.html' with title='Параметры поиска' %}
+		<form id="frmSearch" method="GET" action="{% url 'editor:users' %}" class="form-inline">
+			{% csrf_token %}
+			{% for field in frmSearchUser %}
+				{% include 'results/form_field.html' %}
+			{% endfor %}
+			&nbsp;&nbsp;
+			<input type="submit" name="frmSearchUser_submit" value="Показать пользователей" class="btn btn-success"/>
+		</form>
+	{% include 'results/panel_footer.html' %}
+</div></div>
+
+<div class="row">
+	<div class="col-md-12">
+		<h3>{{ list_title }}</h3>
+	</div>
+</div>
+
+<div class="row"><div class="col-md-12">
+	{% if users %}
+		<table id="table_for_sort" class="table table-condensed table-hover table-bordered" cellspacing="0" width="100%">
+		<thead><tr class="info">
+			<th>id</th><th>Фамилия</th><th>Имя</th><th>Отчество</th><th>Финишей</th>
+			<th class="no-sort">Авторизация</th><th>Username</th><th>E-mail</th><th>Ник для новостей</th>
+			<th>Город</th><th>Дата рождения</th><th>Дата регистрации</th><th>Последний логин</th><th>Статус</th>
+			<th class="no-sort"></th>
+		</tr></thead>
+		<tbody>
+		{% for user in users %}{% with profile=user.user_profile %}
+			<tr{% if not user.is_active %} class="info"{% endif %}>
+				<td>{{ user.id }}</td>
+				<td><a{% if profile %} href="{{ profile.get_absolute_url }}"{% endif %}>{{ user.last_name }}</a></td>
+				<td><a{% if profile %} href="{{ profile.get_absolute_url }}"{% endif %}>{{ user.first_name }}</a></td>
+				<td><a{% if profile %} href="{{ profile.get_absolute_url }}"{% endif %}>{{ profile.midname }}</a></td>
+				<td class="text-center">{{ profile.n_starts|default_if_none:'' }}</td>
+				<td>{% if user.password.0 != '!' %}
+						пароль
+						<br/>
+					{% endif %}
+					{% for auth in user.social_auth.all %}
+						{% if auth.provider != 'facebook' %}
+							<a href="{{ auth|get_social_url }}">{{ auth.provider }}</a>
+						{% else %}
+							{{ auth.provider }}
+						{% endif %}
+						<span class="pull-right"><a href="{{ auth|get_social_editor_url }}">ред</a></span>
+						<br/>
+					{% endfor %}
+				</td>
+				<td>{{ user.username }}</td>
+				<td>{{ user.email }}
+					{% if user.email and not profile.email_is_verified %}
+						<span class="label label-danger">x</span>
+					{% endif %}
+				</td>
+				<td>{{ profile.nickname }}</td>
+				<td>{{ profile.city.name }}</td>
+				<td data-order="{{ profile.birthday.isoformat }}" class="text-center">{{ profile.birthday|date:'d.m.Y' }}</td>
+				<td data-order="{{ user.date_joined.isoformat }}">{{ user.date_joined|date:'d.m.Y H:i' }}</td>
+				<td data-order="{{ user.last_login.isoformat }}">{{ user.last_login|date:'d.m.Y H:i' }}</td>
+				<td>{% if user.id in admin_ids %}
+						Администратор
+					{% elif profile.is_extended_editor %}
+						Расш. редактор
+					{% elif user.id in editor_ids %}
+						Редактор
+					{% endif %}
+				</td>
+				<td><a href="/admin/auth/user/{{ user.id }}">
+					<button type="button" class="btn btn-xs btn-primary">Ред</button></a>
+				</td>
+			</tr>
+		{% endwith %}{% endfor %}
+		</tbody>
+		</table>
+		Синим цветом выделены неактивные пользователи (они не могут зайти на сайт).
+		<br/>
+		<span class="label label-danger">x</span> означает, что пользователь указал, но не подтвердил свой е-мейл.
+	{% else %}
+		<p>Ни одного пользователя не найдено. :(</p>
+	{% endif %}
+</div></div>
+{% endblock %}

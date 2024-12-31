@@ -1,0 +1,13 @@
+<div class="form-group">
+	{% if no_title %}{% else %}&nbsp;{{ field.label_tag|safe }}&nbsp;{% endif %}
+	{{ field }}
+	{% if with_raw_value %}
+		<br/>
+		«{{ raw_value|default_if_none:'' }}»
+	{% endif %}
+	{% if field.errors %}
+		{% for error in field.errors %}
+			<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+		{% endfor %}
+	{% endif %}
+</div>

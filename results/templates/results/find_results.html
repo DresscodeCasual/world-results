@@ -1,0 +1,153 @@
+{% extends 'results/base.html' %}
+{% block main %}
+<h3>{% if user_id %}
+		Поиск результатов пользователя <a href="{{ user.user_profile.get_absolute_url }}">{{ user.get_full_name }} (id {{ user.id }})</a>
+	{% elif runner_id %}
+		Поиск результатов бегуна <a href="{{ runner.get_absolute_url }}">{{ runner.get_name_and_id }}</a>
+	{% else %}
+		Добавьте на свою страницу ваши результаты с забегов, которые уже есть у нас в базе
+	{% endif %}
+</h3>
+<div class="row">
+	<div class="col-md-6 col-xs-12">
+		Ищем результаты, которые пока не привязаны ни к кому из пользователей, со следующими именами:
+		<table class="table">
+			<tr class="info"><th>Фамилия</th><th>Имя</th><th>Отчество</th></tr>
+				<tr>
+					<td>{{ runner.lname }}</td>
+					<td>{{ runner.fname }}</td>
+					<td>{{ runner.midname }}</td>
+				</tr>
+			{% for name in names %}
+				<tr>
+					<td>{{ name.lname }}</td>
+					<td>{{ name.fname }}</td>
+					<td>{{ name.midname }}</td>
+				</tr>
+			{% endfor %}
+		</table>
+		<a href="{% if user_id or runner_id %}{{ runner.get_editor_url }}{% else %}{% url 'results:my_details' %}{% endif %}">
+			<button type="button" class="btn btn-success">
+				Управление дополнительными именами
+				{% if user_id %}
+					пользователя {{ user.get_full_name }}
+				{% elif runner_id %}
+					бегуна {{ runner.get_name_and_id }}
+				{% endif %}
+			</button>
+		</a>
+	</div>
+</div>
+
+<br/><br/><br/>
+<div class="row">
+	<div class="col-md-12">
+		{% if results %}
+			<h4>Найденные результаты</h4>
+			<form id="frmResults" action="" method="POST">
+				{% csrf_token %}
+				<table class="table table-hover">
+				<tr class="info">
+					<th>№</th>
+					<th class="text-right">Дата&nbsp;&nbsp;</th>
+					<th>Забег</th>
+					<th class="text-right">Дистанция&nbsp;&nbsp;</th>
+					<th>Результат</th>
+					<th>Место<br/><nobr>(среди М/Ж)</nobr></th>
+					<th>Группа<br/><nobr>(место в ней)</nobr></th>
+					<th>Имя<br/>в протоколе</th>
+					<th>Город и клуб<br/>участника</th>
+					<th>Возраст</th>
+					<th>Засчитать?
+						<br/>
+						<input type="checkbox" class="toggle_chkbox"/> Все
+					</th>
+					{% if not runner_id %}
+						<th>Не моё, больше<br/>не&nbsp;показывать?</th>
+					{% endif %}
+					{% if is_admin %}
+						<th></th>
+					{% endif %}
+				</tr>
+				{% for result in results %}
+					<tr>
+						<td>{{ forloop.counter }}</td>
+						<td class="text-right"><a href="{% url 'results:event_details' event_id=result.race.event.id %}">
+							{{ result.race.event.dateFull|safe }}&nbsp;&nbsp;
+						</a></td>
+						<td><a href="{{ result.race.event.get_absolute_url }}">{{ result.race.event }}</a>
+							<br/>{{ result.race.event.strCityCountry|safe }}
+						</td>
+						<td class="text-right">
+							<a href="{{ result.race.get_absolute_url }}">{{ result.race.get_precise_name|safe }}</a>&nbsp;&nbsp;
+						</td>
+						<td>{{ result }}</td>
+						{% if result.source %}
+							<td></td>
+							<td></td>
+							<td></td>
+							<td></td>
+							<td></td>
+						{% else %}
+							<td>&nbsp;{{ result.get_place|safe }}
+								{% if result.place_gender %}
+									<br/>
+									({{ result.get_gender_place|safe }})
+								{% endif %}
+							</td>
+							<td>{% include 'tools/result_category_name_and_place.html' %}</td>
+							<td>{{ result.strName }}
+								{% if is_admin %}
+									{% if result.runner %}
+										<br/><span class="for-admin">
+											бегун <a href="{{ result.runner.get_absolute_url }}">{{ result.runner.get_name_and_id }}</a>
+										</span>
+									{% endif %}
+									{% if result.user %}
+										<br/><span class="for-admin">
+											пользователь <a href="{{ result.user.user_profile.get_absolute_url }}">{{ result.user.get_full_name }}</a>
+										</span>
+									{% endif %}
+								{% endif %}
+								{% if result.bib_given_to_unknown %}
+									<br/>(По нашим данным, бежал не тот человек, что указан в протоколе.)
+								{% endif %}
+							</td>
+							<td>{{ result.strCity }}
+								{% if result.club_name %}<br/>{{ result.club_name }}{% endif %}
+							</td>
+							<td>{% include 'tools/result_birthday_and_age.html' %}</td>
+						{% endif %}
+						<td><input type="checkbox" name="claim_{{ result.id }}" class="chkbox"/></td>
+						{% if not runner_id %}
+							<td><input type="checkbox" name="unclaim_forever_{{ result.id }}"/>
+								Не моё
+							</td>
+						{% endif %}
+						{% if is_admin %}
+							<td class="text-center">
+								<a href="{{ result.get_editor_url }}">
+									<button type="button" class="btn btn-xs btn-primary">Ред</button></a>
+							</td>
+						{% endif %}
+					</tr>
+				{% endfor %}
+				</table>
+				<input type="submit" name="frmResults_claim" id="frmResults_claim"
+					{% if user_id %}
+						value="Добавить пользователю {{ user.get_full_name }} (id {{ user.id }}) отмеченные результаты"
+					{% elif runner_id %}
+						value="Добавить бегуну {{ runner.get_name_and_id }} отмеченные результаты"
+					{% else %}
+						value="Добавить себе отмеченные результаты"
+					{% endif %}
+					class="btn btn-success"
+				/>
+			</form>
+		{% else %}
+				<p/>Похожих на Ваши результатов не найдено.
+				<p/>Посмотрите, <a href="{% url 'results:races' %}">где можно побегать в ближайший месяц</a>!
+		{% endif %}
+	</div>
+</div>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends 'results/base.html' %}
+{% load results_extras %}
+{% block main %}
+
+<h3>{{ page_title }}</h3>
+
+<table class="table table-condensed table-hover">
+	<tr class="info">
+		<th>Объект</th><th>Время</th><th>Пользователь</th><th>Действие</th><th>Новые значения</th><th>Кто одобрил</th>
+	</tr>
+	<tr>
+		<td>{% if obj %}
+				<a href="{{ obj.get_absolute_url }}">{{ obj }}</a>
+			{% else %}
+				(Объект удалён)
+			{% endif %}
+		</td>
+		<td>{{ table_update.added_time|date:'d E Y H:i' }}</td>
+		<td><a href="{% url 'results:user_details' user_id=table_update.user.id %}">{{ table_update.user.get_full_name }}</a></td>
+		<td>{{ table_update.get_action_type_display }}
+			{% if table_update.child_id %}
+				с id
+				{% if is_admin %}
+					<a href="{% url 'editor:search_by_id' id=table_update.child_id %}">{{ table_update.child_id }}</a>
+				{% else %}
+					{{ table_update.child_id }}
+				{% endif %}
+			{% endif %}
+		</td>
+		<td>
+			{% for field_change in table_update.field_update_set.all %}
+				{{ field_change.field_name }}='{{ field_change.new_value }}'
+				<br/>
+			{% endfor %}
+		</td>
+		<td>{% include 'editor/tools/action_verified_details.html' with write_if_not_verified=1 %}</td>
+	</tr>
+</table>
+
+<h4>Письма о действии</h4>
+{% if messages %}
+	Ниже – только письма, отправленные с сайта. Ответы на эти письма здесь не появятся.
+	<table class="table table-condensed table-hover">
+		<tr class="info">
+			<th>Отправитель</th><th>Кому</th><th>Время</th><th>Тема</th><th>Сообщение</th><th>Аттачмент</th><th>Отправлено?</th>
+		</tr>
+		{% for message in messages %}
+			<tr>
+				<td>{% include 'editor/user_name_with_link.html' with person=message.created_by %}
+					{% if not message.is_sent %}
+						<br/><span class="label label-danger small-label">не отправлено</span>
+					{% endif %}
+				</td>
+				<td>{{ message.target_email }}</td>
+				<td><a href="{{ message.get_absolute_url }}">{{ message.date_posted|date:'d E Y H:i' }}</a></td>
+				<td>{{ message.title }}</td>
+				<td><pre>{{ message.body }}</pre></td>
+				<td>{% if message.attachment %}
+						<a href="{{ message.attachment|add_prefix }}">{{ message.attachment.name }}</a>
+						({{ message.attachment.size }} байт)
+					{% endif %}
+				</td>
+				<td>{% if message.is_sent %}Да{% else %}Нет{% endif %}</td>
+			</tr>
+		{% endfor %}
+	</table>
+{% else %}
+	Пока не было.
+{% endif %}
+<p/>
+<a class="send_from_info_page" href="#" data-ticket="{{ table_update.id }}">Написать письмо автору изменения</a>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% with overall_group=participant.get_overall_group gender_group=participant.get_gender_group age_group=participant.age_group %}
+	{% include 'tools/klb_participation.html' %}
+	{% if participant.place %}
+		<p>
+			Место в <a href="{{ url_start }}{{ overall_group.get_absolute_url }}"{% if link_style %} style="{{ link_style }}"{% endif %}>общем зачёте</a>:
+			{{ participant.place }} из {{ overall_group.n_participants_started }}
+		</p>
+	{% endif %}
+	{% if participant.place_gender %}
+		<p>
+			Место среди
+			<a href="{{ url_start }}{{ gender_group.get_absolute_url }}"{% if link_style %} style="{{ link_style }}"{% endif %}>{% if participant.klb_person.gender == 2 %}мужчин{% else %}женщин{% endif %}</a>:
+			{{ participant.place_gender }} из {{ gender_group.n_participants_started }}
+		</p>
+	{% endif %}
+	{% if participant.place_group %}
+		<p>
+			Место в группе <a href="{{ url_start }}{{ age_group.get_absolute_url }}"{% if link_style %} style="{{ link_style }}"{% endif %}>{{ age_group.name }}</a>:
+			{{ participant.place_group }} из {{ age_group.n_participants_started }}
+		</p>
+	{% endif %}
+{% endwith %}

@@ -1,0 +1,305 @@
+{% extends 'results/base.html' %}
+{% load results_extras %}
+{% load static %}
+{% load starrating %}
+{% block main %}
+<div class="row"> <!-- Header -->
+	{% button_for_rate_all_available_races %}
+	<div class="col-md-5"> <!-- Profile, stat -->
+		<h3>{{ user.first_name }} {{ user.last_name }}
+			{% if profile.strava_account %}
+				&nbsp;&nbsp;<a href="{{ profile.get_strava_link }}" target="_blank">
+					<img src="/static2/images/icons/strava_60x60.png" width="25" height="25" alt="Ссылка на страницу в Strava"/>
+				</a>
+			{% endif %}
+			{% if is_admin %}
+				<span class="pull-right">
+					<a class="send_from_info_page" href="#" data-user="{{ user.id }}">
+						<button type="button" class="btn btn-xs btn-primary">Написать пользователю</button></a>
+					&nbsp;<a href="{{ profile.get_find_results_url }}">
+						<button type="button" class="btn btn-xs btn-primary">Искать результаты</button></a>
+					&nbsp;<a href="{{ profile.get_our_editor_url }}">
+						<button type="button" class="btn btn-xs btn-primary">Редактировать</button></a>
+					&nbsp;<a href="{{ profile.get_strava_links_url }}">
+						<button type="button" class="btn btn-xs btn-primary">Strava</button></a>
+					&nbsp;<a href="{{ profile.get_all_payments_url }}">
+						<button type="button" class="btn btn-xs btn-primary">Платежи</button></a>
+					&nbsp;<a href="{{ profile.get_regs_url }}">
+						<button type="button" class="btn btn-xs btn-primary">Регистрации</button></a>
+					&nbsp;<a href="{{ profile.get_history_url }}">
+						<button type="button" class="btn btn-xs btn-primary">История</button></a>
+				</span>
+			{% endif %}
+		</h3>
+			{% if is_admin %}
+				<span class="pull-right for-admin">
+					Используйте, только если понимаете, что делаете:
+					<a href="{{ profile.get_editor_url }}">
+						<button type="button" class="btn btn-xs btn-primary">Ред</button></a>
+					&nbsp;<a href="{{ profile.get_profile_editor_url }}">
+						<button type="button" class="btn btn-xs btn-primary">Профиль</button></a>
+				</span>
+			{% endif %}
+		{% if profile.city %}
+			<p><a href="{{ profile.city.get_races_url }}">{{ profile.city.nameWithCountry|safe }}</a></p>
+		{% endif %}
+		{% if runner.birthday_known and runner.deathday %}
+			<p>{{ runner.birthday|date:"j E Y" }} — {{ runner.deathday|date:"j E Y" }}</p>
+		{% elif profile.birthday %}
+			{% if is_admin %}
+				<p class="for-admin">Дата рождения: {{ profile.birthday|date:"j E Y" }}</p>
+			{% endif %}
+		{% endif %}
+		{% if cur_klb_participations %}
+			{% if profile.club_name %}
+				<p>Клуб в личных данных: {{ profile.club_name }}.
+					<br/>Последний раз изменён {{ profile.club_name_last_changed|date:'d.m.Y'|default:'до начала КЛБМатча–2023' }}.
+				</p>
+			{% else %}
+				<p>Клуб в личных данных не указан.</p>
+			{% endif %}
+		{% elif profile.club_name %}
+			<p>Клуб: {{ profile.club_name }}</p>
+		{% endif %}
+		{% include 'tools/runner_or_user_links.html' %}
+		{% if is_user_homepage %}
+			<p>Постоянная ссылка на Вашу страницу:
+				<a href="{{ profile.get_absolute_url }}">{{ SITE_URL }}{{ profile.get_absolute_url }}</a>
+			</p>
+		{% endif %}
+		{% include 'tools/eddington.html' %}
+		{% if is_admin %}
+			<p class="for-admin">
+				{% if user.runner %}
+					<a href="{{ user.runner.get_absolute_url }}">Страница участника забегов</a><br/>
+				{% endif %}
+				{% if not user.is_active %}<strong>Неактивен. Доступ на сайт закрыт</strong><br/>{% endif %}
+				Зарегистрирован {{ user.date_joined|date:'d.m.Y' }}.
+				Последний заход: {{ user.last_login|date:'d.m.Y' }}
+				{% include 'tools/user_email_for_admin.html' %}
+				{% if user.password.0 != '!' %}
+					<br/>Может заходить по почте и паролю
+				{% endif %}
+				{% for auth in user.social_auth.all %}
+					<br/>Может заходить через аккаунт
+					{% if auth.provider != 'facebook' %}
+						<a href="{{ auth|get_social_url }}">{{ auth.provider }}</a>
+					{% else %}
+						{{ auth.provider }}
+					{% endif %}
+					(<a href="{{ auth|get_social_editor_url }}">редактировать</a>)
+				{% endfor %}
+			</p>
+			{% if user_is_admin %}
+				<p class="for-admin">Статус: администратор сайта</p>
+			{% endif %}
+			<br/>
+			<div class="panel-group" id="user_rights">
+				{% if user.id != 1 %}
+					{% include 'tools/panel_header_collapsed.html' with title="Права на редактирование серий" div_id="series_editor" title_number=series_to_edit.count %}
+						<table class="table table-condensed table-borderless" width="100%">
+							{% for series in series_to_edit %}
+								<tr>
+									<td>{{ forloop.counter }}</td>
+									<td><a href="{{ series.get_absolute_url }}">
+											{{ series.name }} (id {{ series.id }})
+										</a>
+									</td>
+									<td class="text-right">
+										<form method="POST" action="{{ profile.get_remove_series_editor_url }}">
+											{% csrf_token %}
+											<input type="hidden" name="series_id" value="{{ series.id }}">
+											<input type="submit" class="btn btn-xs btn-primary" value="Отобрать права"/>
+										</form>
+									</td>
+								</tr>
+							{% endfor %}
+							<tr>
+								<td></td>
+								<td><input type="number" name="series_id" form="frmSeriesEditor"></td>
+								<td class="text-right">
+									<form id="frmSeriesEditor" method="POST" action="{{ profile.get_add_series_editor_url }}">
+										{% csrf_token %}
+										<input type="submit" value="Добавить серию с этим id" class="btn btn-xs btn-success"/>
+									</form>
+								</td>
+							</tr>
+						</table>
+					{% include 'tools/panel_footer_collapsed.html' %}
+					{% include 'tools/panel_header_collapsed.html' with title="Права на работу с клубами" div_id="clubs_editor" title_number=user.clubs_to_edit_set.count %}
+						<form id="frmClubsEditor" method="POST" action="{{ profile.get_absolute_url }}">
+							{% csrf_token %}
+							<table class="table table-condensed table-borderless" width="100%">
+								{% for club in user.clubs_to_edit_set.all %}
+									<tr>
+										<td><a href="{{ club.get_absolute_url }}">
+												{{ club.name }}
+											</a>
+										</td>
+										<td class="text-right">
+											<a href="{% url 'results:user_delete_club' user_id=user.id club_id=club.id %}">
+												<button type="button" class="btn btn-sm btn-primary">Отобрать права</button>
+											</a>
+										</td>
+									</tr>
+								{% endfor %}
+								<tr>
+									<td>{{ frmClubsEditor.club }}</td>
+									<td class="text-right">
+										<input type="submit"
+											name="frmClubsEditor_submit"
+											value="Добавить права на этот клуб"
+											class="btn btn-sm btn-success"
+										/>
+									</td>
+								</tr>
+							</table>
+						</form>
+					{% include 'tools/panel_footer_collapsed.html' %}
+				{% endif %}
+			</div>
+		{% elif is_user_homepage %}
+			<div class="panel-group" id="user_rights">
+				{% if user.series_to_edit_set.exists %}
+					{% include 'tools/panel_header_collapsed.html' with title="Права на редактирование серий" div_id="series_editor" title_number=user.series_to_edit_set.count %}
+						{% for series in user.series_to_edit_set.all %}
+							<p><a href="{{ series.get_absolute_url }}">{{ series.name }}</a></p>
+						{% endfor %}
+					{% include 'tools/panel_footer_collapsed.html' %}
+				{% endif %}
+				{% if user.clubs_to_edit_set.exists %}
+					{% include 'tools/panel_header_collapsed.html' with title="Права на работу с клубами" div_id="clubs_editor" title_number=user.clubs_to_edit_set.count %}
+						{% for club in user.clubs_to_edit_set.all %}
+							<p><a href="{{ club.get_absolute_url }}">{{ club.name }}</a></p>
+						{% endfor %}
+					{% include 'tools/panel_footer_collapsed.html' %}
+				{% endif %}
+			</div>
+		{% endif %}
+		{% if unclaimed_results.exists %}
+			{% include 'tools/panel_header_collapsed.html' with title="Не показывать при поиске своих результатов" div_id="unclamied_results" title_number=user.unclaimed_result_set.count %}
+					<table class="table table-condensed table-borderless" width="100%">
+						{% for unclaimed_result in unclaimed_results %}{% with result=unclaimed_result.result %}
+							<tr>
+								<td>{{ result.race.event.date|safe }}</td>
+								<td><a href="{{ result.race.get_absolute_url }}">
+										{{ result.race.name_with_event }}
+									</a>
+								</td>
+								<td>{{ result.fname }} {{ result.lname }}</td>
+								<td><a href="{{ result.get_absolute_url }}">
+										{{ result }}
+									</a>
+								</td>
+							</tr>
+						{% endwith %}{% endfor %}
+					</table>
+				</form>
+			{% include 'tools/panel_footer_collapsed.html' %}
+		{% endif %}
+		<br/>
+		{% include 'tools/klb_participations_block.html' %}
+	</div>
+	<div class="col-md-5">
+		{% include 'results/distances_stat.html' with person=profile %}
+
+		{% include 'tools/user_clubs_list.html' %}
+	</div>
+	<div class="col-md-2 text-center">
+		{% if profile.avatar_thumb %}
+			<a href="#" class="showAvatar" data-user="{{ user.id }}"><img src="{{ profile.get_avatar_thumb_url }}" alt="Аватар"/></a>
+		{% else %}
+			{% include 'results/user_absent_avatar.html' %}
+			{% if is_user_homepage %}
+				<a href="{% url 'results:my_details' %}">Загрузить аватар</a>
+			{% endif %}
+		{% endif %}
+	</div>
+</div>
+<div class="row"> <!-- Calendar -->
+	<div class="col-md-5">
+		{% if is_user_homepage %}
+			<h4>Your Future Plans
+				&nbsp;&nbsp;&nbsp;<small><a href="{% url 'results:planned_events' %}">Include Past Plans</a></small>
+			</h4>
+			{% for row in calendar %}
+				<p>
+					{{ row.event.date|safe }} –
+					<a href="{{ row.event.get_absolute_url }}">{{ row.event|safe }}</a>
+					{% if row.race %}
+						({{ row.race.distance }})
+					{% endif %}
+				</p>
+			{% empty %}
+				Nothing here yet.
+				<a href="{% url 'results:races' date_region='2' %}">Search for next events</a>
+			{% endfor %}
+		{% else %}
+			{% if calendar %}
+				<h4>Future Plans
+					{% if is_admin %}
+						&nbsp;&nbsp;&nbsp;<small><a href="{% url 'results:planned_events' user_id=user.id %}">Include Past Plans</a></small>
+					{% endif %}
+				</h4>
+				{% for row in calendar %}
+					<p>
+						{{ row.event.date|safe }} –
+						<a href="{{ row.event.get_absolute_url }}">{{ row.event|safe }}</a>
+						{% if row.race %}
+							({{ row.race.distance }})
+						{% endif %}
+					</p>
+				{% endfor %}
+			{% endif %}
+		{% endif %}
+		{% if is_user_homepage and n_possible_results or is_admin and n_possible_results %}
+			<br/><br/>
+			<div class="alert alert-danger" role="alert">
+				Мы нашли {{ n_possible_results }} похожи{{ n_possible_results|ending:5 }} на Ваш{{ n_possible_results|ending:12 }} результат{{ n_possible_results|ending:1 }}. <a href="{% url 'results:find_results' %}" class="underlined">Привяжите {{ n_possible_results|ending:27 }} себе</a>, если действительно Ваш{{ n_possible_results|ending:12 }}.
+			</div>
+		{% endif %}
+	</div>
+	<div class="col-md-5">
+		{% if is_user_homepage and profile.city %}{% with city=profile.city %}
+			<h4>Будущие забеги</h4>
+			<p><a href="{% url 'results:races' city_id=city.id date_region=2 %}">В городе {{ city }}</a></p>
+			{% if city.region.active %}
+				<p><a href="{% url 'results:races' region_id=city.region.id date_region=2 %}">В регионе {{ city.region }}</a></p>
+			{% endif %}
+			<p><a href="{% url 'results:races' country_id=city.region.country.id date_region=2 %}">В стране {{ city.region.country }}</a></p>
+		{% endwith %}{% endif %}
+	</div>
+</div>
+<br/>
+<div class="row">
+	<div class="col-md-10">
+		{% include 'results/results_table.html' with user_page=1 person=profile %}
+		{% if is_user_homepage %}
+			<br/>
+			<div class="row"> <!-- Footer buttons -->
+				<div class="col-md-6">
+					<br/><br/>
+					<p>А может, пора побегать? Посмотрите известные нам
+						<a href="{% url 'results:races' %}">забеги в ближайшую неделю</a>.
+						Или побегайте просто так!
+					</p>
+				</div>
+				<div class="col-md-6 text-right">
+					{% if results %}
+						<form action="{% url 'results:unclaim_results' %}" method="POST" name="frmUnclaim" id="frmUnclaim">
+							{% csrf_token %}
+							<a href="#" onclick="unclaim_results()">
+								<button type="button" class="btn btn-sm btn-danger">Отсоединить отмеченные результаты</button>
+							</a>
+						</form>
+					{% endif %}
+				</div>
+			</div>
+		{% endif %}
+	</div>
+	<div class="col-md-2">
+		{% include 'misc/adsense_high.html' %}
+	</div>
+</div>
+<br/>
+{% endblock %}

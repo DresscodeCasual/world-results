@@ -1,0 +1,46 @@
+{% load results_extras %}
+{% if n_plans %}
+	{% if event.is_in_future %}
+		<h4>{% if is_admin %}
+				<span class="pull-right"><a class="send_from_info_page" href="#" data-event-participants="{{ event.id }}">
+					<button type="button" class="btn btn-xs btn-primary">Написать всем записавшимся</button></a></span>
+			{% endif %}
+			Планиру{{ n_plans|ending:10 }}т участвовать {{ n_plans }} человек{{ n_plans|ending:9 }}
+		</h4>
+		{% if event.registration.is_open and event.registration.is_participants_list_open and event.is_in_future %}
+			<p>См. также: <a href="{{ event.get_registrants_list_url }}">Зарегистрированные на забег</a></p>
+		{% endif %}
+		{% for distance, calendar_set, length in plans_by_distance %}
+			<p>
+				{% if distance %}
+					{{ distance }} ({{ length }}):
+				{% endif %}
+				{% for calendar in calendar_set %}
+					{% if is_admin or calendar.user.user_profile.is_public %}
+						<a href="{{ calendar.user.user_profile.get_absolute_url }}">
+							{{ calendar.user.get_full_name }}</a>{% if not forloop.last %}, {% endif %}
+					{% else %}
+						{{ calendar.user.get_full_name }}{% if not forloop.last %}, {% endif %}
+					{% endif %}
+				{% endfor %}
+			</p>
+		{% endfor %}
+	{% elif is_admin %}
+		<h4 class="for-admin">
+			<span class="pull-right"><a class="send_from_info_page" href="#" data-event-participants="{{ event.id }}">
+				<button type="button" class="btn btn-xs btn-primary">Написать всем записавшимся</button></a></span>
+			Планировали участвовать {{ n_plans }} человек{{ n_plans|ending:9 }}
+		</h4>
+		{% for distance, calendar_set, length in plans_by_distance %}
+			<p>
+				{% if distance %}
+					{{ distance }} ({{ length }}):
+				{% endif %}
+				{% for calendar in calendar_set %}
+					<a href="{{ calendar.user.user_profile.get_absolute_url }}">
+						{{ calendar.user.get_full_name }}</a>{% if not forloop.last %}, {% endif %}
+				{% endfor %}
+			</p>
+		{% endfor %}
+	{% endif %}
+{% endif %}

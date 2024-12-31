@@ -1,0 +1,363 @@
+{% extends 'results/base.html' %}
+{% load results_extras %}
+{% load static %}
+{% block main %}
+
+{% block media_links %}
+{% if frmNews %}{{ frmNews.media }}{% endif %}
+{% endblock %}
+
+{% include 'results/panel_header_before_title.html' %}
+	{% if cloned_event %}
+		Клонирование забега
+		<a class="underlined" href="{{ cloned_event.get_absolute_url }}">{{ event|safe }}</a>
+		в серии
+		<a class="underlined" href="{{ event.series.get_absolute_url }}">{{ event.series|safe }}</a>
+		&nbsp;&nbsp;&nbsp;&nbsp;
+		<a href="{{ event.series.get_editor_url }}">
+			<button type="button" class="btn btn-sm btn-primary">Редактировать серию</button>
+		</a>
+	{% elif event.id %}
+		Забег
+		<a class="underlined" href="{{ event.get_absolute_url }}">{{ page_title|safe }}</a>
+		в серии
+		<a class="underlined" href="{{ event.series.get_absolute_url }}">{{ event.series|safe }}</a>
+		&nbsp;&nbsp;&nbsp;&nbsp;
+		<a class="dash-underlined" href="#documents">{{ n_documents }}&nbsp;документ{{ n_documents|ending:1 }}</a>,
+		<a class="dash-underlined" href="#news">{{ n_news }}&nbsp;новост{{ n_news|ending:3 }}</a>,
+		<a class="dash-underlined" href="#races">{{ n_races }}&nbsp;дистанци{{ n_races|ending:4 }}</a>
+		&nbsp;&nbsp;&nbsp;&nbsp;
+		{% include 'results/event_edit_buttons.html' with event_editor_page=1 %}
+		&nbsp;&nbsp;&nbsp;&nbsp;
+		<a class="underlined" href="{{ event.series.get_old_url }}">
+			Карточка на probeg.org
+		</a>
+	{% else %}
+		Создание нового забега в серии
+		<a class="underlined" href="{{ event.series.get_absolute_url }}">{{ event.series|safe }}</a>
+	{% endif %}
+{% include 'results/panel_header_after_title.html' %}
+
+{% for error in frmEvent.non_field_errors %}
+	<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+{% endfor %}
+
+<form id="frmEvent" method="POST" action="
+	{% if event.id %}
+		{% url 'editor:event_update' event_id=event.id %}
+	{% else %}
+		{% if cloned_event %}
+			{% url 'editor:event_create' event_id=cloned_event.id %}
+		{% else %}
+			{% url 'editor:event_create' series_id=event.series.id %}
+		{% endif %}
+	{% endif %}"
+>
+	{% csrf_token %}
+	{{ frmEvent.media.css }}
+	{{ frmEvent.media.js }}
+	<table class="table table-condensed table-borderless">
+		{% include 'results/form_field_tr.html' with field=frmEvent.name %}
+		{% include 'results/form_field_tr.html' with field=frmEvent.number %}
+		{% include 'results/form_field_tr.html' with field=frmEvent.country %}
+		{% include 'results/form_field_tr.html' with field=frmEvent.region %}
+		{% include 'results/form_field_tr.html' with field=frmEvent.city series_value=event.series.city.name %}
+		{% include 'results/form_field_tr.html' with field=frmEvent.start_place series_value=event.series.start_place %}
+		{% if 0 %}{% include 'results/form_field_tr.html' with field=frmEvent.city_finish series_value=event.series.city_finish.name %}{% endif %}
+		{% include 'results/form_field_tr.html' with field=frmEvent.start_date %}
+		{% include 'results/form_field_tr.html' with field=frmEvent.surface_type series_value=event.series.get_surface_type_display %}
+		{% include 'results/form_field_tr.html' with field=frmEvent.finish_date %}
+		{% include 'results/form_field_tr.html' with field=frmEvent.arrival_date %}
+		{% include 'results/form_field_tr.html' with field=frmEvent.start_time %}
+		{% include 'results/form_field_tr.html' with field=frmEvent.announcement %}
+		{% include 'results/form_field_tr.html' with field=frmEvent.email %}
+		{% include 'results/form_field_tr.html' with field=frmEvent.contacts %}
+		{% include 'results/form_field_tr.html' with field=frmEvent.url_registration %}
+		{% include 'results/form_field_tr.html' with field=frmEvent.url_registration2 %}
+		{% include 'results/form_field_tr.html' with field=frmEvent.url_site series_value=event.series.url_site series_value_link=1 %}
+		{% include 'results/form_field_tr.html' with field=frmEvent.url_vk series_value=event.series.url_vk series_value_link=1 %}
+		{% include 'results/form_field_tr.html' with field=frmEvent.url_facebook series_value=event.series.url_facebook series_value_link=1 %}
+		{% include 'results/form_field_tr.html' with field=frmEvent.url_wiki series_value=event.series.url_wiki series_value_link=1 %}
+		{% include 'results/form_field_tr.html' with field=frmEvent.url_itra %}
+		{% include 'results/form_field_tr.html' with field=frmEvent.cancelled %}
+		{% include 'results/form_field_tr.html' with field=frmEvent.comment %}
+		{% include 'results/form_field_tr.html' with field=frmEvent.comment_private %}
+		{% include 'results/form_field_tr.html' with field=frmEvent.invisible %}
+		{% include 'results/form_field_tr.html' with field=frmEvent.not_in_klb %}
+		{% comment %}{% include 'results/form_field_tr.html' with field=frmEvent.distances_raw %}{% endcomment %}
+		{% include 'results/form_field_tr.html' with field=frmEvent.source %}
+		{% include 'results/form_field_tr.html' with field=frmEvent.source_private %}
+		{% include 'results/form_field_tr.html' with field=frmEvent.platform %}
+		{% include 'results/form_field_tr.html' with field=frmEvent.id_on_platform %}
+		{% include 'results/form_field_tr.html' with field=frmEvent.date_added_to_calendar %}
+
+		{% if event.id %}
+			<tr>
+				<td class="text-right"><strong>Кто добавил забег на сайт:</strong></td>
+				<td>{% include 'editor/user_name_with_link.html' with person=frmEvent.instance.created_by %}</td>
+			</tr>
+		{% endif %}
+	</table>
+	Города старта и финиша указываем только в случае, если они отличаются от таковых серии (или не указаны там вовсе).
+	<input type="submit"
+		name="frmEvent_submit"
+		value="{% if event.id %}Сохранить{% else %}Создать{% endif %}"
+		class="btn btn-success"
+	/>
+</form>
+
+{% include 'results/panel_footer.html' %}
+
+{% if event.id %}
+	{% include 'editor/tools/document_formset.html' with action_link=event.get_documents_update_url %}
+
+	<a name="races"></a>
+	{% include 'results/panel_header.html' with title='Дистанции' %}
+	<form id="frmRaces" method="POST" action="{% url 'editor:event_distances_update' event_id=event.id %}" class="form-inline">
+		{{ frmRaces.management_form }}{% csrf_token %}
+		<ul class="nav nav-tabs">
+			{% for form in frmRaces %}
+				<li{% if forloop.last %} class="active"{% endif %}>
+					<a data-toggle="tab" href="#dist{{ forloop.counter }}">
+						{% if form.instance.id %}{{ form.instance.distance_with_heights }}{% else %}Новая дистанция{% endif %}
+					</a>
+				</li>
+			{% endfor %}
+		</ul>
+		<div class="tab-content">
+			{% for form in frmRaces %}{% with race=form.instance %}
+				<div id="dist{{ forloop.counter }}" class="tab-pane fade{% if forloop.last %} in active{% endif %}">
+					{{ form.id }}
+					{% for error in form.non_field_errors %}
+						<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+					{% endfor %}
+					<div class="row">
+						<div class="col-md-4">
+							<table class="table table-condensed table-borderless">
+								{% include 'results/form_field_tr.html' with field=form.distance %}
+								{% include 'results/form_field_tr.html' with field=form.distance_real %}
+								{% include 'results/form_field_tr.html' with field=form.precise_name %}
+								{% include 'results/form_field_tr.html' with field=form.gps_track %}
+								{% include 'results/form_field_tr.html' with field=form.surface_type event_value=event.get_surface_type_name %}
+								{% include 'results/form_field_tr.html' with field=form.has_no_results %}
+								{% include 'results/form_field_tr.html' with field=form.is_for_handicapped %}
+								{% include 'results/form_field_tr.html' with field=form.exclude_from_stat %}
+								{% include 'results/form_field_tr.html' with field=form.is_multiday %}
+								{% include 'results/form_field_tr.html' with field=form.not_in_klb %}
+								{% include 'results/form_field_tr.html' with field=form.comment %}
+								{% include 'results/form_field_tr.html' with field=form.comment_private %}
+								{% include 'results/form_field_tr.html' with field=form.timing %}
+							</table>
+						</div>
+						<div class="col-md-4">
+							<table class="table table-condensed table-borderless">
+								{% if race.id %}
+									{% if race.klb_result_set.exists %}
+										<tr><td colspan=2>
+											Дистанцию нельзя удалить — на ней есть {{ race.klb_result_set.count }} результат{{ race.klb_result_set.count|ending:1 }}
+											в зачёт КЛБМатчей.
+										</td></tr>
+									{% elif race.registrant_set.exists %}
+										<tr><td colspan=2>
+											Дистанцию нельзя удалить — на ней есть {{ race.registrant_set.count }} зарегистрированны{{ race.registrant_set.count|ending:5 }} через наш сайт.
+										</td></tr>
+									{% else %}
+										{% include 'results/form_field_tr.html' with field=form.DELETE label='Отметьте, чтобы удалить дистанцию' %}
+										{% if race.result_set.count %}
+											<tr><td colspan=2>
+												(Будут удалены и {{ race.result_set.count }}
+												результат{{ race.result_set.count|ending:1 }} на этой дистанции!)
+											</td></tr>
+										{% endif %}
+									{% endif %}
+								{% endif %}
+								<tr><td colspan=2>Поля в этом столбце заполняются автоматически при загрузке результатов из протокола:</td></tr>
+								{% include 'results/form_field_tr.html' with field=form.n_participants %}
+								{% include 'results/form_field_tr.html' with field=form.n_participants_finished %}
+								{% include 'results/form_field_tr.html' with field=form.n_participants_finished_male %}
+								<tr><td colspan=2>&nbsp;</td></tr>
+								{% include 'results/form_field_tr.html' with field=form.winner_male_lname %}
+								{% include 'results/form_field_tr.html' with field=form.winner_male_fname %}
+								{% include 'results/form_field_tr.html' with field=form.winner_male_city %}
+								{% include 'results/form_field_tr.html' with field=form.winner_male_result %}
+								<tr><td colspan=2>&nbsp;</td></tr>
+								{% include 'results/form_field_tr.html' with field=form.winner_female_lname %}
+								{% include 'results/form_field_tr.html' with field=form.winner_female_fname %}
+								{% include 'results/form_field_tr.html' with field=form.winner_female_city %}
+								{% include 'results/form_field_tr.html' with field=form.winner_female_result %}
+							</table>
+						</div>
+						<div class="col-md-4">
+							<table class="table table-condensed table-borderless">
+								{% include 'results/form_field_tr.html' with field=form.start_date %}
+								{% include 'results/form_field_tr.html' with field=form.start_time %}
+								{% include 'results/form_field_tr.html' with field=form.finish_date %}
+								{% include 'results/form_field_tr.html' with field=form.elevation_meters %}
+								{% include 'results/form_field_tr.html' with field=form.descent_meters %}
+								{% include 'results/form_field_tr.html' with field=form.altitude_start_meters %}
+								{% include 'results/form_field_tr.html' with field=form.altitude_finish_meters %}
+								{% include 'results/form_field_tr.html' with field=form.start_lat %}
+								{% include 'results/form_field_tr.html' with field=form.start_lon %}
+								<tr><td colspan=2>&nbsp;</td></tr>
+								{% include 'results/form_field_tr.html' with field=form.price %}
+								{% include 'results/form_field_tr.html' with field=form.price_can_change %}
+								{% include 'results/form_field_tr.html' with field=form.itra_score %}
+							</table>
+							{% for hidden in form.hidden_fields %}
+								{{ hidden }}
+							{% endfor %}
+						</div>
+					</div>
+				</div>
+			{% endwith %}{% endfor %}
+		</div> <!-- tab-content -->
+		<input type="submit" name="frmRaces_submit" value="Сохранить изменения в дистанциях" class="btn btn-success"/>
+	</form>
+	{% include 'results/panel_footer.html' %}
+
+	<a name="news"></a>
+	{% include 'results/panel_header.html' with title='Новости' %}
+	<form id="frmNews" method="POST" action="{% url 'editor:event_news_update' event_id=event.id %}"
+		class="form-inline" enctype="multipart/form-data"
+	>
+		{{ frmNews.management_form }}{% csrf_token %}
+		<ul class="nav nav-tabs">
+			{% for form in frmNews %}
+				<li
+					{% if news_id %}
+						{% if news_id == form.instance.id %}
+							 class="active"
+						{% endif %}
+					{% elif forloop.last %}
+						class="active"
+					{% endif %}
+				>
+					<a data-toggle="tab" href="#news{{ forloop.counter }}">
+						{% if form.instance.id %}{{ form.instance|safe|default:'(без названия)' }}{% else %}Новая новость{% endif %}
+					</a>
+				</li>
+			{% endfor %}
+		</ul>
+		<div class="tab-content">
+			{% for form in frmNews %}{% with news=form.instance %}
+				<div id="news{{ forloop.counter }}"
+					{% if news_id %}
+						{% if news_id == form.instance.id %}
+							class="tab-pane fade in active"
+						{% else %}
+							class="tab-pane fade"
+						{% endif %}
+					{% elif forloop.last %}
+						class="tab-pane fade in active"
+					{% else %}
+						class="tab-pane fade"
+					{% endif %}
+				>
+					{{ form.id }}
+					<div class="row">
+						<div class="col-md-5">
+							<table class="table table-condensed table-borderless">
+								{% for error in form.non_field_errors %}
+									<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+								{% endfor %}
+								{% if news.id %}
+									<tr>
+										<td class="text-right">
+											Ссылка на новость:
+										</td>
+										<td style="vertical-align: bottom;">
+											<a href="{{ news.get_absolute_url }}">{{ news.title|safe|default:'без названия' }}</a>
+										</td>
+									</tr>
+									{% include 'results/form_field_tr.html' with field=form.DELETE label='Удалить новость' %}
+								{% endif %}
+								{% include 'results/form_field_tr.html' with field=form.is_for_social %}
+								{% if is_admin %}
+									{% include 'results/form_field_tr.html' with field=form.is_for_blog %}
+								{% endif %}
+								{% include 'results/form_field_tr.html' with field=form.title td_class='input-100' %}
+								{% include 'results/form_field_tr.html' with field=form.author td_class='input-100' %}
+								{% include 'results/form_field_tr.html' with field=form.date_posted td_class='input-100' %}
+								{% include 'results/form_field_tr.html' with field=form.image %}
+								{% if news.id %}
+									<tr>
+										<td class="text-right"><strong>Кто добавил новость на сайт:</strong></td>
+										<td>{% include 'editor/user_name_with_link.html' with person=news.created_by %}</td>
+									</tr>
+								{% endif %}
+							</table>
+							{% for hidden in form.hidden_fields %}
+								{{ hidden }}
+							{% endfor %}
+						</div>
+						<div class="col-md-7">
+							{{ form.manual_preview.label_tag|safe }}
+							<br/>
+							{{ form.manual_preview }}
+							<br/><br/>
+							{{ form.content.label_tag|safe }}
+							<br/>
+							{{ form.content }}
+							{% for error in form.content.errors %}
+								<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+							{% endfor %}
+						</div>
+					</div>
+				</div>
+			{% endwith %}{% endfor %}
+		</div>
+		<input type="submit" name="frmNews_submit" value="Сохранить изменения в новостях" class="btn btn-success"/>
+	</form>
+	{% include 'results/panel_footer.html' %}
+
+	{% if races %}
+		{% include 'results/panel_header.html' with title='Результаты забегов в серии' %}
+			{% include 'tools/series_results_by_distance.html' %}
+		{% include 'results/panel_footer.html' %}
+	{% endif %}
+
+	{% if is_admin %}
+		{% include 'results/panel_header.html' with title='Переместить забег в другую серию' %}
+		После запуска забег «{{ event }}» (id {{ event.id }})
+		будет перенесён из текущей серии «{{ event.series }}» в ту, id которой Вы укажете в поле.
+		<p/>
+		<form id="frmForSeries" method="POST" action="{{ event.get_change_series_url }}" class="form-inline">
+			{% csrf_token %}
+			{% for field in frmForSeries %}
+				{% include 'results/form_field.html' with field=field %}
+			{% endfor %}
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+			<input type="submit" name="frmForSeries_submit" value="Переместить забег «{{ event }}»" class="btn btn-warning"/>
+		</form>
+		{% include 'results/panel_footer.html' %}
+
+		{% if event.has_dependent_objects %}
+			{% include 'results/panel_header.html' with title='Заменить текущий забег на другой и удалить текущий' %}
+			<p>После запуска все дистанции, документы и новости забега «{{ event }}» (id {{ event.id }})
+			будут перенесены в выбранный ниже забег в таблицах ProbegDist и dj_document, после чего текущий забег будет удалён.</p>
+			<p>Будьте очень осторожны!</p>
+			<p>Чтобы полностью удалить забег, нужно сначала удалить все относящиеся к нему документы, дистанции и новости. После этого здесь появится нужная кнопка.</p>
+			<form id="frmForEvent" method="POST" action="{{ event.get_delete_url }}" class="form-inline">
+				{% csrf_token %}
+				{% for error in frmForEvent.non_field_errors %}
+					<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+				{% endfor %}
+				{% for field in frmForEvent %}
+					{% include 'results/form_field.html' with field=field %}
+				{% endfor %}
+				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+				<input type="submit" name="frmForEvent_submit" value="Удалить забег «{{ event }}»" class="btn btn-danger"/>
+			</form>
+			{% include 'results/panel_footer.html' %}
+		{% else %}
+			<form id="frmForEvent" method="POST" action="{{ event.get_delete_url }}" class="form-inline">
+				{% csrf_token %}
+				{% for error in frmForEvent.errors %}
+					<h4><span class="label label-danger">{{ error|escape }}</span></h4>
+				{% endfor %}
+				<input type="submit" name="frmForEvent_submit" value="Удалить забег «{{ event }}»" class="btn btn-danger"/>
+			</form>
+		{% endif %}
+	{% endif %}
+{% endif %} <!-- event.id -->
+{% endblock %}

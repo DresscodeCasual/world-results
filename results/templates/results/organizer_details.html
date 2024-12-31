@@ -1,0 +1,133 @@
+{% extends 'results/base.html' %}
+{% load static %}
+{% load results_extras %}
+{% load starrating %}
+{% block main %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<div class="row"><div class="col-md-12"> <!-- Header -->
+	<h3>{% if is_admin or is_editor %}
+			<span class="pull-right">
+				<a href="{{ organizer.get_editor_url }}"><button type="button" class="btn btn-xs btn-primary">Редактировать организатора</button></a>
+				&nbsp;&nbsp;&nbsp;&nbsp;
+				<a href="{{ organizer.get_history_url }}"><button type="button" class="btn btn-xs btn-primary">История изменений</button></a>
+			</span>
+		{% endif %}
+		Организатор забегов: {{ organizer.name|safe }}
+	</h3>
+</div>
+{% overall_rating sr_organizer True %}
+</div>
+
+<div class="row"> <!-- First row -->
+	<div class="col-md-4"> <!-- Left column -->
+	</div>
+	<div class="col-md-{% if organizer.logo %}3{% else %}6{% endif %}"> <!-- Middle column -->
+		{% if is_admin or is_editor %}{% if organizer.user %}
+			<p class="for-admin">
+				<strong>Имеет доступ к организатору:</strong>
+				<br/>
+				{% include 'editor/user_name_with_link.html' with person=organizer.user %}
+			</p>
+		{% endif %}{% endif %}
+	</div>
+	{% if organizer.logo %}
+		<div class="col-md-3">
+			<a href="#" class="showLogo" data-organizer="{{ organizer.id }}">
+				<img src="{{ organizer.logo|add_prefix }}" align="right" style="max-height: 200px; max-width: 100%;"/>
+			</a>
+		</div>
+	{% endif %}
+	<div class="col-md-2 text-right"> <!-- Right column -->
+		{% if organizer.url_site %}
+			<p><a href="{{ organizer.url_site }}">Официальный сайт</a></p>
+		{% endif %}
+		<p>
+		{% if organizer.url_vk %}
+			<a href="{{ organizer.url_vk }}"><img src="/static2/images/icons/vk_small_square.png" border="0"/></a>
+		{% endif %}
+		{% if organizer.url_facebook %}
+			&nbsp;<a href="{{ organizer.url_facebook }}"><img src="/static2/images/icons/fb_small_square.png" border="0"/></a>
+		{% endif %}
+		{% if organizer.url_instagram %}
+			&nbsp;<a href="{{ organizer.url_instagram }}"><img src="/static2/images/icons/in_small_square.png" border="0"/></a>
+		{% endif %}
+	</div>
+</div>
+
+{% if series_list %}
+<div class="row"><div class="col-lg-6 col-lg-offset-3 col-md-8 col-md-offset-2 col-sm-12">
+	<h3>Организуемые серии</h3>
+	<table class="table table-condensed table-hover table-striped vcenter">
+		<tr class="info text-center">
+			<th>№</th>
+			<th>Название</th>
+			<th>Забегов в серии</th>
+			<th>Следующий забег</th>
+			<th>Последний забег</th>
+		</tr>
+		{% for data in series_list %}
+			<tr>
+				<td>{{ forloop.counter }}</td>
+				<td>{% if is_admin %}
+						<span class="pull-right">
+							<form action="{% url 'editor:organizer_remove_series' organizer_id=organizer.id series_id=data.series.id %}" method="POST" >
+								{% csrf_token %}
+								<input type="submit" name="btnRemoveSeries" value="Отвязать от организатора" class="btn btn-xs btn-primary"/>
+							</form>
+						</span>
+					{% endif %}
+					<a href="{{ data.series.get_absolute_url }}">{{ data.series.name|safe }}</a>
+				</td>
+				<td class="text-center">{{ data.series.event__count }}</td>
+				<td class="text-center">{% if data.event_next %}
+						<p><a href="{{ data.event_next.get_absolute_url }}">{{ data.event_next.dateFull|safe }}</a></p>
+					{% endif %}
+				</td>
+				<td class="text-center">{% if data.event_prev %}
+						<p><a href="{{ data.event_prev.get_absolute_url }}">{{ data.event_prev.dateFull|safe }}</a></p>
+					{% endif %}
+				</td>
+			</tr>
+		{% endfor %}
+	</table>
+</div></div>
+{% else %}
+	<p>У нас пока нет данных о сериях, проводимых этим организатором.</p>
+{% endif %}
+{% if is_admin %}
+	<br/><br/>
+	<h4 class="for-admin">Добавить организатору серию</h4>
+	<form action="{{ organizer.get_add_series_url }}" method="POST">
+		{% csrf_token %}
+		<select id="organizers_list" name="select_series" style="width: 50%" data-organizer="{{ organizer.id }}"></select>
+		<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css" rel="stylesheet" />
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>
+		<script type="text/javascript">
+$("#organizers_list").select2({
+	placeholder: "Введите ID или первые буквы названия",
+	width: 'element',
+	allowClear: true,
+	minimumInputLength: 3,
+	ajax: {
+		url: "{% url 'editor:series_list' organizer_id=organizer.id %}",
+		dataType: 'json',
+		delay: 250,
+		data: function (params) {
+			return {
+				query: params.term
+			};
+		},
+		processResults: function (data) {
+			return {
+				results: data
+			};
+		},
+		cache: true
+	},
+});
+		</script>
+		&nbsp;&nbsp;&nbsp;&nbsp;
+		<input type="submit" name="btnAddSeries" value="Добавить" class="btn btn-warning"/>
+	</form>
+{% endif %}
+{% endblock %}
